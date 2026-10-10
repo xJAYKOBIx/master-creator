@@ -1,0 +1,14 @@
+{
+  "name": "master-creator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A library of reusable pixel-art assets written as code.",
+  "type": "module",
+  "scripts": {
+    "serve": "python3 -m http.server 8771",
+    "test": "node tests/smoke.mjs http://127.0.0.1:8771"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.47.0"
+  }
+}

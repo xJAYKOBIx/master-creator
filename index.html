@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Master Creator</title>
+<meta name="description" content="A library of reusable pixel-art characters, animals, weapons, effects and sounds.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Silkscreen&display=swap">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app/style.css">
+</head>
+<body>
+<div class="app">
+ <header class="top">
+  <div class="mark"><h1>MASTER CREATOR</h1><span>Pixel asset library</span></div>
+  <label class="search"><input id="search" type="search" placeholder="Search assets" aria-label="Search assets" autocomplete="off"></label>
+  <span class="count" id="count"></span>
+ </header>
+ <div class="shell">
+  <nav class="rail" id="rail" aria-label="Categories"></nav>
+  <main class="browse" id="browse" aria-label="Assets"></main>
+  <aside class="inspector" id="inspector" aria-label="Asset preview"></aside>
+ </div>
+</div>
+<script type="module" src="app/library.js"></script>
+</body>
+</html>

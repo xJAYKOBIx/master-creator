@@ -1,0 +1,139 @@
+// The catalogue: every asset in the Master Creator, with what the library needs to preview it and what a game needs to use it.
+// Each entry is plain data plus a draw (or play) function that calls the asset's own code, so the library never redraws anything itself.
+//
+// Entry shape:
+//   id, name, category, group      where it sits in the library
+//   summary                        one line about what it is
+//   source, usage                  the file it lives in and how a game calls it
+//   kind                           'sprite' (facings and animations), 'still', 'motion' (plays over time) or 'sound'
+//   w, h, scale                    the size of one picture in canvas pixels, and the preview's starting zoom
+//   facings, anims                 for sprites: how many facings, and {Name: {frames, ms}} per animation
+//   options, presets, defaults     choices a person can change: {key, label, choices, swatches?} or {key, label, type:'text'}
+//   draw(c, {facing, frame, o, t}) paints one picture into a clean w × h canvas; t is seconds for motion
+//   sound, dur                     for sounds: the recipe and its length in seconds
+import {survivor,FRAME,DIRECTIONS,WALK_FRAMES,RUN_FRAMES,HAIR_TONES} from './characters/character.js';
+import {APPEARANCE_OPTIONS,DEFAULT_APPEARANCE,UNIFORMS,randomAppearance} from './characters/appearance.js';
+import {SKIN_TONES,DYES,ROT_TONES,rotRamp} from './characters/palette.js';
+import {pet,PET_FRAME,PET_ANIM} from './animals/pet.js';
+import {BREEDS,MARKINGS,COATS,EYES,COLLARS,DEFAULT_PET,randomPet} from './animals/look.js';
+import {GUNS,GRENADES,PAINT,gunArt,grenadeArt} from './weapons/equipment.js';
+import {vectorPainter} from './core/paint.js';
+import {R,hash,canvas} from './core/kit.js';
+import {text,width,GLYPHS} from './ui/font5x7.js';
+import {BLOOD,brushes} from './effects/grime.js';
+import {logo,osd,breakup,flip,noSignal} from './effects/tv.js';
+import {captions,lowerThird,ticker,bug} from './effects/broadcast.js';
+import {SOUNDS} from './sounds/library.js';
+
+export const CATEGORIES=[
+ {id:'characters',name:'Characters'},{id:'animals',name:'Animals'},{id:'weapons',name:'Weapons'},{id:'props',name:'Props and scenery'},
+ {id:'effects',name:'Effects'},{id:'broadcast',name:'Screens and broadcast'},{id:'type',name:'Type'},{id:'sounds',name:'Sounds'}];
+export {DIRECTIONS};
+
+// ---------- Characters ----------
+const pick=(list,i)=>list.map(x=>x[i]);
+const SWATCH={skin:SKIN_TONES.map(t=>t.ramp[0]),color:HAIR_TONES.map(t=>t[0]),coat:pick(DYES.coat,1),shirt:pick(DYES.shirt,1),pants:pick(DYES.pants,1),boots:pick(DYES.boots,1),packColor:pick(DYES.pack,1),rot:ROT_TONES.map((t,i)=>rotRamp(SKIN_TONES[0].ramp,i,1)[1])};
+const LABEL={body:'Body type',skin:'Skin tone',hair:'Hairstyle',color:'Hair color',beard:'Facial hair',hat:'Headwear',top:'Top',coat:'Jacket color',shirt:'Shirt color',bottom:'Pants',pants:'Pants color',shoes:'Shoes',boots:'Shoe color',pack:'Pack',packColor:'Pack color',rot:'Rot',decay:'Decay',eyes:'Eyes',wounds:'Wound'};
+const PERSON=['body','skin','hair','color','beard','hat','top','coat','shirt','bottom','pants','shoes','boots','pack','packColor'],INFECTION=['rot','decay','eyes','wounds'];
+const lookOption=key=>({key,label:LABEL[key],choices:APPEARANCE_OPTIONS[key],swatches:SWATCH[key]});
+const GUN_IDS=Object.keys(GUNS);
+// The look the painter takes, from the library's option values.
+const survivorLook=(o,zombie)=>{const l={...DEFAULT_APPEARANCE,...o,zombie:zombie?1:0};delete l.gunChoice;delete l.paintball;
+ if(!zombie&&o.gunChoice>0){l.gun=GUN_IDS[o.gunChoice-1];if(o.paintball)l.paint=PAINT[l.gun];}return l;};
+const personAnims=zombie=>({Idle:{frames:[0],ms:200},Walk:{frames:WALK_FRAMES,ms:zombie?125:85},Run:{frames:RUN_FRAMES,ms:zombie?80:60}});
+const personDraw=zombie=>(c,{facing,frame,o})=>{c.scale(2,2);survivor(c,facing,frame,true,survivorLook(o,zombie));};
+const CHARACTERS=[
+ {id:'survivor',name:'Survivor',category:'characters',group:'People',kind:'sprite',summary:'The modular survivor: two body types, six skin tones and every hair, clothing and pack choice, in 8 facings with idle, walk and run.',
+  source:'assets/characters/character.js',usage:"import {survivor} from './assets/characters/character.js';\n// c is a 160 × 192 canvas context; draw at half scale for world units\nc.scale(2,2); survivor(c, facing, frame, true, look);",
+  w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:personAnims(false),
+  options:[...PERSON.map(lookOption),{key:'gunChoice',label:'Held gun',choices:['No gun',...GUN_IDS.map(id=>GUNS[id].name)]},{key:'paintball',label:'Paintball finish',choices:['Off','On']}],
+  presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),defaults:{...pickKeys(DEFAULT_APPEARANCE,PERSON),gunChoice:0,paintball:0},
+  random:r=>({...pickKeys(randomAppearance(r),PERSON),gunChoice:0,paintball:0}),draw:personDraw(false)},
+ {id:'zombie',name:'Zombie',category:'characters',group:'Infected',kind:'sprite',summary:'Any survivor look, turned: rot tones, three stages of decay, eyes and wounds, with the shamble walk and lurching run.',
+  source:'assets/characters/character.js, zombie.js',usage:"import {survivor} from './assets/characters/character.js';\nc.scale(2,2); survivor(c, facing, frame, true, {...look, zombie: 1});",
+  w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:personAnims(true),
+  options:[...INFECTION.map(lookOption),...PERSON.map(lookOption)],presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),
+  defaults:pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON]),random:r=>pickKeys(randomAppearance(r),[...INFECTION,...PERSON]),draw:personDraw(true)}];
+function pickKeys(o,keys){const out={};for(const k of keys)out[k]=o[k];return out;}
+
+// ---------- Animals ----------
+const petAnims={Idle:{frames:PET_ANIM.idle,ms:220},Walk:{frames:PET_ANIM.walk,ms:110},Run:{frames:PET_ANIM.run,ms:75},Sit:{frames:PET_ANIM.sit,ms:260},Lie:{frames:PET_ANIM.lie,ms:400}};
+const petEntry=(species,id,name,summary)=>({id,name,category:'animals',group:species?'Cats':'Dogs',kind:'sprite',summary,
+ source:'assets/animals/pet.js, look.js',usage:`import {pet} from './assets/animals/pet.js';\n// c is a 160 × 160 canvas context\nc.scale(2,2); pet(c, facing, frame, {species: ${species}, ...look});`,
+ w:PET_FRAME.w,h:PET_FRAME.h,scale:2,facings:8,facing:1,anims:petAnims,
+ options:[{key:'breed',label:'Breed',choices:BREEDS[species]},{key:'coat',label:'Coat',choices:COATS.map(c=>c.name),swatches:COATS.map(c=>c.ramp[2])},{key:'marking',label:'Markings',choices:MARKINGS[species]},
+  {key:'eyes',label:'Eyes',choices:EYES.map(e=>e.name),swatches:EYES.map(e=>e.col)},{key:'collar',label:'Collar',choices:COLLARS.map(c=>c.name)}],
+ defaults:{...DEFAULT_PET[species?'cat':'dog']},random:r=>randomPet(species,r),
+ draw:(c,{facing,frame,o})=>{c.scale(2,2);pet(c,facing,frame,{species,...o});}});
+const ANIMALS=[petEntry(0,'dog','Dog','Shepherd, Lab, Terrier or Husky, with seven coats and five markings. Idle, walk, run, sit and lie in 8 facings.'),
+ petEntry(1,'cat','Cat','Shorthair or Longhair, with seven coats and five markings. Idle, walk, run, sit and lie in 8 facings.')];
+
+// ---------- Weapons ----------
+// Gun and grenade icons are drawn four times up on a scratch canvas, trimmed to their pixels and centred, as the creator's tiles do.
+function icon(c,w,h,paint){const s=canvas(240,120),g=s.getContext('2d',{willReadFrequently:true});g.translate(120,60);g.scale(4,4);paint(vectorPainter(g));
+ const d=g.getImageData(0,0,240,120).data;let x0=240,y0=120,x1=0,y1=0;for(let y=0;y<120;y++)for(let x=0;x<240;x++)if(d[(y*240+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+ if(x1<x0)return;const bw=x1-x0+1,bh=y1-y0+1;c.drawImage(s,x0,y0,bw,bh,Math.round((w-bw)/2),Math.round((h-bh)/2),bw,bh);}
+const WEAPONS=[
+ ...GUN_IDS.map(id=>({id,name:GUNS[id].name,category:'weapons',group:GUNS[id].rifle?'Rifles':'Handguns',kind:'still',summary:GUNS[id].description+'.',
+  stats:{Magazine:GUNS[id].mag,Damage:GUNS[id].damage,'Fire interval':GUNS[id].interval+' s',Reload:GUNS[id].reload+' s',Range:GUNS[id].range},
+  source:'assets/weapons/equipment.js',usage:`import {gunArt, heldGun, weaponArms} from './assets/weapons/equipment.js';\n// gunArt draws the icon; survivor() draws it held when look.gun = '${id}'\ngunArt(painter, '${id}', paintColor);`,
+  w:120,h:60,scale:3,options:[{key:'paintball',label:'Finish',choices:['Steel','Paintball']}],defaults:{paintball:0},
+  draw:(c,{o})=>icon(c,120,60,g=>gunArt(g,id,o.paintball?PAINT[id]:undefined))})),
+ ...Object.keys(GRENADES).map(id=>({id:id+'-grenade',name:GRENADES[id].name,category:'weapons',group:'Grenades',kind:'still',summary:GRENADES[id].description+'.',
+  stats:{Fuse:GRENADES[id].duration+' s',Radius:GRENADES[id].radius},source:'assets/weapons/equipment.js',usage:`import {grenadeArt} from './assets/weapons/equipment.js';\ngrenadeArt(painter, '${id}');`,
+  w:60,h:60,scale:3,draw:c=>icon(c,60,60,g=>grenadeArt(g,id))}))];
+
+// ---------- Effects: blood and grime ----------
+const seedOpt={key:'seed',label:'Variation',choices:['1','2','3','4','5','6']};
+const grime=(id,name,summary,paint)=>({id,name,category:'effects',group:'Blood and grime',kind:'still',summary,source:'assets/effects/grime.js',
+ usage:`import {brushes} from './assets/effects/grime.js';\nconst b = brushes(ctx, seed); // one canvas pixel per art pixel\n${paint.toString().match(/b\.\w+\([^;]*\)/)?.[0]??''};`,
+ w:96,h:64,scale:4,bg:'#3a3f46',options:[seedOpt],defaults:{seed:0},draw:(c,{o})=>{const b=brushes(c,0x5eed+o.seed*977);paint(b,c);c.globalAlpha=1;}});
+const EFFECTS=[
+ grime('blood-splat','Blood splat','A pool with thrown droplets and streaks, optionally sprayed in one direction.',b=>{b.splat(40,30,6,{spread:1.1,count:14});}),
+ grime('blood-drips','Blood drips','Runs that thin as they fall and end in a bead.',b=>{b.blob(30,10,4,BLOOD[1]);b.drip(28,12,30,2);b.drip(33,11,18,1);b.blob(62,14,3,BLOOD[2]);b.drip(61,16,24,1);}),
+ grime('hand-smear','Hand smear','A hand dragged through blood: a heavy patch, then finger streaks that break up.',b=>{b.smear(14,16,82,40,12,4,3,4);}),
+ grime('claw-gouges','Claw gouges','Scraped metal with a shadow on one side, deepest mid-scratch.',b=>{b.claw(24,10,68,54,3,4);}),
+ grime('scuffs-dirt','Scuffs and dirt','Worn paint, chips and grime for panels and props.',b=>{b.dirt(6,6,84,52,3,.6);for(let i=0;i<9;i++)b.scuff(10+i*9,14+(i%3)*14,14,.4+i*.2,.14);for(let i=0;i<12;i++)b.chip(8+i*7,50-(i%4)*9);}),
+ {id:'blood-palette',name:'Blood palette',category:'effects',group:'Blood and grime',kind:'still',summary:'The five dried-to-fresh blood colors every grime brush uses.',source:'assets/effects/grime.js',usage:"import {BLOOD} from './assets/effects/grime.js';",
+  w:100,h:24,scale:4,palette:BLOOD,draw:c=>BLOOD.forEach((col,i)=>R(c,i*20,0,20,24,col))}];
+
+// ---------- Screens and broadcast (a 240 × 135 TV picture) ----------
+const PW=240,PH=135;
+// A stand-in picture for effects that work on another picture: a bar test card with a moving sweep.
+function card(t){const s=canvas(PW,PH),c=s.getContext('2d');['#c8c8c8','#c8c800','#00c8c8','#00c800','#c800c8','#c80000','#0000c8'].forEach((col,i)=>R(c,Math.round(i*PW/7),0,Math.ceil(PW/7),96,col));
+ R(c,0,96,PW,39,'#101418');R(c,Math.round((t*60)%PW),96,6,39,'#e8e8e8');text(c,'TEST CARD',PW/2-width('TEST CARD')/2,110,'#e8e8e8');return s;}
+const motion=(id,name,group,summary,dur,usage,draw,extra={})=>({id,name,category:'broadcast',group,kind:'motion',summary,dur,source:extra.source||'assets/effects/tv.js',usage,w:PW,h:PH,scale:2,draw,...extra});
+const BROADCAST=[
+ motion('tv-logo','Power-on logo','The set','The maker’s name fades up on black when a TV wakes, with an accent rule.',3,"import {logo} from './assets/effects/tv.js';\nlogo(ctx, 240, 135, fade, 'VESPERA');",
+  (c,{t,o})=>logo(c,PW,PH,Math.min(1,t/.6)*(t<2.4?1:Math.max(0,(3-t)/.6)),(o.brand||'VESPERA').toUpperCase()),{options:[{key:'brand',label:'Brand name',type:'text',default:'VESPERA'}],defaults:{brand:'VESPERA'}}),
+ motion('tv-osd','Channel number','The set','The channel number and station name a set shows after a flip.',2.5,"import {osd} from './assets/effects/tv.js';\nosd(ctx, 6, 'CH6 NEWS', fade, 240);",
+  (c,{t,o})=>{c.drawImage(card(t),0,0);osd(c,o.ch||'6',(o.station||'').toUpperCase(),t<1.8?1:Math.max(0,(2.4-t)/.6),PW);},{options:[{key:'ch',label:'Channel',type:'text',default:'6'},{key:'station',label:'Station',type:'text',default:'CH6 NEWS'}],defaults:{ch:'6',station:'CH6 NEWS'}}),
+ motion('tv-flip','Channel flip','The set','A digital channel change: 8 × 8 blocks smear from one picture into the next.',1.2,"import {flip} from './assets/effects/tv.js';\nflip(ctx, fromCanvas, toCanvas, k, frameNo, 240, 135);",
+  (c,{t})=>{const a=card(0),b=canvas(PW,PH),g=b.getContext('2d');R(g,0,0,PW,PH,'#14203a');text(g,'NEXT CHANNEL',PW/2-width('NEXT CHANNEL')/2,62,'#7ab4ff');const k=Math.max(0,Math.min(1,(t-.3)/.4));flip(c,a,b,k,Math.floor(t*30),PW,PH);}),
+ motion('tv-breakup','Digital breakup','The set','A failing signal: the picture freezes and cracks into shifting blocks, never analog static.',2,"import {breakup} from './assets/effects/tv.js';\nbreakup(ctx, frozenCanvas, k, frameNo, 240, 135);",
+  (c,{t})=>breakup(c,card(0),Math.max(0,Math.min(1,(t-.3)/1.2)),Math.floor(t*30),PW,PH)),
+ motion('tv-no-signal','NO SIGNAL','The set','The set’s own grey box drifting round a black screen.',8,"import {noSignal} from './assets/effects/tv.js';\nnoSignal(ctx, 240, 135, seconds);",(c,{t})=>noSignal(c,PW,PH,t)),
+ motion('captions','Closed captions','Broadcast overlays','Roll-up captions, two lines at a time in black boxes.',4,"import {captions} from './assets/effects/broadcast.js';\ncaptions(ctx, [[0,'FIRST LINE'],[1.2,'SECOND LINE']], seconds, top);",
+  (c,{t})=>{c.drawImage(card(t),0,0);captions(c,[[0,'WE ARE GETTING REPORTS'],[1.2,'FROM ACROSS THE CITY...'],[2.4,'[SIRENS]']],t);},{source:'assets/effects/broadcast.js'}),
+ motion('lower-third','Lower third','Broadcast overlays','A colored tag over a white headline bar that wipes in.',3,"import {lowerThird} from './assets/effects/broadcast.js';\nlowerThird(ctx, {tag:'BREAKING NEWS', headline:'...', tagColor:'#c8102e', wipe:k});",
+  (c,{t,o})=>{c.drawImage(card(t),0,0);lowerThird(c,{tag:(o.tag||'').toUpperCase(),headline:(o.headline||'').toUpperCase(),tagColor:'#c8102e',wipe:t/.5});},{source:'assets/effects/broadcast.js',options:[{key:'tag',label:'Tag',type:'text',default:'BREAKING NEWS'},{key:'headline',label:'Headline',type:'text',default:'CITY UNDER CURFEW TONIGHT'}],defaults:{tag:'BREAKING NEWS',headline:'CITY UNDER CURFEW TONIGHT'}}),
+ motion('ticker','News ticker','Broadcast overlays','A scrolling ticker with a station box and an optional clock.',6,"import {ticker} from './assets/effects/broadcast.js';\nticker(ctx, 'LINE · LINE · ', seconds, {station:'6 NEWS', color:'#c8102e', clock:'11:47'});",
+  (c,{t,o})=>{c.drawImage(card(t),0,0);ticker(c,(o.line||' ').toUpperCase()+' · ',t,{station:'6 NEWS',color:'#c8102e',clock:'11:47'});},{source:'assets/effects/broadcast.js',options:[{key:'line',label:'Ticker text',type:'text',default:'STAY INDOORS · POLICE URGE CALM · ROADS CLOSED ON THE EAST SIDE'}],defaults:{line:'STAY INDOORS · POLICE URGE CALM · ROADS CLOSED ON THE EAST SIDE'}}),
+ motion('corner-bug','Corner bug','Broadcast overlays','A small station or LIVE badge for the corner of the picture.',1,"import {bug} from './assets/effects/broadcast.js';\nbug(ctx, 'LIVE', x, y, '#c8102e', '#ffffff');",
+  (c,{t,o})=>{c.drawImage(card(t),0,0);const s=(o.label||'LIVE').toUpperCase();bug(c,s,PW-6-width(s)-6,5,'#c8102e');},{source:'assets/effects/broadcast.js',options:[{key:'label',label:'Label',type:'text',default:'LIVE'}],defaults:{label:'LIVE'}})];
+
+// ---------- Type ----------
+const TYPE=[{id:'font-5x7',name:'Pixel font 5 × 7',category:'type',group:'Fonts',kind:'still',summary:'A capitals-only bitmap font for screens and signage. Every character is six pixels wide, gap included.',
+ source:'assets/ui/font5x7.js',usage:"import {text, width} from './assets/ui/font5x7.js';\ntext(ctx, 'HELLO', x, y, '#ffffff'); // width('HELLO') gives its length",
+ w:200,h:64,scale:3,bg:'#0d1117',options:[{key:'sample',label:'Sample text',type:'text',default:'THE QUICK BROWN FOX'},{key:'ink',label:'Ink',choices:['White','Amber','Green','Red'],swatches:['#ffffff','#f2c200','#7fe07f','#ff4a3a']}],
+ defaults:{sample:'THE QUICK BROWN FOX',ink:0},
+ draw:(c,{o})=>{const ink=['#ffffff','#f2c200','#7fe07f','#ff4a3a'][o.ink|0],all=Object.keys(GLYPHS).join('');let x=4,y=4;
+  for(const ch of all){if(x+6>196){x=4;y+=9;}text(c,ch,x,y,'#8b93a1');x+=6;}text(c,(o.sample||'').toUpperCase().slice(0,32),4,y+14,ink);}}];
+
+// ---------- Sounds ----------
+const SOUND_ENTRIES=SOUNDS.map(s=>({id:'sound-'+s.id,name:s.name,category:'sounds',group:s.group,kind:'sound',summary:`${s.dur < 1 ? Math.round(s.dur*1000)+' ms' : s.dur+' seconds'}, synthesised in the browser, so it ships as code with no audio file.`,
+ source:'assets/sounds/library.js',usage:`import {SOUNDS, playSound} from './assets/sounds/library.js';\nplaySound(audioCtx, SOUNDS.find(s => s.id === '${s.id}'));`,
+ dur:s.dur,sound:s,options:s.options,defaults:Object.fromEntries((s.options||[]).map(o=>[o.key,0]))}));
+
+export const CATALOG=[...CHARACTERS,...ANIMALS,...WEAPONS,...EFFECTS,...BROADCAST,...TYPE,...SOUND_ENTRIES];
+export const byId=id=>CATALOG.find(e=>e.id===id);
