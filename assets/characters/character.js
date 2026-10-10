@@ -102,7 +102,8 @@ function gait(frame,side,back,quarter,zombie=false){
   return {near:foot(s,v),far,swing:s,running:frame>=9,bob:moving?-Math.round(G.bob*Math.max(0,Math.sin(t))*2)/2:0,lean:(side?G.lean:Math.round(fx*G.lean*2)/2)+(moving&&!side?Math.round(G.sway*Math.sin(t)*2)/2:0)};}
  return {near:foot(s,v),far:foot(-s,-v),nearHand:hand(-s),farHand:hand(s),bob:moving?-G.bob*Math.sin(2*t):0,lean:side?G.lean:Math.round(fx*G.lean*2)/2};
 }
-function backpack(g,back,quarter,side=false){const {p,r}=g;
+// Packs by look.pack: 0 the leather pack (medium), 2 a canvas daypack (small), 3 a frame pack with a bedroll (large). 1 is no pack.
+function backpack(g,back,quarter,side=false,kind=0){if(kind===2)return daypack(g,back,quarter,side);if(kind===3)return framePack(g,back,quarter,side);const {p,r}=g;
  if(side){p([[-12,-47],[-5,-46],[-4,-24],[-12,-23],[-16,-27],[-16,-42]],C.ink);p([[-12,-45],[-7,-44],[-6,-26],[-12,-25],[-14,-28],[-14,-41]],C.leather);r(-12,-42,3,12,C.leatherHi);r(-14,-42,2,11,C.leatherLo);r(-12,-40,5,2,C.leatherLight);r(-11,-35,3,6,C.leatherLo);r(-10,-34,1,2,C.metal);r(-8,-44,1,17,C.leatherLo);return;}
  if(!back){p([[-14,-46],[-10,-47],[-10,-25],[-15,-26],[-17,-30],[-17,-42]],C.ink);p([[-14,-44],[-11,-45],[-11,-27],[-14,-28],[-15,-31],[-15,-40]],C.leather);r(-14,-41,2,10,C.leatherHi);return;}
  let dx=quarter?-3:0;p([[-10+dx,-48],[6+dx,-48],[11+dx,-43],[11+dx,-26],[6+dx,-22],[-10+dx,-23],[-13+dx,-27],[-13+dx,-43]],C.ink);
@@ -112,6 +113,50 @@ function backpack(g,back,quarter,side=false){const {p,r}=g;
  r(-9+dx,-43,12,1,C.leatherLight);r(-8+dx,-35,12,9,C.leatherLo);r(-7+dx,-34,10,7,'#694a36');r(-7+dx,-34,10,1,'#826047');
  for(let x of [-7+dx,3+dx]){r(x,-43,2,12,'#352a26');r(x,-42,1,8,C.leatherLight);r(x,-35,2,2,C.metal);r(x+.5,-34.5,1,1,C.leatherLo);}r(-4+dx,-31,4,2,'#8a8170');r(-3+dx,-30.5,2,1,'#4c4d49');r(-9+dx,-27,3,.5,C.leatherHi);
 }
+// The small pack: a soft canvas daypack that sits high between the shoulders, with a grab loop, a zip round the top and a front
+// pocket. No buckles, so it reads as lighter than the leather pack.
+function daypack(g,back,quarter,side){const {p,r}=g,seam='#352a26';
+ if(side){p([[-11,-45],[-5,-44],[-4.5,-28],[-10,-27.5],[-13,-30.5],[-13,-41]],C.ink);p([[-10.5,-43.5],[-6,-42.5],[-5.5,-29.5],[-10,-29],[-11.5,-31.5],[-11.5,-40.5]],C.leather);
+  r(-10,-41,2,9,C.leatherHi);r(-12,-37,2,6,C.leatherLo);r(-12,-37,2,.5,'#694a36');r(-7.5,-43,.5,13,C.leatherLo);r(-9.5,-43.5,3,1.5,C.ink);return;}
+ if(!back){p([[-13,-44],[-10,-45],[-10,-29],[-13,-30],[-15,-33],[-15,-41]],C.ink);p([[-13,-42.5],[-11,-43.5],[-11,-30.5],[-13,-31.5],[-13.75,-34],[-13.75,-40]],C.leather);r(-13,-40,1.5,7,C.leatherHi);return;}
+ const dx=quarter?-3:0,P=pts=>pts.map(([x,y])=>[x+dx,y]);
+ r(-2.5+dx,-48,4,1,C.ink);r(-2.5+dx,-48,1,2.5,C.ink);r(.5+dx,-48,1,2.5,C.ink);
+ p(P([[-6,-46],[4,-46],[8,-43],[9,-31],[6,-28],[-8,-28],[-11,-31],[-10,-43]]),C.ink);
+ p(P([[-6,-44.5],[4,-44.5],[7,-42],[7.5,-31.5],[5,-29.5],[-7.5,-29.5],[-9.5,-31.5],[-8.5,-42]]),C.leather);
+ p(P([[4,-44.5],[7,-42],[7.5,-31.5],[5,-29.5],[5,-41]]),C.leatherLo);p(P([[-6,-44.5],[3.5,-44.5],[5,-42.5],[-8,-42.5]]),C.leatherHi);
+ r(-8+dx,-41.5,13,.5,seam);r(3+dx,-41.5,1,2,C.metal);
+ p(P([[-6,-38],[4,-38],[5.5,-36],[5,-31],[-7,-31],[-7.5,-36]]),C.ink);p(P([[-5.5,-37.25],[3.5,-37.25],[4.75,-35.5],[4.25,-31.75],[-6.25,-31.75],[-6.75,-35.5]]),C.leatherLo);
+ r(-5.5+dx,-37.25,9,.75,'#694a36');r(-1+dx,-37.75,1,1.5,C.metal);r(-8.5+dx,-40,.5,8,C.leatherHi);
+}
+// The large pack: a tall pack on a metal frame, with a lid, two compression straps, side pockets and a bedroll strapped under
+// it. The frame's bars show above the shoulders. The bedroll is a red wool blanket whatever the pack dye, so it reads against every pack color.
+const ROLL=['#7b4237','#94574a','#5a2f28'];
+function bedroll(g,x0,x1,y0,y1){const {p,r}=g;p([[x0+2,y0],[x1-2,y0],[x1,y0+2],[x1,y1-2],[x1-2,y1],[x0+2,y1],[x0,y1-2],[x0,y0+2]],C.ink);
+ p([[x0+2,y0+1],[x1-2,y0+1],[x1-1,y0+2.5],[x1-1,y1-2.5],[x1-2,y1-1],[x0+2,y1-1],[x0+1,y1-2.5],[x0+1,y0+2.5]],ROLL[0]);r(x0+2,y0+1.5,x1-x0-4,1.5,ROLL[1]);r(x0+2,y1-2.5,x1-x0-4,1,ROLL[2]);}
+function framePack(g,back,quarter,side){const {p,r}=g,seam='#352a26';
+ if(side){r(-4.5,-54,1.5,30,C.ink);r(-4,-53.5,.5,29,C.metal);
+  p([[-12,-51],[-4,-50],[-3.5,-25],[-12,-24],[-18,-28],[-18,-47]],C.ink);p([[-12,-49.5],[-5,-48.5],[-5,-26.5],[-12,-25.5],[-16.5,-29],[-16.5,-46]],C.leather);
+  p([[-12,-49.5],[-5,-48.5],[-5,-46],[-16.5,-46.5],[-16.5,-46]],C.leatherHi);r(-15,-44,2,13,C.leatherHi);r(-16.5,-38,3,7,C.leatherLo);r(-16.5,-38,3,.5,'#694a36');
+  r(-16.5,-42,11,1,seam);r(-16.5,-33,11,1,seam);r(-10,-42,1,1,C.metal);r(-10,-33,1,1,C.metal);
+  p([[-16,-27],[-11,-27],[-9,-25],[-9,-20],[-11,-18],[-16,-18],[-18,-20],[-18,-25]],C.ink);p([[-15.5,-26],[-11.5,-26],[-10,-24.5],[-10,-20.5],[-11.5,-19],[-15.5,-19],[-17,-20.5],[-17,-24.5]],ROLL[0]);
+  r(-15,-24.5,4,4,ROLL[2]);r(-14,-23.5,2,2,ROLL[1]);return;}
+ if(!back){r(-15,-54,1.5,6,C.ink);r(-14.5,-53.5,.5,5,C.metal);
+  p([[-15,-50],[-10,-51],[-10,-25],[-15,-26],[-18,-29],[-18,-46]],C.ink);p([[-15,-48.5],[-11,-49.5],[-11,-26.5],[-15,-27.5],[-16.75,-30],[-16.75,-45]],C.leather);r(-15,-48.5,4,2,C.leatherHi);r(-15,-45,1.5,13,C.leatherHi);
+  bedroll(g,-19,-10,-27,-18);return;}
+ const dx=quarter?-3:0,P=pts=>pts.map(([x,y])=>[x+dx,y]);
+ for(const x of [-15,11.5]){r(x+dx,-54,2,29,C.ink);r(x+.5+dx,-53.5,1,28,C.metal);}r(-15+dx,-54,28.5,1.5,C.ink);r(-14.5+dx,-53.5,27.5,.5,C.metal);
+ p(P([[-11,-51],[8,-51],[12,-47],[12,-26],[8,-23],[-11,-23],[-14,-26],[-14,-47]]),C.ink);
+ p(P([[-10,-49.5],[7,-49.5],[10.5,-46.5],[10.5,-26.5],[7,-24.5],[-10,-24.5],[-12.5,-26.5],[-12.5,-46.5]]),C.leather);
+ p(P([[7,-46],[10.5,-44],[10.5,-26.5],[7,-24.5]]),C.leatherLo);
+ p(P([[-10,-49.5],[7,-49.5],[10.5,-46.5],[10.5,-44.5],[-12.5,-44.5],[-12.5,-46.5]]),C.leatherHi);r(-12.5+dx,-44.5,23,1,C.leatherLo);r(-9+dx,-48.5,14,.5,C.leatherLight);
+ r(-12.5+dx,-38,3,9,C.ink);r(-12+dx,-37.5,2,8,C.leatherLo);r(8.5+dx,-38,3,9,C.ink);r(9+dx,-37.5,2,8,C.leatherLo);
+ for(const y of [-41,-32]){r(-12.5+dx,y,23,1.5,seam);r(-2+dx,y-.25,2,2,C.metal);r(-1.5+dx,y+.25,1,1,C.leatherLo);}
+ r(-8+dx,-30,3,.5,C.leatherHi);
+ bedroll(g,-15+dx,13+dx,-26,-17);for(const x of [-9,5])r(x+dx,-26,2,9,seam);
+}
+// A pack on its own, seen from behind, for inventory icons: look.pack picks the pack (0, 2 or 3), look.packColor its dye.
+// Drawn in world units with the wearer's foot at (0, 0), so the pack sits from about y -54 to y -17.
+export function packArt(c,look={}){const g=tint(painter(c),colorMaps(look).pack);backpack(g,true,false,false,look.pack|0);}
 // Tops: closed fronts share the T-shirt body; extra details are drawn on top of it.
 // Uniforms: 7 fatigues with a plate carrier, 8 the same carrier taped LEET AF, 9 police patrol shirt, 10 SWAT armor.
 const TOPS=[{sleeve:0},{sleeve:1,closed:1},{sleeve:2,closed:1},{sleeve:3,closed:1,hood:1},{sleeve:4,closed:1,collar:1},{sleeve:4,closed:1,collar:1,tie:1},{sleeve:5,closed:1,scoop:1},
@@ -438,11 +483,11 @@ export function survivorBody(c,direction=1,frame=0,pack=true,look={},part='all')
  const reachBehind=zombie&&back;if(U&&reachBehind){farArm();nearArm();}
  // In profile the far arm is genuinely behind the body.
  if(U){if(side&&!GUNS[look.gun])armAt(g,3,-46,G.farHand,false);}
- if(U){if(pack&&!back)backpack(packG,false,quarter,side);}
+ if(U){if(pack&&!back)backpack(packG,false,quarter,side,look.pack|0);}
  // Long hair falls behind the shoulders in forward views, so that part is painted before the torso.
  if(U&&look.hair===7)hairBehind(headG,back,quarter,side,look.hair,hairPalette(look));
  if(U){torso(body,back,quarter,side,T,straps?packG:null);if(zombie)zombieTorso(c,body,back,quarter,side,look);}
- if(pack&&back&&(packOver?O:U))backpack(packG,true,quarter,false);
+ if(pack&&back&&(packOver?O:U))backpack(packG,true,quarter,false,look.pack|0);
  if(U){if(!side&&!GUNS[look.gun]&&!reachBehind)farArm();}
  if(U){if(!GUNS[look.gun]&&!reachBehind)nearArm();}
  if(U){if(look.grenade&&!back){const belt={p:(pts,col)=>g.p(pts.map(([x,y])=>[x*.6-8,y*.6-25]),col),r:(x,y,w,h,col)=>g.r(x*.6-8,y*.6-25,w*.6,h*.6,col)};grenadeArt(belt,look.grenade);}}

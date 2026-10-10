@@ -11,7 +11,8 @@
 //   options, presets, defaults     choices a person can change: {key, label, choices, swatches?} or {key, label, type:'text'}
 //   draw(c, {facing, frame, o, t}) paints one picture into a clean w × h canvas; t is seconds for motion
 //   sound, dur                     for sounds: the recipe and its length in seconds
-import {survivor,FRAME,DIRECTIONS,WALK_FRAMES,RUN_FRAMES,HAIR_TONES} from './characters/character.js';
+import {survivor,packArt,FRAME,DIRECTIONS,WALK_FRAMES,RUN_FRAMES,HAIR_TONES} from './characters/character.js';
+import {BAGS,BAG_IDS,slots} from './gear/bags.js';
 import {APPEARANCE_OPTIONS,DEFAULT_APPEARANCE,UNIFORMS,randomAppearance} from './characters/appearance.js';
 import {SKIN_TONES,DYES,ROT_TONES,rotRamp} from './characters/palette.js';
 import {pet,PET_FRAME,PET_ANIM} from './animals/pet.js';
@@ -106,6 +107,13 @@ fishArt(ctx, '${id}', cook, scale);`,
  w:84,h:32,scale:4,options:[{key:'cook',label:'Cooked',choices:['Raw','Cooking','Cooked','Burnt']}],defaults:{cook:0},
  draw:(c,{o})=>{c.translate(46,16);c.scale(2,2);fishArt(c,id,[null,.3,.7,.95][o.cook|0]);}}));
 
+// Backpacks: the pack art from the survivor, on its own, with the grid and weight each one carries.
+BAG_IDS.forEach(id=>{const b=BAGS[id];ITEMS.push({id:'backpack-'+id,name:b.name,category:'items',group:'Backpacks',kind:'still',summary:`${b.size} pack. ${b.description}.`,
+ stats:{Size:b.size,Grid:`${b.cols} × ${b.rows} (${slots(id)} slots)`,'Weight limit':b.kg+' kg'},source:'assets/gear/bags.js, assets/characters/character.js',
+ usage:`import {BAGS} from './assets/gear/bags.js';\nimport {packArt} from './assets/characters/character.js';\n// worn: survivor(c, facing, frame, true, {...look, pack: ${b.pack}})\nctx.scale(2,2); ctx.translate(20,56); packArt(ctx, {pack: BAGS.${id}.pack, packColor});`,
+ w:80,h:80,scale:3,options:[{key:'packColor',label:'Pack color',choices:DYES.pack.map(d=>d[0]),swatches:SWATCH.packColor}],defaults:{packColor:0},
+ draw:(c,{o})=>{c.scale(2,2);c.translate(20,56);packArt(c,{pack:b.pack,packColor:o.packColor|0});}});});
+
 // ---------- Animals ----------
 const petAnims={Idle:{frames:PET_ANIM.idle,ms:220},Walk:{frames:PET_ANIM.walk,ms:110},Run:{frames:PET_ANIM.run,ms:75},Sit:{frames:PET_ANIM.sit,ms:260},Lie:{frames:PET_ANIM.lie,ms:400},Sniff:{frames:PET_ANIM.sniff,ms:300},Stretch:{frames:PET_ANIM.stretch,ms:700}};
 const petEntry=(species,id,name,summary)=>({id,name,category:'animals',group:species?'Cats':'Dogs',kind:'sprite',summary,
@@ -125,7 +133,7 @@ function icon(c,w,h,paint){const s=canvas(240,120),g=s.getContext('2d',{willRead
  if(x1<x0)return;const bw=x1-x0+1,bh=y1-y0+1;c.drawImage(s,x0,y0,bw,bh,Math.round((w-bw)/2),Math.round((h-bh)/2),bw,bh);}
 const WEAPONS=[
  ...GUN_IDS.map(id=>({id,name:GUNS[id].name,category:'weapons',group:GUNS[id].shells?'Shotguns':GUNS[id].rifle?'Rifles':'Handguns',kind:'still',summary:GUNS[id].description+'.',
-  stats:{[GUNS[id].shells?'Tube':'Magazine']:GUNS[id].mag,Damage:GUNS[id].damage+(GUNS[id].pellets?' × '+GUNS[id].pellets+' pellets':''),'Fire interval':GUNS[id].interval+' s',Reload:GUNS[id].reload+(GUNS[id].shells?' s a shell':' s'),Range:GUNS[id].range},
+  stats:{Slot:GUNS[id].rifle?'Primary · carried ammo':'Secondary · unlimited ammo',[GUNS[id].shells?'Tube':'Magazine']:GUNS[id].mag,Damage:GUNS[id].damage+(GUNS[id].pellets?' × '+GUNS[id].pellets+' pellets':''),'Fire interval':GUNS[id].interval+' s',Reload:GUNS[id].reload+(GUNS[id].shells?' s a shell':' s'),Range:GUNS[id].range},
   source:'assets/weapons/equipment.js',usage:`import {gunArt, heldGun, weaponArms} from './assets/weapons/equipment.js';\n// gunArt draws the icon; survivor() draws it held when look.gun = '${id}'\ngunArt(painter, '${id}', paintColor);`,
   w:120,h:60,scale:3,options:[{key:'paintball',label:'Finish',choices:['Steel','Paintball']}],defaults:{paintball:0},
   draw:(c,{o})=>icon(c,120,60,g=>gunArt(g,id,o.paintball?PAINT[id]:undefined))})),

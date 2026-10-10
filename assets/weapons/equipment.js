@@ -7,6 +7,10 @@ export const GUNS={
  // A pump gun: each shot throws a spread of pellets, it racks between shots, and it loads one shell at a time (reload is per shell).
  'pump-shotgun':{name:'Pump Shotgun',mag:8,damage:13,interval:.82,reload:.48,range:300,rifle:true,shells:true,pellets:7,spread:.2,description:'Walnut stock and pump · 8-shell tube · a wide spread up close'}
 };
+// Pistols are secondaries: they still reload, but their spare rounds never run out. Shotguns and rifles are primaries and use
+// ammo you carry in your bag.
+export const slotOf=id=>GUNS[id]?.rifle===false?'secondary':'primary';
+export const unlimited=id=>slotOf(id)==='secondary';
 // In the Training Grounds every gun is its paintball twin: same handling, its own paint color.
 export const PAINT={'light-pistol':'#e0457b','heavy-pistol':'#f08a24','hand-cannon':'#e8d43a','tactical-ar':'#4fc76a','heavy-ar':'#3f8fe0','pump-shotgun':'#a46ad8'};
 export const GRENADES={smoke:{name:'Smoke Grenade',color:'#59818a',description:'Blue canister · lingering smoke screen',duration:6,radius:78},incendiary:{name:'Incendiary Grenade',color:'#bc582b',description:'Orange canister · burning ground',duration:4,radius:54},explosive:{name:'Explosive Grenade',color:'#7d8050',description:'Olive body · yellow band · immediate blast',duration:.55,radius:85}};
