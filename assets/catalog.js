@@ -95,7 +95,7 @@ propArt(ctx, ${JSON.stringify({...o0,x:o0.x|0,y:o0.y|0})});`,
   w,h,scale:2,bg:null,options:s.samples.length>1?[{key:'variant',label:'Variation',choices:s.samples.map((x,i)=>`${i+1} · ${x.w} × ${x.h}`)}]:undefined,defaults:{variant:0},
   draw:(c,{o})=>{const sm=s.samples[o.variant|0]||o0,sz=propSize(sm);c.translate(Math.round((w-sz.w)/2),h-sz.h);paint(c,sm);}};});
 // Floors: one swatch per kind, painted into a rectangle of world units.
-PROPS.push({id:'floor',name:'Floors',category:'props',group:'Floors and ground',kind:'still',summary:'Wood boards, kitchen and bathroom tile, carpet, lawn, concrete and asphalt, painted into any rectangle. The pattern is tied to world position, so neighbouring rectangles line up.',
+PROPS.push({id:'floor',name:'Floors',category:'props',group:'Floors and ground',kind:'still',summary:'Wood boards, kitchen and bathroom tile, carpet, lawn, concrete, asphalt, dirt, gravel and field grass, painted into any rectangle. The pattern is tied to world position, so neighbouring rectangles line up.',
  source:'assets/scenery/floors.js',usage:"import {floorArt} from './assets/scenery/floors.js';\nimport {painter} from './assets/core/paint.js';\nctx.scale(2,2); floorArt(painter(ctx), {kind: 'wood', x: 0, y: 0, w: 160, h: 100});",
  w:320,h:200,scale:2,bg:null,options:[{key:'floor',label:'Floor',choices:FLOOR_KINDS.map(k=>FLOORS[k].name)}],defaults:{floor:0},
  draw:(c,{o})=>{c.scale(2,2);floorArt(painter(c),{kind:FLOOR_KINDS[o.floor|0],x:0,y:0,w:160,h:100});}});

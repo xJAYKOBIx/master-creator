@@ -1,10 +1,10 @@
-// Street props: parked cars and a police cruiser (crashed, with its light bar turning), utility poles, dark street lamps and
-// fire hydrants. Same conventions as the other sets: footprint top left at (0, 0), height rising into negative y. Cars lie
-// along the road (length w, depth h) and face right; the near side is the one you see. Kinds this file does not draw fall
-// back to the house props.
+// Street props: parked cars and a police cruiser (crashed, with its light bar turning), utility poles, dark street lamps, fire
+// hydrants, whole houses, trees and pines, stop signs, trash bins, sheds, and wooden and chain-link fences. Same conventions as
+// the other sets: footprint top left at (0, 0), height rising into negative y. Cars lie along the road (length w, depth h) and
+// face right; the near side is the one you see. Kinds this file does not draw fall back to the house props.
 import {painter,hash2 as hash} from '../core/paint.js';
 import {EDGE,SHADOW,PROP_PAD} from './camp.js';
-import {propArt as homePropArt} from './home.js';
+import {propArt as homePropArt,HOME_ART} from './home.js';
 // Car paint, dark to light: maroon, slate blue, silver, forest green, tan. The cruiser has its own black and white.
 export const CAR_PAINTS=[['#3a1a1c','#5a2a2c','#753a3a','#8e4f4c'],['#1c2633','#2c3b4e','#3e5168','#566c86'],['#4a4e54','#6c7179','#8e939b','#b0b5bc'],['#16261c','#24382a','#344c3a','#486450'],['#4a3e2c','#6a5a40','#857258','#9e8a6c']];
 const GLASS=['#0d1218','#1a2430','#2c3c4c'],TYRE='#0c0d10',HUB='#55585e',CHROME='#9aa0a6',LAMP='#e8e2c4',TAIL='#8a1c1c';
@@ -77,7 +77,63 @@ export const STREET_ART={
   r(cx-1.5,-z-.5,18,3,EDGE);r(cx-1,-z,17,2,M[1]);r(cx-1,-z,17,.5,M[2]);p([[cx+11,-z-2.5],[cx+23,-z-2.5],[cx+25,-z+2.5],[cx+9,-z+2.5]],EDGE);p([[cx+11.5,-z-2],[cx+22.5,-z-2],[cx+24,-z+1],[cx+10,-z+1]],M[0]);r(cx+11,-z+1,12,1,'#4a4c44');},
  // A fire hydrant.
  hydrant(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,cx=w/2,R=['#5a1414','#8a2222','#b03a30'],t=h-z;e(cx,h,6,2.5,SHADOW);r(cx-4,t+2,8,z-1.5,EDGE);r(cx-3.5,t+2.5,7,z-2.5,R[1]);r(cx-3.5,t+2.5,2,z-2.5,R[2]);r(cx+2,t+2.5,1.5,z-2.5,R[0]);r(cx-4.5,h-2.5,9,2.5,EDGE);r(cx-4,h-2,8,1.5,R[0]);
-  r(cx-6,t+6,12,3.5,EDGE);r(cx-5.5,t+6.5,11,2.5,R[1]);r(cx-5.5,t+6.5,11,.5,R[2]);r(cx-1,t+7,2,1.5,'#c9a24a');r(cx-3,t-.5,6,3,EDGE);r(cx-2.5,t,5,2,R[2]);r(cx-1,t-1.5,2,1.5,EDGE);r(cx-.5,t-1,1,1,R[2]);}};
+  r(cx-6,t+6,12,3.5,EDGE);r(cx-5.5,t+6.5,11,2.5,R[1]);r(cx-5.5,t+6.5,11,.5,R[2]);r(cx-1,t+7,2,1.5,'#c9a24a');r(cx-3,t-.5,6,3,EDGE);r(cx-2.5,t,5,2,R[2]);r(cx-1,t-1.5,2,1.5,EDGE);r(cx-.5,t-1,1,1,R[2]);},
+ // A whole house as you see it from the street: the roof running back from the eave, a chimney if it has one, and the front wall
+ // built from the house set's own siding, windows and front door, with a garage door if it has one. o.w is the width, o.h the depth
+ // from the back of the roof to the face of the front wall, o.z the wall height; windows are [from, to] pairs and door the door's
+ // left edge along the front; garage is [from, to]. paint is a siding colour (5 and up in the house set), roof 0 to 3.
+ house(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,T=12,R=ROOFS[o.roof|0]||ROOFS[0],eave=h-T-z+2,top=-z;
+  // The roof: shingle rows, darker up toward the ridge, a light edge at the eave and its shadow on the wall.
+  r(-2,top-.5,w+4,eave-top+2.5,INK);
+  for(let y=top,k=0;y<eave;y+=5,k++){const hy=Math.min(5,eave-y),col=R[Math.min(3,Math.floor((y-top)/(eave-top)*4))];r(0,y,w,hy,col);if(hy===5)r(0,y+4.5,w,.5,R[0]);for(let x=(k%2)*6;x<w;x+=12)r(x,y,.5,Math.max(0,hy-.5),R[0]);}
+  // A hip roof: the ridge a third of the way back, the far slope in shade, the hips at the ends lit from the left and shaded right.
+  const yr=top+Math.round((eave-top)*.34),ins=Math.min(Math.round((eave-top)*.62),Math.round(w*.3)),{p,l}=g;
+  p([[0,top],[w,top],[w-ins,yr],[ins,yr]],'#00000038');p([[w,top],[w,eave],[w-ins,yr]],'#00000028');p([[0,top],[0,eave],[ins,yr]],'#ffffff0c');
+  l(0,eave,ins,yr,1,R[0]);l(w,eave,w-ins,yr,1,R[0]);l(0,top,ins,yr,.5,R[0]);l(w,top,w-ins,yr,.5,R[0]);r(ins,yr-.5,w-ins*2,1,R[0]);r(ins,yr+.5,w-ins*2,.5,R[3]);
+  r(0,eave-1.5,w,1.5,R[3]);r(0,eave,w,2,'#0d0e11');
+  if(o.chimney!=null){const cx=o.chimney,cy=top+Math.round((eave-top)*.28);r(cx-.5,cy-14.5,15,21,INK);r(cx,cy-14,14,5,'#4a3a34');r(cx,cy-14,14,.5,'#5e4a42');r(cx,cy-9,14,14.5,'#3a2a24');for(let y=cy-6;y<cy+5;y+=3)r(cx,y,14,.5,'#2a1e1a');r(cx+3,cy-13,8,3,'#1a1412');}
+  // The front wall, piece by piece: siding between the openings.
+  const gaps=[...(o.windows||[]).map(([a,b])=>[a,b,'window']),...(o.door!=null?[[o.door,o.door+34,'frontdoor']]:[]),...(o.garage?[[o.garage[0],o.garage[1],'garage']]:[])].sort((a,b)=>a[0]-b[0]);
+  const piece=(a,b,kind,k)=>{const q=at(g,a,h-T),pc={kind:kind==='garage'?'wall':kind,w:b-a,h:T,z,paint:o.paint??5,x:(o.x||0)+a,y:(o.y||0)+h-T,curtain:k%2};HOME_ART[pc.kind](q,pc);if(kind==='garage')garageDoor(q,b-a,T,z);};
+  let cur=0,k=0;for(const [a,b,kind] of gaps){if(a>cur)piece(cur,a,'wall',k++);piece(a,b,kind,k++);cur=b;}if(w>cur)piece(cur,w,'wall',k);},
+ // A tree: a trunk and a round, lumpy canopy, lit from the top left by the moon. w is the canopy's width, h the trunk's depth and z
+ // the height to the top of the leaves; seed changes the shape.
+ tree(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,s=o.seed|0,cx=w/2,R=w/2,cy=-z+R*.95,L=['#0f1a12','#16261a','#1f3322','#2a432c','#385636'],B=['#1e1712','#2e231a','#3d2f22'];
+  e(cx,h-1,R*.75,R*.22,SHADOW);r(cx-3.5,cy,7,h-cy-1,EDGE);r(cx-3,cy,6,h-cy-1.5,B[1]);r(cx-3,cy,2,h-cy-1.5,B[2]);r(cx+1.5,cy,1.5,h-cy-1.5,B[0]);e(cx,h-1.5,5,2,EDGE);e(cx,h-1.5,4.5,1.5,B[1]);
+  const n=6+(s%3),blobs=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2+hash(s,i)*.6,d=R*(.42+hash(i,s)*.12);blobs.push([cx+Math.cos(a)*d,cy+Math.sin(a)*d*.8,R*(.42+hash(s+i,3)*.12)]);}blobs.push([cx,cy,R*.6]);
+  for(const [x,y,q] of blobs)e(x,y,q+1,q*.9+1,EDGE);for(const [x,y,q] of blobs)e(x,y,q,q*.9,L[1]);for(const [x,y,q] of blobs)e(x-q*.12,y-q*.15,q*.78,q*.68,L[2]);
+  for(const [x,y,q] of blobs)if(y<cy+R*.1)e(x-q*.25,y-q*.3,q*.5,q*.4,L[3]);for(const [x,y,q] of blobs)if(y<cy-R*.1&&x<cx+R*.2)e(x-q*.35,y-q*.4,q*.24,q*.18,L[4]);
+  for(let i=0;i<w*1.4;i++){const a=hash(i,s+5)*Math.PI*2,d=Math.sqrt(hash(s+9,i))*R*.85,x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d*.8;r(x,y,.5,.5,y<cy?L[3+(i%2)]:L[i%2]);}},
+ // A pine: tiers of needles stacked on a short trunk, the top tier drawn last.
+ pine(g,o){const {r,e,p,l}=g,w=o.w,h=o.h,z=o.z,s=o.seed|0,cx=w/2,L=['#0e1a12','#16281c','#203826','#2c4a32','#3a5e40'],B=['#1e1712','#2e231a'];e(cx,h-1,w*.36,3,SHADOW);r(cx-2,h-16,4,15,EDGE);r(cx-1.5,h-15.5,3,14.5,B[1]);
+  const tiers=4+(s%2),top=-z,bot=h-12;for(let i=tiers-1;i>=0;i--){const k=i/(tiers-1),y0=top+(bot-top)*k*.74,y1=y0+(bot-top)*.32,hw=w/2*(.32+.68*k),j=(hash(s,i)-.5)*3;
+   p([[cx+j,y0-1.5],[cx+hw+1.5,y1+1],[cx-hw-1.5,y1+1]],EDGE);p([[cx+j,y0],[cx+hw,y1],[cx-hw,y1]],L[1]);p([[cx+j,y0],[cx-hw*.1,y1-1],[cx-hw,y1]],L[2]);p([[cx+j-.5,y0+3],[cx-hw*.35,y1-3],[cx-hw*.75,y1-1]],L[3]);l(cx+j,y0+.5,cx-hw+1,y1-.5,.5,L[4]);r(cx-hw+1,y1-.5,hw*2-2,1,L[0]);}},
+ // A stop sign on its post.
+ stopsign(g,o){const {r,p,e}=g,w=o.w,h=o.h,z=o.z,cx=w/2,cy=-z+8,oct=q=>Array.from({length:8},(_,i)=>{const a=(i+.5)/8*Math.PI*2;return [cx+Math.cos(a)*q,cy+Math.sin(a)*q];});
+  e(cx,h-1,4,1.5,SHADOW);r(cx-1.5,cy,3,h-cy-1,EDGE);r(cx-1,cy,2,h-cy-1.5,'#5c6168');r(cx-1,cy,.5,h-cy-1.5,'#8e939b');
+  p(oct(8.5),EDGE);p(oct(8),'#c8c2b6');p(oct(7),'#7a1a1a');p(oct(6),'#9a2622');r(cx-4,cy-.75,8,1.5,'#c8c2b6');r(cx-5,cy-4,3,1,'#b03a30');},
+ // A wheeled trash bin out at the curb: green, grey or blue by paint.
+ bin(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,P=BINS[o.paint|0]||BINS[0];e(w/2,h,w/2+1.5,2,SHADOW);r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,P[2]);r(0,-z,w,.5,P[3]);r(0,h-z-1,w,1,P[0]);
+  r(.5,h-z,w-1,z-1,P[1]);r(.5,h-z,w-1,.5,P[2]);r(2.5,h-z+3,.5,z-6,P[0]);r(w-3,h-z+3,.5,z-6,P[0]);r(-1,h-z-1,w+2,2.5,EDGE);r(-.5,h-z-.5,w+1,1.5,P[2]);r(w/2-2,h-z+1.5,4,1,P[0]);e(2,h-1,1.5,1.5,'#0c0d10');e(w-2,h-1,1.5,1.5,'#0c0d10');},
+ // A garden shed: a tin roof with its ridge along the length, plank walls and double doors.
+ shed(g,o){const {r,l}=g,w=o.w,h=o.h,z=o.z,zf=Math.round(z*.72),yb=-zf,yr=Math.round(h/2-z),yf=h-zf,W=['#231e1a','#322a24','#40362d','#4e4236'],R=['#1e2024','#2a2d33','#363a42','#454952'];
+  r(-1.5,Math.min(yb,yr)-1,w+3,yf-Math.min(yb,yr)+2,EDGE);if(yr>yb)r(-1,yb,w+2,yr-yb,R[1]);r(-1,yr,w+2,yf-yr,R[2]);for(let x=1;x<w;x+=3){r(x,yr,.5,yf-yr,R[1]);r(x+1,yr,.5,yf-yr,R[3]);}r(-1,yr-.5,w+2,1.5,R[3]);r(-1,yf,w+2,1.5,'#0d0e11');
+  r(-.5,yf+1,w+1,h-yf-.5,EDGE);r(0,yf+1.5,w,h-yf-2,W[1]);for(let x=2;x<w;x+=5){r(x,yf+1.5,.5,h-yf-2,W[0]);if(hash(x+(o.x|0),5)>.6)r(x+1,yf+2,1,h-yf-3,W[2]);}
+  const dx=Math.round(w/2-12),dt=h-28;r(dx-.5,dt-.5,25,h-dt,EDGE);r(dx,dt,24,h-dt-.5,W[2]);r(dx+11.75,dt,.5,h-dt-.5,W[0]);l(dx+1,dt+1,dx+11,h-2,1,W[1]);l(dx+13,h-2,dx+23,dt+1,1,W[1]);r(dx+9,dt+12,1.5,2,'#8a8e94');r(dx+13.5,dt+12,1.5,2,'#8a8e94');
+  r(5,yf+8,10,7,EDGE);r(5.5,yf+8.5,9,6,'#141b27');r(6,yf+9,3,2,'#2a3c55');},
+ // A wooden privacy fence along its length (woodfence) or running away from you (woodfenceV): planks, a rail and posts.
+ woodfence(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,PLANK[2]);r(0,-z,w,.5,PLANK[3]);r(0,h-z,w,z-.5,PLANK[1]);
+  for(let x=0;x<w;x+=5){const v=hash((x+(o.x|0))|0,(o.y|0)+3);r(x,h-z+(v>.8?1:0),.5,z-1,PLANK[0]);if(v<.3)r(x+1,h-z+1,1.5,z-2,PLANK[2]);}r(0,h-z+5,w,1,PLANK[0]);r(0,h-7,w,1,PLANK[0]);
+  for(let x=0;x<w;x+=48){r(x-1,-z-1.5,3,h+z+1.5,EDGE);r(x-.5,-z-1,2,h+z,PLANK[2]);r(x-.5,-z-1,2,.5,PLANK[3]);}},
+ woodfenceV(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,PLANK[2]);for(let y=-z+2;y<h-z;y+=5)r(0,y,w,.5,PLANK[1]);r(0,-z,.5,h,PLANK[3]);for(let y=-z;y<h-z;y+=48)r(-.5,y,w+1,2,PLANK[3]);r(0,h-z,w,z-.5,PLANK[1]);r(0,h-z,w,.5,PLANK[3]);for(let x=1;x<w;x+=2)r(x,h-z+1,.5,z-2,PLANK[0]);},
+ // A chain-link fence: you see through the mesh to what is behind it. Posts, a top rail and a sagging bottom wire.
+ chainlink(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,S=['#3b3e43','#6c7179','#8e939b'];for(let y=h-z+2;y<h-.5;y+=2)for(let x=((y-h+z)/2|0)%2;x<w;x+=2)r(x,y,.5,.5,'#6c717970');
+  r(0,h-z-.5,w,1.5,EDGE);r(0,h-z,w,.5,S[2]);r(0,h-1,w,.5,S[0]);for(let x=0;x<=w;x+=40){const px=Math.min(x,w-1.5);r(px-.5,h-z-1.5,2.5,z+1.5,EDGE);r(px,h-z-1,1.5,z,S[1]);r(px,h-z-1,.5,z,S[2]);}}};
+// What the house and the fences are made of, and the garage door the house draws into its front wall.
+const ROOFS=[['#1c1e23','#24272d','#2c3037','#363a42'],['#201812','#2c2219','#382c21','#45372a'],['#181c24','#20262f','#29303b','#333b48'],['#16201a','#1e2a22','#27352b','#314034']];
+const PLANK=['#241e19','#332a22','#42372c','#524537'],BINS=[['#10201a','#1a3226','#244434','#2e5440'],['#202226','#30333a','#40444b','#50555c'],['#141c28','#1e2a3c','#2a3a52','#364a66']],INK='#111319';
+const at=(g,dx,dy)=>({r:(x,y,w,h,c)=>g.r(x+dx,y+dy,w,h,c),p:(pts,c)=>g.p(pts.map(([x,y])=>[x+dx,y+dy]),c),e:(x,y,rx,ry,c)=>g.e(x+dx,y+dy,rx,ry,c),l:(x1,y1,x2,y2,w,c)=>g.l(x1+dx,y1+dy,x2+dx,y2+dy,w,c)});
+function garageDoor(g,w,h,z){const {r}=g,t=h-40,x0=4,x1=w-4;r(x0-.5,t-.5,x1-x0+1,40.5,EDGE);r(x0,t,x1-x0,40,'#3a3d42');for(let y=t+7;y<h;y+=8){r(x0,y,x1-x0,.5,'#26282c');r(x0,y+.5,x1-x0,.5,'#4c5056');}for(let x=x0+6;x<x1-5;x+=10)r(x,t+2,6,3,'#141b27');r(x0,t,x1-x0,.5,'#55585e');r((x0+x1)/2-3,h-6,6,1,'#8a8e94');}
 export function propArt(c,o){if(!STREET_ART[o.kind])return homePropArt(c,o);c.save();c.scale(2,2);c.translate(PROP_PAD,o.z+PROP_PAD);STREET_ART[o.kind](painter(c),o);c.restore();}
 export const STREET_KINDS=Object.keys(STREET_ART);
 export {PROP_PAD};

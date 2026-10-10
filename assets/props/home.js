@@ -10,8 +10,10 @@ import {propArt as workshopPropArt} from './workshop.js';
 const INK='#111319';
 // Wall paints, dark to light: living room beige, kitchen sage, bedroom blue, bathroom aqua, hall cream, and the outside siding.
 export const HOUSE_PAINTS=[['#4f453b','#6b5f51','#7f7262','#948776'],['#3f4a3f','#55634f','#687862','#7c8c74'],['#3a4250','#4e5869','#626d80','#768297'],
- ['#3f5050','#566a69','#6b807e','#829694'],['#545044','#706a5a','#867e6c','#9a927f'],['#2f353d','#454d57','#59626d','#6d7682']];
-export const PAINT_NAMES=['Living room beige','Kitchen sage','Bedroom blue','Bathroom aqua','Hall cream','Outside siding'];
+ ['#3f5050','#566a69','#6b807e','#829694'],['#545044','#706a5a','#867e6c','#9a927f'],['#2f353d','#454d57','#59626d','#6d7682'],
+ // More outside siding for the other houses on the street: pale, yellow, red, green and tan, all dimmed for the night.
+ ['#3c3e40','#56595c','#6c7074','#82868a'],['#4a4430','#625a3e','#78704e','#8c8460'],['#3e2422','#56322e','#6a403a','#7e5048'],['#2a3830','#3a4c42','#4a5e52','#5a6e62'],['#463c30','#5e5242','#746654','#887a66']];
+export const PAINT_NAMES=['Living room beige','Kitchen sage','Bedroom blue','Bathroom aqua','Hall cream','Outside siding','Pale siding','Yellow siding','Red siding','Green siding','Tan siding'];
 const CAP=['#1f1c1a','#2e2925','#3e3832'],TRIM=['#7d786e','#a29c90','#c2bcaf'],OAK=['#4a3424','#664a32','#7f5e40','#9a7752'],
  FAB=['#2f2a3a','#433b52','#584e6b','#6e6384'],CREAM=['#8f8a7e','#b3ada0','#cfc9bb','#e6e0d2'],STEEL=['#3b4047','#59606a','#7c848e','#a3aab3'],
  NIGHT=['#141b27','#1d2a3c','#2a3c55'],GLASS='#22303f',PORC=['#8e8e88','#b4b3ab','#d2d1c8','#ecebe3'],BRASS='#c9a24a',WOOD=W;
@@ -20,7 +22,7 @@ const bx=(g,x,y,w,d,z,top,front,hi='#ffffff22',base=0)=>{const {r}=g;r(x-.5,y-z-
 // A wall face between x0 and x1, from screen y F (under the cap) down to the floor at B. Each paint has its own finish.
 function face(g,x0,x1,F,B,paint,o){const {r}=g,P=HOUSE_PAINTS[paint]||HOUSE_PAINTS[0],w=x1-x0,sx=Math.round(o.x||0),sy=Math.round(o.y||0);
  r(x0+.5,F,w-1,B-F-.5,P[1]);
- if(paint===5){for(let y=F+1;y<B-1;y+=4){r(x0+.5,y,w-1,1,P[2]);r(x0+.5,y,w-1,.5,P[3]);r(x0+.5,y+3.5,w-1,.5,P[0]);}r(x0+.5,B-2,w-1,1.5,P[0]);return;}
+ if(paint>=5){for(let y=F+1;y<B-1;y+=4){r(x0+.5,y,w-1,1,P[2]);r(x0+.5,y,w-1,.5,P[3]);r(x0+.5,y+3.5,w-1,.5,P[0]);}r(x0+.5,B-2,w-1,1.5,P[0]);return;}
  r(x0+.5,F,w-1,1,P[0]);r(x0+.5,F+1,w-1,1.5,TRIM[0]);r(x0+.5,F+1,w-1,.5,TRIM[1]);
  if(paint===0||paint===2){for(let x=x0+3;x<x1-1;x+=6)r(x,F+3,.5,B-F-8,P[2]);for(let x=x0+6;x<x1-2;x+=6)for(let y=F+6+((x/6|0)%2)*4;y<B-8;y+=8)r(x-.25,y,.5,.5,P[3]);}
  else if(paint===1||paint===4){const t=paint===4?F+(B-F)*.52:B;for(let k=0;k<w*(t-F)/30;k++){const x=x0+1+hash(k+sx,sy+7)*(w-2),y=F+3+hash(sy+k,sx+3)*(t-F-6);r(x,y,.5,.5,k%3?P[2]:P[0]);}
@@ -41,7 +43,7 @@ export const HOME_ART={
   if((o.paint|0)!==5){r(-.5,top-.5,w+1,2,TRIM[1]);r(-.5,top-.5,w+1,.5,TRIM[2]);for(const x of [-.5,w-1.5]){r(x,top,2,h-top,TRIM[1]);r(x,top,.5,h-top,TRIM[2]);}}},
  doorwayV(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+1,EDGE);cap(g,0,-z,w,h);r(-.5,h-z,w+1,6.5,EDGE);face(g,0,w,h-z,h-z+6,o.paint|0,o);},
  // A window in a horizontal wall. From inside (view 'in') you see the night through it and the curtains; from outside, shutters.
- window(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,paint=o.paint|0,out=paint===5,x0=5,x1=w-5,t=h-40,b=h-17,cx=w/2;
+ window(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,paint=o.paint|0,out=paint>=5,x0=5,x1=w-5,t=h-40,b=h-17,cx=w/2;
   HOME_ART.wall(g,o);r(x0-1.5,t-1.5,x1-x0+3,b-t+3,EDGE);r(x0-1,t-1,x1-x0+2,b-t+2,TRIM[1]);
   if(out){r(x0+.5,t+.5,x1-x0-1,b-t-1,GLASS);for(let k=0;k<3;k++)r(x0+2+k*3,b-3-k*3,5,.5,'#4a5a6b');for(const x of [x0-7.5,x1+1.5]){r(x,t-.5,6,b-t+1,EDGE);r(x+.5,t,5,b-t,'#2e3b33');for(let y=t+1.5;y<b-1;y+=2)r(x+.5,y,5,.5,'#3c4d42');}}
   else nightGlass(g,x0+.5,t+.5,x1-x0-1,b-t-1,Math.round(o.x||0));

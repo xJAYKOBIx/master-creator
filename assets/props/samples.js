@@ -133,4 +133,13 @@ export const PROP_SAMPLES=[
  {set:'street',kind:"pole",name:"Utility pole",group:"Street",samples:[{"kind":"pole","x":40,"y":40,"w":12,"h":12,"z":150},{"kind":"pole","x":40,"y":40,"w":12,"h":12,"z":150,"lean":14}]},
  {set:'street',kind:"streetlamp",name:"Street lamp",group:"Street",samples:[{"kind":"streetlamp","x":40,"y":40,"w":10,"h":10,"z":110}]},
  {set:'street',kind:"hydrant",name:"Fire hydrant",group:"Street",samples:[{"kind":"hydrant","x":40,"y":40,"w":12,"h":10,"z":18}]},
+ {set:'street',kind:"house",name:"House",group:"Street",samples:[{"kind":"house","x":40,"y":40,"w":340,"h":150,"z":48,"paint":5,"roof":0,"windows":[[30,74],[190,234]],"door":120,"chimney":250},{"kind":"house","x":40,"y":40,"w":300,"h":150,"z":48,"paint":7,"roof":1,"windows":[[24,68],[110,154]],"door":180,"garage":[226,290]},{"kind":"house","x":40,"y":40,"w":260,"h":130,"z":48,"paint":8,"roof":2,"windows":[[30,74]],"door":110,"garage":[170,240],"chimney":40},{"kind":"house","x":40,"y":40,"w":220,"h":120,"z":48,"paint":9,"roof":3,"windows":[[20,64],[156,200]],"door":100}]},
+ {set:'street',kind:"tree",name:"Tree",group:"Street",samples:[{"kind":"tree","x":40,"y":40,"w":60,"h":10,"z":96,"seed":0},{"kind":"tree","x":40,"y":40,"w":80,"h":10,"z":112,"seed":3}]},
+ {set:'street',kind:"pine",name:"Pine",group:"Street",samples:[{"kind":"pine","x":40,"y":40,"w":36,"h":10,"z":84,"seed":0},{"kind":"pine","x":40,"y":40,"w":48,"h":10,"z":104,"seed":1}]},
+ {set:'street',kind:"stopsign",name:"Stop sign",group:"Street",samples:[{"kind":"stopsign","x":40,"y":40,"w":6,"h":6,"z":52}]},
+ {set:'street',kind:"bin",name:"Trash bin",group:"Street",samples:[{"kind":"bin","x":40,"y":40,"w":12,"h":10,"z":22,"paint":0},{"kind":"bin","x":40,"y":40,"w":12,"h":10,"z":22,"paint":1},{"kind":"bin","x":40,"y":40,"w":12,"h":10,"z":22,"paint":2}]},
+ {set:'street',kind:"shed",name:"Garden shed",group:"Street",samples:[{"kind":"shed","x":40,"y":40,"w":64,"h":44,"z":46}]},
+ {set:'street',kind:"woodfence",name:"Wooden fence",group:"Street",samples:[{"kind":"woodfence","x":40,"y":40,"w":120,"h":4,"z":30}]},
+ {set:'street',kind:"woodfenceV",name:"Wooden fence, running away",group:"Street",samples:[{"kind":"woodfenceV","x":40,"y":40,"w":4,"h":80,"z":30}]},
+ {set:'street',kind:"chainlink",name:"Chain-link fence",group:"Street",samples:[{"kind":"chainlink","x":40,"y":40,"w":120,"h":4,"z":30}]},
 ];
