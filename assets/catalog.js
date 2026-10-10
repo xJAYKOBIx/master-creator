@@ -124,8 +124,8 @@ function icon(c,w,h,paint){const s=canvas(240,120),g=s.getContext('2d',{willRead
  const d=g.getImageData(0,0,240,120).data;let x0=240,y0=120,x1=0,y1=0;for(let y=0;y<120;y++)for(let x=0;x<240;x++)if(d[(y*240+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
  if(x1<x0)return;const bw=x1-x0+1,bh=y1-y0+1;c.drawImage(s,x0,y0,bw,bh,Math.round((w-bw)/2),Math.round((h-bh)/2),bw,bh);}
 const WEAPONS=[
- ...GUN_IDS.map(id=>({id,name:GUNS[id].name,category:'weapons',group:GUNS[id].rifle?'Rifles':'Handguns',kind:'still',summary:GUNS[id].description+'.',
-  stats:{Magazine:GUNS[id].mag,Damage:GUNS[id].damage,'Fire interval':GUNS[id].interval+' s',Reload:GUNS[id].reload+' s',Range:GUNS[id].range},
+ ...GUN_IDS.map(id=>({id,name:GUNS[id].name,category:'weapons',group:GUNS[id].shells?'Shotguns':GUNS[id].rifle?'Rifles':'Handguns',kind:'still',summary:GUNS[id].description+'.',
+  stats:{[GUNS[id].shells?'Tube':'Magazine']:GUNS[id].mag,Damage:GUNS[id].damage+(GUNS[id].pellets?' × '+GUNS[id].pellets+' pellets':''),'Fire interval':GUNS[id].interval+' s',Reload:GUNS[id].reload+(GUNS[id].shells?' s a shell':' s'),Range:GUNS[id].range},
   source:'assets/weapons/equipment.js',usage:`import {gunArt, heldGun, weaponArms} from './assets/weapons/equipment.js';\n// gunArt draws the icon; survivor() draws it held when look.gun = '${id}'\ngunArt(painter, '${id}', paintColor);`,
   w:120,h:60,scale:3,options:[{key:'paintball',label:'Finish',choices:['Steel','Paintball']}],defaults:{paintball:0},
   draw:(c,{o})=>icon(c,120,60,g=>gunArt(g,id,o.paintball?PAINT[id]:undefined))})),

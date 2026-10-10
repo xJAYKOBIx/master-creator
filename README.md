@@ -21,7 +21,7 @@ Pick a category, tap an asset, and the panel on the right (a full screen sheet o
 |---|---|---|
 | Characters | Survivor (two body types, six skin tones, every hair, headwear, top, pants, shoes and pack, held guns), Zombie (rot, decay, eyes, wounds, shamble and lurch), Training robot (seven looks), Brute | `assets/characters/` |
 | Animals | Dog (Shepherd, Lab, Terrier, Husky), Cat (Shorthair, Longhair), seven coats, markings, eyes, collars; idle, walk, run, sit, lie, sniff and stretch | `assets/animals/` |
-| Weapons | Light Pistol, Heavy Pistol, Hand Cannon, Tactical AR, Heavy AR, smoke, incendiary and explosive grenades | `assets/weapons/` |
+| Weapons | Light Pistol, Heavy Pistol, Hand Cannon, Tactical AR, Heavy AR, Pump Shotgun, smoke, incendiary and explosive grenades | `assets/weapons/` |
 | Items | Sand perch, Inlet mackerel, Rock cod, Moonfin, each raw, cooking, cooked or burnt | `assets/props/camp.js` |
 | Props and scenery | 126 props in three sets. Camp: shelters, tents, furniture, storage, fire and cooking, lights and power, workshop, structures, shore and garden. Workshop: salvage walls, workshop interior, robot shop and yard. Home: painted walls, doorways and windows, living room, pets' corner, kitchen, bedroom, bathroom, front hall, wall pictures and the front yard | `assets/props/` |
 | Floors and ground | Wood boards, kitchen tile, bathroom tile, carpet, lawn and concrete, patterned by world position so neighbouring rooms line up | `assets/scenery/floors.js` |
@@ -72,4 +72,4 @@ Both use the Chromium that Playwright can find; set `CHROMIUM` to point at anoth
 
 1. **Ground and scenery tiles:** sand, rock walls and water as reusable tiles like the house floors, so new places can be laid out from them.
 2. **Sprite sheet export** to PNG for engines and tools that want images.
-3. **New assets for the tutorial:** the pump-action shotgun, backpacks of several sizes, and the pickups for the starter house.
+3. **New assets for the tutorial:** backpacks of several sizes.

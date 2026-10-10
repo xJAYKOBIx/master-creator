@@ -155,9 +155,12 @@ export const HOME_ART={
   const qt=4-z+18;r(.5,qt,w-1,h-4-18,Q[1]);r(.5,qt,w-1,3,Q[3]);r(.5,qt+3,w-1,.5,Q[0]);for(let y=qt+7;y<h-z;y+=8)r(.5,y,w-1,.5,Q[0]);for(let x=8;x<w;x+=10)r(x,qt+3.5,.5,h-z-qt-3.5,Q[0]);
   for(let y=qt+7;y<h-z-3;y+=8)for(let x=8;x<w-4;x+=10)if(hash(x,y)>.5)r(x+2,y+2,5,3,Q[2]);r(-.5,qt+3,1.5,h-z-qt+1,Q[1]);r(w-1,qt+3,1.5,h-z-qt+1,Q[0]);r(.5,h-z,w-1,1,Q[0]);
   bx(g,-1,0,w+2,4,HB,OAK[2],OAK[1]);r(0,4-HB+1,w,.5,OAK[3]);for(let x=6;x<w-4;x+=8)r(x,4-HB+5,4,HB-z-6,OAK[2]);},
- // The nightstand: one drawer, a lamp, a clock that went dark with the power, and a paperback. open shows the drawer pulled out.
+ // The nightstand: one drawer, a lamp, a clock that went dark with the power, and a paperback. open shows the drawer pulled out,
+ // with the pistol in it while gun is set.
  nightstand(g,o){const {r,e,p}=g,w=o.w,h=o.h,z=o.z,F=h-z;e(w/2,h,w/2+3,3,SHADOW);bx(g,0,0,w,h,z,OAK[2],OAK[1]);r(1,-z+1,w-2,.5,OAK[3]);r(2,F+3,w-4,6,OAK[0]);r(2.5,F+3.5,w-5,5,OAK[2]);r(w/2-1.5,F+5.5,3,1,BRASS);r(2,F+11,w-4,z-14,OAK[0]);
-  if(o.open){r(1,F+2,w-2,8,EDGE);r(1.5,F+2.5,w-3,3,'#1a1410');r(1.5,F+5.5,w-3,4,OAK[3]);r(w/2-1.5,F+7,3,1,BRASS);}
+  if(o.open){r(1,F+2,w-2,8,EDGE);r(1.5,F+2.5,w-3,3,'#1a1410');r(1.5,F+5.5,w-3,4,OAK[3]);r(w/2-1.5,F+7,3,1,BRASS);
+   // gun: the pistol lying in the drawer, seen from above.
+   if(o.gun){r(w/2-5,F+3,7,1.2,EDGE);r(w/2-4.5,F+3.2,6,.8,STEEL[2]);r(w/2+1,F+3.4,1.6,1.8,'#38646d');}}
   const cx=w*.35,t=-z+h*.45;e(cx,t,3.4,1.8,EDGE);e(cx,t-.3,2.8,1.3,CREAM[1]);r(cx-.5,t-8,1,8,EDGE);p([[cx-5,t-8],[cx+5,t-8],[cx+3.5,t-14],[cx-3.5,t-14]],EDGE);p([[cx-4.2,t-8.5],[cx+4.2,t-8.5],[cx+3,t-13.5],[cx-3,t-13.5]],'#c9b088');
   r(w-9,t-3,7,4.5,EDGE);r(w-8.5,t-2.5,6,3.5,'#2a2c31');r(w-8,t-2,5,2,'#151a1e');r(4,-z+h-6,9,4,'#3f6a8a');r(4,-z+h-6,9,.5,'#5a8aaa');},
  dresser(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,F=h-z;e(w/2,h,w/2+4,3,SHADOW);bx(g,0,0,w,h,z,OAK[2],OAK[1]);r(1,-z+1,w-2,.5,OAK[3]);
@@ -180,12 +183,16 @@ export const HOME_ART={
   e(w/2,-z+h/2+1,9,4,EDGE);e(w/2,-z+h/2+.7,8.3,3.4,PORC[1]);e(w/2,-z+h/2+1.2,6,2.2,'#9ab0b4');r(w/2-1,-z+1,2,4,EDGE);r(w/2-.5,-z+1.5,1,3,STEEL[3]);l(w/2,-z+2,w/2,-z+5,.8,STEEL[3]);
   r(w-7,-z+2,4,6,EDGE);r(w-6.5,-z+2.5,3,5,'#d97a9a');r(3,-z+3,6,3,'#c9c0aa');},
  // ---------- Hall ----------
- // The hall closet: bifold doors, louvered. open folds them back on coats, a shelf of boxes and the lockbox on the floor.
+ // The hall closet: bifold doors, louvered. open folds them back on coats, a shelf of boxes and the lockbox on the floor; box
+ // opens the lockbox ('open' with the shotgun inside, 'empty' after).
  closet(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,F=h-z,D=['#a29c90','#c2bcaf','#d8d2c4'];e(w/2,h,w/2+4,3,SHADOW);bx(g,-2,0,w+4,h,z,'#3a3430','#5a524a');r(-1,-z+1,w+2,.5,'#5a524a');
   const ix=2,iw=w-4,it=F+4,ib=h-1;r(ix-1,it-1,iw+2,ib-it+1,TRIM[1]);r(ix,it,iw,ib-it,'#15120f');
   if(o.open){r(ix,it+3,iw,1.5,STEEL[2]);for(const [x,c] of [[ix+5,'#5a2e2a'],[ix+12,'#3a4a5a'],[ix+19,'#4a4a3a'],[ix+26,'#6a5238']]){if(x>ix+iw-6)continue;r(x-.5,it+4,1,2,STEEL[3]);r(x-3.5,it+6,8,22,EDGE);r(x-3,it+6.5,7,21,c);r(x-.5,it+7,1,20,'#00000033');}
    r(ix+1,it+.5,iw-2,2,OAK[2]);for(const [x,bw,c] of [[ix+2,10,'#8a7258'],[ix+14,8,'#a88e6c']])r(x,it-4,bw,4.5,EDGE),r(x+.5,it-3.5,bw-1,3.5,c);
    const lx=ix+iw/2-9,ly=ib-11;r(lx-.5,ly-.5,19,11,EDGE);r(lx,ly,18,4,STEEL[1]);r(lx,ly+4,18,6,STEEL[0]);r(lx,ly,18,.5,STEEL[2]);r(lx+12,ly+5.5,4,3,'#1b1c20');r(lx+12.5,ly+6,1,1,'#7fd18b');r(lx+3,ly+6,6,1.5,STEEL[2]);
+   // box: 'open' lifts the lid on the shotgun and a carton of shells; 'empty' once they are taken.
+   if(o.box){r(lx-.5,ly-6.5,19,6.5,EDGE);r(lx,ly-6,18,5.5,STEEL[0]);r(lx,ly-6,18,.5,STEEL[2]);r(lx+.5,ly+.5,17,3,'#101114');
+    if(o.box==='open'){r(lx+1,ly+1,15,1.2,'#6b3f27');r(lx+6,ly+1,10,.8,STEEL[2]);r(lx+1,ly+1,4,1.6,'#4a2a1a');r(lx+13,ly+2,3.5,1.5,'#a0302a');r(lx+13,ly+2,3.5,.5,'#d9c27a');}}
    for(let k=0;k<3;k++)e(ix+4+k*5,ib-1.5,2.4,1.4,['#2a2c31','#5a2e2a','#3a3d44'][k]);
    for(const x of [ix-3,ix+iw-3])r(x-.5,it-.5,7,ib-it+1,EDGE),r(x,it,6,ib-it,D[1]);}
   else{for(const x of [ix,ix+iw/2]){const dw=iw/2;r(x,it,dw-.5,ib-it,D[1]);r(x,it,dw-.5,.5,D[2]);r(x+dw/2-.25,it,.5,ib-it,D[0]);for(let y=it+3;y<ib-3;y+=2){r(x+1.5,y,dw/2-2.5,.5,D[0]);r(x+dw/2+1,y,dw/2-2.5,.5,D[0]);}}r(ix+iw/2-2.5,it+(ib-it)/2,1,3,BRASS);r(ix+iw/2+1.5,it+(ib-it)/2,1,3,BRASS);}},
