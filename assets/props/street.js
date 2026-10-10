@@ -121,13 +121,17 @@ export const STREET_ART={
   r(-.5,yf+1,w+1,h-yf-.5,EDGE);r(0,yf+1.5,w,h-yf-2,W[1]);for(let x=2;x<w;x+=5){r(x,yf+1.5,.5,h-yf-2,W[0]);if(hash(x+(o.x|0),5)>.6)r(x+1,yf+2,1,h-yf-3,W[2]);}
   const dx=Math.round(w/2-12),dt=h-28;r(dx-.5,dt-.5,25,h-dt,EDGE);r(dx,dt,24,h-dt-.5,W[2]);r(dx+11.75,dt,.5,h-dt-.5,W[0]);l(dx+1,dt+1,dx+11,h-2,1,W[1]);l(dx+13,h-2,dx+23,dt+1,1,W[1]);r(dx+9,dt+12,1.5,2,'#8a8e94');r(dx+13.5,dt+12,1.5,2,'#8a8e94');
   r(5,yf+8,10,7,EDGE);r(5.5,yf+8.5,9,6,'#141b27');r(6,yf+9,3,2,'#2a3c55');},
- // A wooden privacy fence along its length (woodfence) or running away from you (woodfenceV): planks, a rail and posts.
- woodfence(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,PLANK[2]);r(0,-z,w,.5,PLANK[3]);r(0,h-z,w,z-.5,PLANK[1]);
+ // A wooden privacy fence along its length (woodfence) or running away from you (woodfenceV): planks, a rail and posts. Each throws a
+ // shadow along its foot and has a post at both ends, so where a fence stops and a gap starts reads even in the dark.
+ woodfence(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-1,h,w+2,3,SHADOW);r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,PLANK[2]);r(0,-z,w,.5,PLANK[3]);r(0,h-z,w,z-.5,PLANK[1]);
   for(let x=0;x<w;x+=5){const v=hash((x+(o.x|0))|0,(o.y|0)+3);r(x,h-z+(v>.8?1:0),.5,z-1,PLANK[0]);if(v<.3)r(x+1,h-z+1,1.5,z-2,PLANK[2]);}r(0,h-z+5,w,1,PLANK[0]);r(0,h-7,w,1,PLANK[0]);
-  for(let x=0;x<w;x+=48){r(x-1,-z-1.5,3,h+z+1.5,EDGE);r(x-.5,-z-1,2,h+z,PLANK[2]);r(x-.5,-z-1,2,.5,PLANK[3]);}},
- woodfenceV(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,PLANK[2]);for(let y=-z+2;y<h-z;y+=5)r(0,y,w,.5,PLANK[1]);r(0,-z,.5,h,PLANK[3]);for(let y=-z;y<h-z;y+=48)r(-.5,y,w+1,2,PLANK[3]);r(0,h-z,w,z-.5,PLANK[1]);r(0,h-z,w,.5,PLANK[3]);for(let x=1;x<w;x+=2)r(x,h-z+1,.5,z-2,PLANK[0]);},
+  for(const x of [...Array(Math.floor(w/48)+1).keys()].map(k=>Math.min(k*48,w-2)).concat(w-2)){r(x-1,-z-1.5,4,h+z+1.5,EDGE);r(x-.5,-z-1,3,h+z,PLANK[2]);r(x-.5,-z-1,3,.5,PLANK[3]);r(x+1.5,-z-1,.5,h+z,PLANK[0]);}},
+ woodfenceV(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(w,0,6,h,SHADOW);r(w,0,3,h,SHADOW);r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,PLANK[3]);for(let y=-z+2;y<h-z;y+=5)r(.5,y,w-1,.5,PLANK[2]);r(0,-z,.5,h,'#665645');r(w-.5,-z,.5,h,PLANK[1]);
+  r(0,h-z,w,z-.5,PLANK[1]);r(0,h-z,w,.5,PLANK[3]);for(let x=1;x<w;x+=2)r(x,h-z+1,.5,z-2,PLANK[0]);
+  // Posts stand proud of the boards every so often and at both ends.
+  for(const y of [...Array(Math.floor(h/32)+1).keys()].map(k=>Math.min(k*32,h-3)).concat(h-3)){r(-2,y-z-.5,w+4,4,EDGE);r(-1.5,y-z,w+3,3,PLANK[2]);r(-1.5,y-z,w+3,.5,'#665645');}},
  // A chain-link fence: you see through the mesh to what is behind it. Posts, a top rail and a sagging bottom wire.
- chainlink(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,S=['#3b3e43','#6c7179','#8e939b'];for(let y=h-z+2;y<h-.5;y+=2)for(let x=((y-h+z)/2|0)%2;x<w;x+=2)r(x,y,.5,.5,'#6c717970');
+ chainlink(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,S=['#3b3e43','#6c7179','#8e939b'];r(0,h,w,2,SHADOW);for(let y=h-z+2;y<h-.5;y+=2)for(let x=((y-h+z)/2|0)%2;x<w;x+=2)r(x,y,.5,.5,'#6c717970');
   r(0,h-z-.5,w,1.5,EDGE);r(0,h-z,w,.5,S[2]);r(0,h-1,w,.5,S[0]);for(let x=0;x<=w;x+=40){const px=Math.min(x,w-1.5);r(px-.5,h-z-1.5,2.5,z+1.5,EDGE);r(px,h-z-1,1.5,z,S[1]);r(px,h-z-1,.5,z,S[2]);}}};
 // What the house and the fences are made of, and the garage door the house draws into its front wall.
 const ROOFS=[['#1c1e23','#24272d','#2c3037','#363a42'],['#201812','#2c2219','#382c21','#45372a'],['#181c24','#20262f','#29303b','#333b48'],['#16201a','#1e2a22','#27352b','#314034']];

@@ -41,7 +41,9 @@ export const HOME_ART={
  // A doorway: only the header over the opening and the casing round it. You walk through.
  doorway(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,top=h-42;r(-.5,-z-.5,w+1,top+z+.5,EDGE);cap(g,0,-z,w,h);face(g,0,w,h-z,top+.5,o.paint|0,{...o,y:o.y+1});
   if((o.paint|0)!==5){r(-.5,top-.5,w+1,2,TRIM[1]);r(-.5,top-.5,w+1,.5,TRIM[2]);for(const x of [-.5,w-1.5]){r(x,top,2,h-top,TRIM[1]);r(x,top,.5,h-top,TRIM[2]);}}},
- doorwayV(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+1,EDGE);cap(g,0,-z,w,h);r(-.5,h-z,w+1,6.5,EDGE);face(g,0,w,h-z,h-z+6,o.paint|0,o);},
+ // A doorway in a wall that runs away from you: no header over the gap, so it reads as an opening, with the end of the wall
+ // behind it showing and a pale casing along its top edge. (A header here hid the opening behind the wall south of it.)
+ doorwayV(g,o){const {r}=g,w=o.w,z=o.z;r(-1,-z-.5,w+2,1.5,EDGE);r(-.5,-z,w+1,1,TRIM[1]);r(-.5,-z,w+1,.5,TRIM[2]);},
  // A window in a horizontal wall. From inside (view 'in') you see the night through it and the curtains; from outside, shutters.
  window(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,paint=o.paint|0,out=paint>=5,x0=5,x1=w-5,t=h-40,b=h-17,cx=w/2;
   HOME_ART.wall(g,o);r(x0-1.5,t-1.5,x1-x0+3,b-t+3,EDGE);r(x0-1,t-1,x1-x0+2,b-t+2,TRIM[1]);
@@ -227,7 +229,13 @@ export const HOME_ART={
  porch(g,o){const {r}=g,w=o.w,h=o.h,C=['#3a3b3f','#4b4d52','#5f6166','#6a6c70'];r(-.5,-.5,w+1,h+1,EDGE);r(0,0,w,h*.5,C[2]);r(0,0,w,.5,C[3]);r(4,h*.5,w-8,h*.25,C[1]);r(4,h*.5,w-8,.5,C[3]);r(8,h*.75,w-16,h*.25,C[0]);r(8,h*.75,w-16,.5,C[2]);for(let k=0;k<6;k++)r(2+hash(k,9)*(w-6),1+hash(9,k)*h*.4,2,.5,C[1]);},
  mailbox(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z;e(w/2,h,4,2,SHADOW);r(w/2-1,h-z+8,2,z-8,EDGE);r(w/2-.5,h-z+8,1,z-8,OAK[2]);r(-2,h-z-.5,w+4,9,EDGE);r(-1.5,h-z,w+3,8,'#2e3b4a');r(-1.5,h-z,w+3,1.5,'#3f5266');r(w+1,h-z+1,1.5,4,'#c0392b');r(w/2-2,h-z+3,4,1,'#c9c0aa');},
  picket(g,o){const {r,p}=g,w=o.w,h=o.h,z=o.z,PK=['#6a675e','#8c887c','#a8a395'];r(0,h-z+5,w,2,EDGE);r(0,h-z+5.5,w,1,PK[0]);r(0,h-z+14,w,2,EDGE);r(0,h-z+14.5,w,1,PK[0]);
-  for(let x=1;x<w-3;x+=5){const t=h-z+(hash(x,o.y|0)>.9?2:0);p([[x-.5,t+2],[x+1.5,t-.5],[x+3.5,t+2],[x+3.5,h+.5],[x-.5,h+.5]],EDGE);p([[x,t+2],[x+1.5,t],[x+3,t+2],[x+3,h],[x,h]],PK[1]);r(x,t+2,.5,h-t-2,PK[2]);}}
+  for(let x=1;x<w-3;x+=5){const t=h-z+(hash(x,o.y|0)>.9?2:0);p([[x-.5,t+2],[x+1.5,t-.5],[x+3.5,t+2],[x+3.5,h+.5],[x-.5,h+.5]],EDGE);p([[x,t+2],[x+1.5,t],[x+3,t+2],[x+3,h],[x,h]],PK[1]);r(x,t+2,.5,h-t-2,PK[2]);}},
+ // An inside door standing half open, beside a doorway in a wall that runs away from you, so the opening reads. The hinge is at
+ // the bottom left of the footprint and the door swings up and to the right: a wooden slab, two sunk panels and a brass knob.
+ doorleaf(g,o){const {p,e,l}=g,w=o.w,h=o.h,z=o.z,at=(u,v)=>[u*w,h-u*h-v],quad=(u0,u1,v0,v1,c)=>p([at(u0,v0),at(u1,v0),at(u1,v1),at(u0,v1)],c);e(w/2,h/2+2,w/2+2,4,SHADOW);
+  p([[-.5,h+.5],[w+1,-.5],[w+1,-z-.5],[-.5,h-z-.5]],EDGE);quad(0,1,0,z,OAK[1]);quad(.94,1,0,z,OAK[2]);l(0,h-z,w,-z,.5,OAK[3]);
+  for(const [v0,v1] of [[z*.08,z*.44],[z*.54,z*.9]]){quad(.18,.78,v0,v1,OAK[0]);quad(.2,.76,v0+1,v1-1,OAK[1]);}
+  const [kx,ky]=at(.86,z*.48);p([[kx-1,ky-1],[kx+1,ky-2],[kx+1,ky],[kx-1,ky+1]],EDGE);p([[kx-.5,ky-.5],[kx+.5,ky-1],[kx+.5,ky-.5],[kx-.5,ky]],'#c9a24a');},
 };
 // Everything that stands on the floor gets a soft contact shadow; this helper is for the few tall things drawn without one above.
 function e2(g,w,h){g.e(w/2,h,w/2+3,3,SHADOW);}

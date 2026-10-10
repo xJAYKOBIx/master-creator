@@ -85,6 +85,7 @@ export const PROP_SAMPLES=[
  {set:'home',kind:"wallV",name:"Wall, side on",group:"Walls and doors",samples:[{"kind":"wallV","x":40,"y":40,"w":10,"h":120,"z":48,"paint":0}]},
  {set:'home',kind:"doorway",name:"Doorway",group:"Walls and doors",samples:[{"kind":"doorway","x":40,"y":40,"w":36,"h":10,"z":48,"paint":2},{"kind":"doorway","x":47,"y":40,"w":36,"h":10,"z":48,"paint":4}]},
  {set:'home',kind:"doorwayV",name:"Doorway, side on",group:"Walls and doors",samples:[{"kind":"doorwayV","x":40,"y":40,"w":10,"h":36,"z":48,"paint":0}]},
+ {set:'home',kind:"doorleaf",name:"Open inside door",group:"Walls and doors",samples:[{"kind":"doorleaf","x":40,"y":40,"w":26,"h":24,"z":44}]},
  {set:'home',kind:"window",name:"Window",group:"Walls and doors",samples:[{"kind":"window","x":40,"y":40,"w":44,"h":12,"z":48,"paint":0},{"kind":"window","x":47,"y":40,"w":44,"h":12,"z":48,"paint":1,"curtain":1},{"kind":"window","x":54,"y":40,"w":44,"h":12,"z":48,"paint":5}]},
  {set:'home',kind:"windowV",name:"Window, side on",group:"Walls and doors",samples:[{"kind":"windowV","x":40,"y":40,"w":12,"h":44,"z":48,"paint":5}]},
  {set:'home',kind:"frontdoor",name:"Front door",group:"Walls and doors",samples:[{"kind":"frontdoor","x":40,"y":40,"w":34,"h":12,"z":48,"paint":5}]},
