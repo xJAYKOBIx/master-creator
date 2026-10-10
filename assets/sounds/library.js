@@ -1,5 +1,6 @@
 // Ready-made sounds built from the kit. Each recipe schedules itself from time 0 on a kit: play(k, options).
-// Sources: the Deadlight Hollow intro (TV, broadcast, street) and the game's interface blips.
+// Sources: the Deadlight Hollow intro (TV, broadcast, street), the game's interface blips, and the street outside the house
+// (the cruiser, the crash, guns and the dead).
 import {kit,syllables,voice,siren} from './kit.js';
 import {rng} from '../core/kit.js';
 
@@ -41,7 +42,34 @@ export const SOUNDS=[
  {id:'clear',name:'Wave cleared',group:'Game',dur:.55,play:k=>{blip(k,0,330,.4,'sine',.045,660);blip(k,.16,660,.35,'sine',.025,880);}},
  {id:'dash',name:'Dash',group:'Game',dur:.12,play:k=>blip(k,0,180,.1,'triangle',.025,520)},
  // Reloaded is three times the game's volume (.009), which was too faint to hear on its own.
- {id:'loaded',name:'Reloaded',group:'Game',dur:.05,play:k=>blip(k,0,540,.035,'square',.027,660)}];
+ {id:'loaded',name:'Reloaded',group:'Game',dur:.05,play:k=>blip(k,0,540,.035,'square',.027,660)},
+ // Out on the street, heard in the room rather than on TV. A cruiser going past fast: the engine roar and the siren rise as it
+ // comes, the pitch drops as it passes (a Doppler fall), then both fade off down the road.
+ {id:'car-pass',name:'Cruiser speeds past',group:'Street',dur:4,play:k=>{const {ctx,at,out}=k,g=ctx.createGain();g.gain.setValueAtTime(.0001,at(0));g.gain.exponentialRampToValueAtTime(1,at(1.6));g.gain.setValueAtTime(1,at(1.9));g.gain.exponentialRampToValueAtTime(.02,at(4));g.connect(out);
+  const o=ctx.createOscillator();o.type='triangle';for(let s=0;s<4;s+=.45){const d=s<1.8?1:.82;o.frequency.setValueAtTime(700*d,at(s));o.frequency.linearRampToValueAtTime(1000*d,at(s+.22));o.frequency.linearRampToValueAtTime(700*d,at(s+.45));}
+  const og=ctx.createGain();og.gain.value=.05;o.connect(og).connect(g);o.start(at(0));o.stop(at(4));
+  const e=ctx.createOscillator();e.type='sawtooth';e.frequency.setValueAtTime(70,at(0));e.frequency.linearRampToValueAtTime(95,at(1.8));e.frequency.linearRampToValueAtTime(62,at(2.2));e.frequency.linearRampToValueAtTime(55,at(4));
+  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=400;const eg=ctx.createGain();eg.gain.value=.08;e.connect(lp).connect(eg).connect(g);e.start(at(0));e.stop(at(4));
+  k.noise(0,4,g,{type:'bandpass',f:500,q:.6,gain:.2,attack:.4,sweep:300});}},
+ // The crash a few houses down: a heavy thump, metal folding, then glass and bits falling, with the siren choked off.
+ {id:'car-crash',name:'Car crash',group:'Street',dur:2.4,play:k=>{const {out}=k,r=rng(17);k.tone(0,.5,out,{f:60,to:30,gain:.5,attack:.002,release:.4});k.noise(0,.6,out,{f:900,gain:.6,attack:.002,decay:true,sweep:120});
+  k.noise(.04,.9,out,{type:'bandpass',f:1600,q:2,gain:.18,attack:.01,decay:true,sweep:600});for(let i=0;i<5;i++)k.tone(.05+r()*.35,.25,out,{type:'square',f:200+r()*500,to:90,gain:.03,release:.2});
+  for(let i=0;i<26;i++)k.noise(.2+r()*1.9,.03+r()*.05,out,{type:'highpass',f:3500+r()*3000,gain:.05+r()*.06,decay:true});k.noise(.9,1.4,out,{type:'lowpass',f:500,gain:.04,attack:.1});}},
+ // Guns in the hand, heard close: a crack and a boom with a short tail. The shotgun is deeper and longer; its pump is two clacks.
+ {id:'pistol',name:'Pistol shot',group:'Combat',dur:.4,play:k=>{const {out}=k;k.noise(0,.07,out,{type:'highpass',f:1800,gain:.5,attack:.001,decay:true});k.noise(0,.35,out,{f:1400,gain:.45,attack:.001,decay:true,sweep:200});k.tone(0,.12,out,{f:150,to:50,gain:.3,attack:.001,release:.1});}},
+ {id:'shotgun',name:'Shotgun blast',group:'Combat',dur:.7,play:k=>{const {out}=k;k.noise(0,.09,out,{type:'highpass',f:1200,gain:.55,attack:.001,decay:true});k.noise(0,.65,out,{f:900,gain:.6,attack:.001,decay:true,sweep:90});k.tone(0,.25,out,{f:110,to:35,gain:.45,attack:.001,release:.2});}},
+ {id:'pump',name:'Shotgun pump',group:'Combat',dur:.35,play:k=>{const {out}=k;for(const [t,f] of [[0,2400],[.2,1800]]){k.noise(t,.05,out,{type:'bandpass',f,q:3,gain:.35,attack:.001,decay:true});k.tone(t,.04,out,{type:'square',f:f/6,gain:.04,release:.03});}}},
+ {id:'shell-in',name:'Shell loaded',group:'Combat',dur:.12,play:k=>{const {out}=k;k.noise(0,.06,out,{type:'bandpass',f:3000,q:4,gain:.25,attack:.001,decay:true});k.tone(.01,.05,out,{f:900,to:500,gain:.04,release:.04});}},
+ {id:'mag-in',name:'Magazine in',group:'Combat',dur:.25,play:k=>{const {out}=k;k.noise(0,.04,out,{type:'bandpass',f:1500,q:3,gain:.3,attack:.001,decay:true});k.noise(.14,.05,out,{type:'bandpass',f:2600,q:4,gain:.35,attack:.001,decay:true});}},
+ {id:'dry-fire',name:'Empty click',group:'Combat',dur:.08,play:k=>k.noise(0,.03,k.out,{type:'bandpass',f:3200,q:6,gain:.3,attack:.001,decay:true})},
+ // The dead: a wet, rattling groan (a low buzz through a moving vowel), a hit landing in one, and a bite.
+ {id:'groan',name:'Zombie groan',group:'Combat',dur:1.4,options:[{key:'voice',label:'Voice',choices:['Low','Rough','High']}],play:(k,o={})=>{const {ctx,at,out}=k,f=[62,78,105][o.voice|0],s=ctx.createOscillator();s.type='sawtooth';s.frequency.setValueAtTime(f,at(0));s.frequency.linearRampToValueAtTime(f*1.18,at(.5));s.frequency.linearRampToValueAtTime(f*.85,at(1.35));
+  const am=ctx.createOscillator(),amg=ctx.createGain();am.frequency.value=17;amg.gain.value=f*.25;am.connect(amg).connect(s.frequency);
+  const v=ctx.createBiquadFilter();v.type='bandpass';v.Q.value=4;v.frequency.setValueAtTime(380,at(0));v.frequency.linearRampToValueAtTime(700,at(.5));v.frequency.linearRampToValueAtTime(320,at(1.35));
+  const g=ctx.createGain();g.gain.setValueAtTime(0,at(0));g.gain.linearRampToValueAtTime(.5,at(.15));g.gain.setValueAtTime(.5,at(1));g.gain.linearRampToValueAtTime(0,at(1.38));s.connect(v).connect(g).connect(out);s.start(at(0));s.stop(at(1.4));am.start(at(0));am.stop(at(1.4));
+  k.noise(0,1.35,out,{type:'bandpass',f:900,q:1.5,gain:.06,attack:.2});}},
+ {id:'zombie-hit',name:'Hit',group:'Combat',dur:.2,play:k=>{const {out}=k;k.noise(0,.15,out,{f:700,gain:.4,attack:.001,decay:true,sweep:150});k.tone(0,.1,out,{f:120,to:60,gain:.2,attack:.001,release:.08});}},
+ {id:'bite',name:'Bite',group:'Combat',dur:.35,play:k=>{const {out}=k;k.noise(0,.08,out,{type:'bandpass',f:1200,q:2,gain:.4,attack:.001,decay:true});k.noise(.06,.25,out,{f:600,gain:.3,attack:.01,decay:true});blip(k,.02,110,.2,'sawtooth',.05,55);}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0).
 export function playSound(ctx,sound,options={},when=ctx.currentTime+.03){const k=kit(ctx,when);sound.play(k,options);return when;}

@@ -1,5 +1,5 @@
 // Sample props: real sizes and settings from Deadlight Hollow, up to four variations per kind, with a name and a group for the library.
-// set is the painter that draws them: camp props (camp.js), workshop props (workshop.js) or house props (home.js).
+// set is the painter that draws them: camp props (camp.js), workshop props (workshop.js), house props (home.js) or street props (street.js).
 // House samples are the sizes the starter house uses.
 export const PROP_SAMPLES=[
  {set:'camp',kind:'shelter',name:"Sleeping shelter",group:"Shelters",samples:[{"kind":"shelter","x":124,"y":930,"w":190,"h":22,"z":60,"glass":[187,-6],"candle":[148,13]}]},
@@ -128,4 +128,9 @@ export const PROP_SAMPLES=[
  {set:'home',kind:"porch",name:"Front step",group:"Outside",samples:[{"kind":"porch","x":40,"y":40,"w":60,"h":24,"z":1}]},
  {set:'home',kind:"mailbox",name:"Mailbox",group:"Outside",samples:[{"kind":"mailbox","x":40,"y":40,"w":10,"h":8,"z":34}]},
  {set:'home',kind:"picket",name:"Picket fence",group:"Outside",samples:[{"kind":"picket","x":40,"y":40,"w":80,"h":4,"z":22}]},
+ {set:'street',kind:"car",name:"Parked car",group:"Street",samples:[{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":0},{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":1},{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":2},{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":3}]},
+ {set:'street',kind:"policecar",name:"Police cruiser",group:"Street",samples:[{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":0},{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":1},{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":2,"crashed":true},{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":1,"crashed":true,"trunk":true}]},
+ {set:'street',kind:"pole",name:"Utility pole",group:"Street",samples:[{"kind":"pole","x":40,"y":40,"w":12,"h":12,"z":150},{"kind":"pole","x":40,"y":40,"w":12,"h":12,"z":150,"lean":14}]},
+ {set:'street',kind:"streetlamp",name:"Street lamp",group:"Street",samples:[{"kind":"streetlamp","x":40,"y":40,"w":10,"h":10,"z":110}]},
+ {set:'street',kind:"hydrant",name:"Fire hydrant",group:"Street",samples:[{"kind":"hydrant","x":40,"y":40,"w":12,"h":10,"z":18}]},
 ];

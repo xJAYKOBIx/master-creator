@@ -30,6 +30,7 @@ import {propArt as campProp,PROP_PAD,FLAME,flameArt,ICON,ICONS,iconArt,fishArt} 
 import {propArt as workshopProp,text as sprayText,splat} from './props/workshop.js';
 import {PROP_SAMPLES} from './props/samples.js';
 import {propArt as homeProp,HOME_DECOR} from './props/home.js';
+import {propArt as streetProp} from './props/street.js';
 import {FLOORS,FLOOR_KINDS,floorArt} from './scenery/floors.js';
 import {BOT,BRUTE,botArt,bruteArt} from './characters/bots.js';
 import {painter} from './core/paint.js';
@@ -81,12 +82,12 @@ CHARACTERS.push(
 
 // ---------- Props and scenery ----------
 const propSize=o=>({w:Math.ceil(o.w+PROP_PAD*2)*2,h:Math.ceil(o.h+o.z+PROP_PAD*2)*2});
-const SETS={camp:{paint:campProp,file:'camp.js',id:'',label:'Camp'},workshop:{paint:workshopProp,file:'workshop.js',id:'workshop-',label:'Workshop'},home:{paint:homeProp,file:'home.js',id:'home-',label:'House'}};
+const SETS={camp:{paint:campProp,file:'camp.js',id:'',label:'Camp'},workshop:{paint:workshopProp,file:'workshop.js',id:'workshop-',label:'Workshop'},home:{paint:homeProp,file:'home.js',id:'home-',label:'House'},street:{paint:streetProp,file:'street.js',id:'street-',label:'Street'}};
 const PROPS=PROP_SAMPLES.map(s=>{const sizes=s.samples.map(propSize),w=Math.max(...sizes.map(z=>z.w)),h=Math.max(...sizes.map(z=>z.h)),set=SETS[s.set],o0=s.samples[0],file=set.file;
  // Wall decorations are previewed on a piece of the wall they hang on.
  const paint=s.set==='home'&&HOME_DECOR.has(s.kind)?(c,o)=>{homeProp(c,{...o,kind:'wall',paint:0});homeProp(c,o);}:set.paint;
  return {id:'prop-'+set.id+s.kind,name:s.name,category:'props',group:s.group,kind:'still',
-  summary:`${set.label} prop, drawn to fit its footprint.${s.samples.length>1?' '+s.samples.length+' variations.':''} ${s.set==='home'?'Its pattern follows its size and position, so copies placed around a house vary.':'Its wear and grain follow its size and position, so copies placed around a scene vary.'}`,
+  summary:`${set.label} prop, drawn to fit its footprint.${s.samples.length>1?' '+s.samples.length+' variations.':''} ${s.set==='home'||s.set==='street'?'Its pattern follows its size and position, so copies placed around a house vary.':'Its wear and grain follow its size and position, so copies placed around a scene vary.'}`,
   stats:{Footprint:`${o0.w} × ${o0.h} units`,Height:`${o0.z} units`},source:'assets/props/'+file,
   usage:`import {propArt, PROP_PAD} from './assets/props/${file}';
 // canvas: (w + 2 × PROP_PAD) × 2 wide, (h + z + 2 × PROP_PAD) × 2 tall
@@ -94,7 +95,7 @@ propArt(ctx, ${JSON.stringify({...o0,x:o0.x|0,y:o0.y|0})});`,
   w,h,scale:2,bg:null,options:s.samples.length>1?[{key:'variant',label:'Variation',choices:s.samples.map((x,i)=>`${i+1} · ${x.w} × ${x.h}`)}]:undefined,defaults:{variant:0},
   draw:(c,{o})=>{const sm=s.samples[o.variant|0]||o0,sz=propSize(sm);c.translate(Math.round((w-sz.w)/2),h-sz.h);paint(c,sm);}};});
 // Floors: one swatch per kind, painted into a rectangle of world units.
-PROPS.push({id:'floor',name:'Floors',category:'props',group:'Floors and ground',kind:'still',summary:'Wood boards, kitchen and bathroom tile, carpet, lawn and concrete, painted into any rectangle. The pattern is tied to world position, so neighbouring rectangles line up.',
+PROPS.push({id:'floor',name:'Floors',category:'props',group:'Floors and ground',kind:'still',summary:'Wood boards, kitchen and bathroom tile, carpet, lawn, concrete and asphalt, painted into any rectangle. The pattern is tied to world position, so neighbouring rectangles line up.',
  source:'assets/scenery/floors.js',usage:"import {floorArt} from './assets/scenery/floors.js';\nimport {painter} from './assets/core/paint.js';\nctx.scale(2,2); floorArt(painter(ctx), {kind: 'wood', x: 0, y: 0, w: 160, h: 100});",
  w:320,h:200,scale:2,bg:null,options:[{key:'floor',label:'Floor',choices:FLOOR_KINDS.map(k=>FLOORS[k].name)}],defaults:{floor:0},
  draw:(c,{o})=>{c.scale(2,2);floorArt(painter(c),{kind:FLOOR_KINDS[o.floor|0],x:0,y:0,w:160,h:100});}});

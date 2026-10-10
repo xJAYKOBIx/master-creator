@@ -8,7 +8,8 @@ export const FLOORS={
  bathtile:{name:'Bathroom tile',ramp:['#5a6a6a','#9aaaa8','#b4c2c0','#7a8a88']},
  carpet:{name:'Carpet',ramp:['#2e3442','#3a4252','#465062','#525e72']},
  lawn:{name:'Lawn',ramp:['#141f16','#1c2b1e','#243826','#2e4730','#3b5a3a']},
- concrete:{name:'Concrete',ramp:['#2e3034','#3b3e43','#474a50','#55585e']}};
+ concrete:{name:'Concrete',ramp:['#2e3034','#3b3e43','#474a50','#55585e']},
+ asphalt:{name:'Asphalt',ramp:['#141518','#1c1d21','#24262a','#2e3034']}};
 export const FLOOR_KINDS=Object.keys(FLOORS);
 export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLOORS.wood).ramp,x1=x+w,y1=y+h;
  if(k==='wood'){// Boards run east to west, 6 units wide, with staggered joints and a little grain.
@@ -21,4 +22,7 @@ export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLO
    const odd=((tx/T|0)+(ty/T|0))%2,col=k==='tile'?(odd?P[1]:P[3]):(hash(tx|0,ty|0)>.85?P[2]:P[1]);r(a,t,b-a,u-t,col);if(tx>=x)r(tx,t,.5,u-t,P[0]);if(ty>=y)r(a,ty,b-a,.5,P[0]);if(hash(ty|0,tx|0)>.6&&tx+2>=x&&ty+2>=y&&tx+3<x1&&ty+3<y1)r(tx+1.5,ty+1.5,1,.5,'#ffffff22');}}
  else if(k==='carpet'){r(x,y,w,h,P[1]);for(let i=0;i<w*h/6;i++){const px=x+hash(i,(x|0)+3)*w,py=y+hash((y|0)+5,i)*h;r(px,py,.5,.5,P[(i%3===0)?0:(i%3===1?2:3)]);}}
  else if(k==='lawn'){r(x,y,w,h,P[1]);for(let i=0;i<w*h/10;i++){const px=x+hash(i,(x|0)+11)*w,py=y+hash((y|0)+13,i)*h,c=P[(hash(i,3)*5)|0];r(px,py,.5,1,c);if(i%4===0)r(px+.5,py-.5,.5,1,P[4]);}}
+ // Asphalt: dark and fine-grained, with a few hairline cracks. Grain is tied to world position so strips line up.
+ else if(k==='asphalt'){r(x,y,w,h,P[1]);for(let gy=Math.floor(y);gy<y1;gy+=2)for(let gx=Math.floor(x);gx<x1;gx+=2){const v=hash(gx,gy);if(v>.82)r(gx+(v*7%1)*1.5,gy+(v*13%1)*1.5,.5,.5,v>.95?P[3]:P[2]);else if(v<.08)r(gx,gy,.5,.5,P[0]);}
+  for(let cy=Math.floor(y/60)*60;cy<y1;cy+=60)for(let cx=Math.floor(x/90)*90;cx<x1;cx+=90){if(hash(cx,cy)<.55)continue;let px=cx+hash(cy,cx)*80,py=cy+hash(cx+1,cy)*50;for(let i=0;i<9;i++){px+=1+hash(i,cx)*1.5;py+=hash(cy,i)*2-1;if(px>=x&&px<x1-.5&&py>=y&&py<y1-.5)r(px,py,1,.5,P[0]);}}}
  else{r(x,y,w,h,P[1]);for(let sx=Math.floor(x/40)*40;sx<x1;sx+=40)if(sx>=x)r(sx,y,.5,h,P[0]);for(let sy=Math.floor(y/40)*40;sy<y1;sy+=40)if(sy>=y)r(x,sy,w,.5,P[0]);for(let i=0;i<w*h/30;i++)r(x+hash(i,17)*w,y+hash(19,i)*h,.5,.5,i%2?P[2]:P[0]);}}
