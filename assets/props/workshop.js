@@ -299,5 +299,5 @@ function p3(g,x,y){g.p([[x,y],[x+2.5,y-.5],[x+1,y+1.5]],'#9fc4cc');g.r(x+.5,y,.5
 // A lit laptop also gets a sticker or two.
 function p8(g,x,y,sw,sh){g.r(x+sw-5,y+sh+1,4,2,'#2a2c31');g.r(x-2,y+sh+1.5,sw+4,3,EDGE);g.r(x-1.5,y+sh+2,sw+3,2,'#3a3d44');}
 export function propArt(c,o){if(!TG_ART[o.kind])return campPropArt(c,o);c.save();c.scale(2,2);c.translate(PROP_PAD,o.z+PROP_PAD);TG_ART[o.kind](painter(c),o);c.restore();}
-export {PROP_PAD};
+export {PROP_PAD,PAINTS,fade};
 export const WORKSHOP_KINDS=Object.keys(TG_ART);
