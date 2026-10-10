@@ -13,6 +13,7 @@
 //   sound, dur                     for sounds: the recipe and its length in seconds
 import {survivor,packArt,FRAME,DIRECTIONS,WALK_FRAMES,RUN_FRAMES,HAIR_TONES} from './characters/character.js';
 import {BAGS,BAG_IDS,slots} from './gear/bags.js';
+import {ITEMS as SUPPLIES,ITEM_IDS as SUPPLY_IDS,itemArt} from './gear/items.js';
 import {APPEARANCE_OPTIONS,DEFAULT_APPEARANCE,UNIFORMS,randomAppearance} from './characters/appearance.js';
 import {SKIN_TONES,DYES,ROT_TONES,rotRamp} from './characters/palette.js';
 import {pet,PET_FRAME,PET_ANIM} from './animals/pet.js';
@@ -113,6 +114,12 @@ BAG_IDS.forEach(id=>{const b=BAGS[id];ITEMS.push({id:'backpack-'+id,name:b.name,
  usage:`import {BAGS} from './assets/gear/bags.js';\nimport {packArt} from './assets/characters/character.js';\n// worn: survivor(c, facing, frame, true, {...look, pack: ${b.pack}})\nctx.scale(2,2); ctx.translate(20,56); packArt(ctx, {pack: BAGS.${id}.pack, packColor});`,
  w:80,h:80,scale:3,options:[{key:'packColor',label:'Pack color',choices:DYES.pack.map(d=>d[0]),swatches:SWATCH.packColor}],defaults:{packColor:0},
  draw:(c,{o})=>{c.scale(2,2);c.translate(20,56);packArt(c,{pack:b.pack,packColor:o.packColor|0});}});});
+
+// Supplies: ammo, the field kit and materials, each one bag cell, drawn four times up.
+SUPPLY_IDS.forEach(id=>{const it=SUPPLIES[id];ITEMS.push({id:'supply-'+id,name:it.name,category:'items',group:'Supplies',kind:'still',summary:it.description+'.',
+ stats:{Kind:{ammo:'Ammo',kit:'Field kit',material:'Material'}[it.kind],'Bag space':it.shape.join(' × '),Stack:it.stack,Weight:it.kg+' kg each'},source:'assets/gear/items.js',
+ usage:`import {ITEMS, itemArt} from './assets/gear/items.js';\n// centred on (0, 0), about 12 × 12 units\nctx.scale(2,2); ctx.translate(8,8); itemArt(painter(ctx), '${id}');`,
+ w:60,h:60,scale:3,draw:c=>{c.translate(30,30);c.scale(4,4);itemArt(painter(c),id);}});});
 
 // ---------- Animals ----------
 const petAnims={Idle:{frames:PET_ANIM.idle,ms:220},Walk:{frames:PET_ANIM.walk,ms:110},Run:{frames:PET_ANIM.run,ms:75},Sit:{frames:PET_ANIM.sit,ms:260},Lie:{frames:PET_ANIM.lie,ms:400},Sniff:{frames:PET_ANIM.sniff,ms:300},Stretch:{frames:PET_ANIM.stretch,ms:700}};
