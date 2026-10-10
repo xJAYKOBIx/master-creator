@@ -46,7 +46,7 @@ function rail(){const counts=Object.fromEntries(CATEGORIES.map(c=>[c.id,CATALOG.
  $('rail').innerHTML=[`<button data-cat="all" aria-pressed="${category==='all'}"><span>Everything</span><span class="n">${CATALOG.length}</span></button>`,
   ...CATEGORIES.map(c=>`<button data-cat="${c.id}" aria-pressed="${category===c.id}"><span>${esc(c.name)}</span>${counts[c.id]?`<span class="n">${counts[c.id]}</span>`:'<span class="soon">next</span>'}</button>`)].join('');}
 function grid(){const list=CATALOG.filter(matches);$('count').textContent=`${list.length} of ${CATALOG.length} assets`;
- if(!list.length){$('browse').innerHTML=category==='props'&&!query?`<div class="empty"><b>Props and scenery are next.</b> Tents, crates, barrels, carts, fences, the camp fire and the rest of Deadlight Hollow's scenery move in here in the next build, each as a standalone prop.</div>`:`<div class="empty">Nothing matches “${esc(query)}”.</div>`;return;}
+ if(!list.length){$('browse').innerHTML=query?`<div class="empty">Nothing matches “${esc(query)}”.</div>`:'<div class="empty">Nothing here yet.</div>';return;}
  const groups=new Map();for(const e of list){const k=category==='all'?CATEGORIES.find(c=>c.id===e.category).name:e.group;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(e);}
  $('browse').innerHTML=[...groups].map(([g,items])=>`<section class="group"><h2><b>${esc(g)}</b> ${items.length}</h2><div class="cards">${items.map(e=>`<button class="card" data-id="${e.id}" aria-current="${current?.id===e.id}"><canvas width="96" height="96" aria-hidden="true"></canvas><span class="nm">${esc(e.name)}</span><span class="kd">${category==='all'?esc(e.group):KIND[e.kind]}</span></button>`).join('')}</div></section>`).join('');
  // Thumbnails paint as they scroll into view.
@@ -60,13 +60,13 @@ function open(e,{show=true}={}){current=e;const saved=store.get('opts-'+e.id,nul
  try{history.replaceState(null,'','#'+e.id);}catch{}
  if(show)$('inspector').classList.add('open');if(!state.zoom)state.zoom=fitZoom(e);inspector();loop();}
 // The largest whole-number zoom that fits the stage.
-function fitZoom(e){const box=$('inspector'),W=Math.max(200,(box.clientWidth||innerWidth)-58),H=Math.min(innerHeight*(innerWidth<=900?.44:.5),460);return Math.max(1,Math.min(8,Math.round(Math.min(W/e.w,H/e.h))));}
+function fitZoom(e){const box=$('inspector'),W=Math.max(200,(box.clientWidth||innerWidth)-58),H=Math.min(innerHeight*(innerWidth<=900?.44:.5),460);const fit=Math.min(W/e.w,H/e.h);return Math.max(1,Math.min(6,Math.round(fit),Math.floor(H/e.h)||1));}
 function optionHtml(op){const v=state.o[op.key];
  if(op.type==='text')return `<div class="opt"><label for="op-${op.key}">${esc(op.label)}</label><input type="text" id="op-${op.key}" data-key="${op.key}" value="${esc(v??op.default??'')}" maxlength="48" autocomplete="off"></div>`;
  if(op.swatches)return `<div class="opt"><span class="lbl">${esc(op.label)} · <span style="color:var(--ink-2)">${esc(op.choices[v]??'')}</span></span><div class="swatches">${op.choices.map((c,i)=>`<button data-key="${op.key}" data-v="${i}" aria-pressed="${v===i}" title="${esc(c)}" aria-label="${esc(c)}" style="background:${op.swatches[i]}"></button>`).join('')}</div></div>`;
  if(op.choices.length<=5)return `<div class="opt"><span class="lbl">${esc(op.label)}</span><div class="chips">${op.choices.map((c,i)=>`<button data-key="${op.key}" data-v="${i}" aria-pressed="${v===i}">${esc(c)}</button>`).join('')}</div></div>`;
  return `<div class="opt"><label for="op-${op.key}">${esc(op.label)}</label><select id="op-${op.key}" data-key="${op.key}">${op.choices.map((c,i)=>c?`<option value="${i}"${v===i?' selected':''}>${esc(c)}</option>`:'').join('')}</select></div>`;}
-function code(e){let s=e.usage;if(e.kind==='sprite'||(e.options&&e.kind!=='sound')){const o=Object.fromEntries(Object.entries(state.o).filter(([,v])=>v!==undefined));s+=`\n\n// The look shown here\nconst ${e.kind==='sprite'?'look':'options'} = ${JSON.stringify(o)};`;}return s;}
+function code(e){let s=e.usage;if(e.options?.length&&e.kind!=='sound'){const o=Object.fromEntries(Object.entries(state.o).filter(([,v])=>v!==undefined));s+=`\n\n// The look shown here\nconst ${e.kind==='sprite'?'look':'options'} = ${JSON.stringify(o)};`;}return s;}
 function inspector(){const e=current,cat=CATEGORIES.find(c=>c.id===e.category).name;
  const stats=e.stats?`<dl class="stats">${Object.entries(e.stats).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`:'';
  const tools=e.kind==='sound'?`<div class="tools"><button class="play" id="playSound">Play</button><span class="zoom">${e.dur} s</span></div>`

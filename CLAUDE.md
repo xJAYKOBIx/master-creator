@@ -14,6 +14,7 @@ This repo is a library of reusable pixel-art assets written as code. Games impor
 - Eight facings, 0 to 7: right, front right, front, front left, left, back left, back, back right. Mirrored facings reuse the right-facing art.
 - People have the darkest outlines (`#111319`) and strongest color. Solid props get a softer edge (`#191b21`). Scenery is muted and low contrast with no hard outlines on the ground.
 - Looks swap whole color ramps by exact hex match (`characters/palette.js`), so outlines, shading and animation stay the same for every combination.
+- Props draw with their footprint's top left corner at (0, 0) and height rising into negative y; `propArt(c, {kind, w, h, z, x, y})` adds the padding (`PROP_PAD`), the 2x scale and the grime at the foot. Real sample sizes live in `props/samples.js`.
 - Screen art (TV pictures, overlays, the 5 × 7 font) is drawn at one canvas pixel per art pixel on a 240 × 135 picture.
 - Sounds are synthesised with WebAudio through the kit in `sounds/kit.js`, so they can be rendered offline and never clip.
 

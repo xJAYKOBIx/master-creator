@@ -28,6 +28,12 @@ const out=await p.evaluate(async([mc,dh])=>{
  tally('osd',same(240,135,c=>dhT.osd(c,9,'MRN',1,240),c=>mcT.osd(c,9,'MRN',1,240)));
  for(const t of [.5,2])tally('broadcast',same(240,135,c=>{dhB.lowerThird(c,{tag:'LIVE',headline:'TEST',wipe:t});dhB.ticker(c,'ONE · TWO · ',t,{clock:'11:47'});dhB.captions(c,[[0,'A'],[1,'B']],t);dhB.bug(c,'6',200,5);},
   c=>{mcB.lowerThird(c,{tag:'LIVE',headline:'TEST',wipe:t});mcB.ticker(c,'ONE · TWO · ',t,{clock:'11:47'});mcB.captions(c,[[0,'A'],[1,'B']],t);mcB.bug(c,'6',200,5);}));
+ // Props, robots, icons, flames and fish.
+ const [mcC,dhC,mcWk,dhWk,mcBt,cd,td]=await Promise.all([M('props/camp.js'),D('camp/art.js'),M('props/workshop.js'),D('grounds/art.js'),M('characters/bots.js'),D('camp/data.js'),D('grounds/data.js')]);
+ for(const [mine,theirs,list] of [[mcC,dhC,cd.PROPS],[mcWk,dhWk,td.PROPS]])for(const o of list){const w=Math.ceil(o.w+mcC.PROP_PAD*2)*2,h=Math.ceil(o.h+o.z+mcC.PROP_PAD*2)*2;tally('props',same(w,h,c=>theirs.propArt(c,o),c=>mine.propArt(c,o)));}
+ tally('robots',same(56*4*2,56*7*2,c=>dhWk.botArt(c),c=>mcBt.botArt(c)));tally('brute',same(96*4*2,88*2,c=>dhWk.bruteArt(c),c=>mcBt.bruteArt(c)));
+ tally('icons',same(20*7*2,24*2,c=>dhC.iconArt(c),c=>mcC.iconArt(c)));tally('flames',same(48*6*2,60*2,c=>dhC.flameArt(c),c=>mcC.flameArt(c)));
+ for(const id of Object.keys(dhC.FISH_COLORS))for(const cook of [null,.3,.7,.95])tally('fish',same(120,60,c=>{c.translate(60,30);c.scale(2,2);dhC.fishArt(c,id,cook);},c=>{c.translate(60,30);c.scale(2,2);mcC.fishArt(c,id,cook);}));
  return res;},[mc,dh]);
 let bad=0;for(const [k,v] of Object.entries(out)){console.log(`${k.padEnd(12)} ${String(v.cases).padStart(4)} cases  ${v.failed?v.failed+' DIFFER':'identical'}${v.emptyCases?'  ('+v.emptyCases+' blank)':''}`);bad+=v.failed;}
 await b.close();process.exit(bad?1:0);

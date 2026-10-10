@@ -24,10 +24,15 @@ import {BLOOD,brushes} from './effects/grime.js';
 import {logo,osd,breakup,flip,noSignal} from './effects/tv.js';
 import {captions,lowerThird,ticker,bug} from './effects/broadcast.js';
 import {SOUNDS} from './sounds/library.js';
+import {propArt as campProp,PROP_PAD,FLAME,flameArt,ICON,ICONS,iconArt,fishArt} from './props/camp.js';
+import {propArt as workshopProp,text as sprayText,splat} from './props/workshop.js';
+import {PROP_SAMPLES} from './props/samples.js';
+import {BOT,BRUTE,botArt,bruteArt} from './characters/bots.js';
+import {painter} from './core/paint.js';
 
 export const CATEGORIES=[
- {id:'characters',name:'Characters'},{id:'animals',name:'Animals'},{id:'weapons',name:'Weapons'},{id:'props',name:'Props and scenery'},
- {id:'effects',name:'Effects'},{id:'broadcast',name:'Screens and broadcast'},{id:'type',name:'Type'},{id:'sounds',name:'Sounds'}];
+ {id:'characters',name:'Characters'},{id:'animals',name:'Animals'},{id:'weapons',name:'Weapons'},{id:'items',name:'Items'},{id:'props',name:'Props and scenery'},
+ {id:'effects',name:'Effects'},{id:'broadcast',name:'Screens and broadcast'},{id:'type',name:'Interface and type'},{id:'sounds',name:'Sounds'}];
 export {DIRECTIONS};
 
 // ---------- Characters ----------
@@ -55,6 +60,41 @@ const CHARACTERS=[
   options:[...INFECTION.map(lookOption),...PERSON.map(lookOption)],presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),
   defaults:pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON]),random:r=>pickKeys(randomAppearance(r),[...INFECTION,...PERSON]),draw:personDraw(true)}];
 function pickKeys(o,keys){const out={};for(const k of keys)out[k]=o[k];return out;}
+
+// Training robots and the brute come as sprite sheets; the library cuts single frames out of a sheet painted once.
+const sheetOf=(()=>{const cache=new Map();return (key,w,h,paint)=>{if(!cache.has(key)){const s=canvas(w,h);paint(s.getContext('2d'));cache.set(key,s);}return cache.get(key);};})();
+const cell=(c,sheet,col,row,w,h)=>c.drawImage(sheet,col*w,row*h,w,h,0,0,w,h);
+CHARACTERS.push(
+ {id:'training-robot',name:'Training robot',category:'characters',group:'Training dummies',kind:'sprite',summary:'A bedsheet over a stuffed pillow, broom-handle arms, a car battery and shopping-cart wheels. Seven looks, from plain sheets to copies of the runner, the husk and the spitter.',
+  source:'assets/characters/bots.js',usage:"import {BOT, botArt} from './assets/characters/bots.js';\n// one sheet: BOT.rows looks down, BOT.frames frames across, each BOT.w × BOT.h units at 2x\nbotArt(sheetCtx);",
+  w:BOT.w*2,h:BOT.h*2,scale:3,anims:{Rolling:{frames:[0,1],ms:160},'Knocked down':{frames:[2],ms:400},Tell:{frames:[3,0],ms:200}},
+  options:[{key:'look',label:'Look',choices:['Blue sheet','Sheet 2','Sheet 3','Sheet 4','Runner','Husk','Spitter']}],defaults:{look:0},
+  draw:(c,{frame,o})=>cell(c,sheetOf('bots',BOT.w*2*BOT.frames,BOT.h*2*BOT.rows,botArt),frame,o.look|0,BOT.w*2,BOT.h*2)},
+ {id:'brute',name:'Brute',category:'characters',group:'Training dummies',kind:'sprite',summary:'The big training dummy: a hulking frame that stomps forward and winds up before it swings.',
+  source:'assets/characters/bots.js',usage:"import {BRUTE, bruteArt} from './assets/characters/bots.js';\nbruteArt(sheetCtx); // BRUTE.frames frames across",
+  w:BRUTE.w*2,h:BRUTE.h*2,scale:2,anims:{Stomp:{frames:[0,1],ms:220},Down:{frames:[2],ms:400},'Wind-up':{frames:[3],ms:400}},
+  draw:(c,{frame})=>cell(c,sheetOf('brute',BRUTE.w*2*BRUTE.frames,BRUTE.h*2,bruteArt),frame,0,BRUTE.w*2,BRUTE.h*2)});
+
+// ---------- Props and scenery ----------
+const propSize=o=>({w:Math.ceil(o.w+PROP_PAD*2)*2,h:Math.ceil(o.h+o.z+PROP_PAD*2)*2});
+const PROPS=PROP_SAMPLES.map(s=>{const sizes=s.samples.map(propSize),w=Math.max(...sizes.map(z=>z.w)),h=Math.max(...sizes.map(z=>z.h)),paint=s.set==='camp'?campProp:workshopProp,o0=s.samples[0],file=s.set==='camp'?'camp.js':'workshop.js';
+ return {id:'prop-'+(s.set==='camp'?'':'workshop-')+s.kind,name:s.name,category:'props',group:s.group,kind:'still',
+  summary:`${s.set==='camp'?'Camp':'Workshop'} prop, drawn to fit its footprint.${s.samples.length>1?' '+s.samples.length+' variations.':''} Its wear and grain follow its size and position, so copies placed around a scene vary.`,
+  stats:{Footprint:`${o0.w} × ${o0.h} units`,Height:`${o0.z} units`},source:'assets/props/'+file,
+  usage:`import {propArt, PROP_PAD} from './assets/props/${file}';
+// canvas: (w + 2 × PROP_PAD) × 2 wide, (h + z + 2 × PROP_PAD) × 2 tall
+propArt(ctx, ${JSON.stringify({...o0,x:o0.x|0,y:o0.y|0})});`,
+  w,h,scale:2,bg:null,options:s.samples.length>1?[{key:'variant',label:'Variation',choices:s.samples.map((x,i)=>`${i+1} · ${x.w} × ${x.h}`)}]:undefined,defaults:{variant:0},
+  draw:(c,{o})=>{const sm=s.samples[o.variant|0]||o0,sz=propSize(sm);c.translate(Math.round((w-sz.w)/2),h-sz.h);paint(c,sm);}};});
+
+// ---------- Items ----------
+const FISH=[['perch','Sand perch','Striped, common in the shallows.'],['mackerel','Inlet mackerel','Barred blue-green back.'],['cod','Rock cod','Heavy and spotted.'],['moonfin','Moonfin','The rare one: a pale glow along its side and fins.']];
+const ITEMS=FISH.map(([id,name,line])=>({id:'fish-'+id,name,category:'items',group:'Fish',kind:'still',summary:line+' Raw, cooking, cooked or burnt.',source:'assets/props/camp.js',
+ usage:`import {fishArt} from './assets/props/camp.js';
+// centred on (0, 0), facing right, about 31 × 12 units; cook runs 0 to 1, past 0.84 it chars
+fishArt(ctx, '${id}', cook, scale);`,
+ w:84,h:32,scale:4,options:[{key:'cook',label:'Cooked',choices:['Raw','Cooking','Cooked','Burnt']}],defaults:{cook:0},
+ draw:(c,{o})=>{c.translate(46,16);c.scale(2,2);fishArt(c,id,[null,.3,.7,.95][o.cook|0]);}}));
 
 // ---------- Animals ----------
 const petAnims={Idle:{frames:PET_ANIM.idle,ms:220},Walk:{frames:PET_ANIM.walk,ms:110},Run:{frames:PET_ANIM.run,ms:75},Sit:{frames:PET_ANIM.sit,ms:260},Lie:{frames:PET_ANIM.lie,ms:400}};
@@ -89,6 +129,9 @@ const grime=(id,name,summary,paint)=>({id,name,category:'effects',group:'Blood a
  usage:`import {brushes} from './assets/effects/grime.js';\nconst b = brushes(ctx, seed); // one canvas pixel per art pixel\n${paint.toString().match(/b\.\w+\([^;]*\)/)?.[0]??''};`,
  w:96,h:64,scale:4,bg:'#3a3f46',options:[seedOpt],defaults:{seed:0},draw:(c,{o})=>{const b=brushes(c,0x5eed+o.seed*977);paint(b,c);c.globalAlpha=1;}});
 const EFFECTS=[
+ {id:'flames',name:'Campfire flames',category:'effects',group:'Fire',kind:'sprite',summary:'Six looping flame frames for a fire, anchored at the bottom centre. Lay an additive glow under them.',source:'assets/props/camp.js',
+  usage:"import {FLAME, flameArt} from './assets/props/camp.js';\n// FLAME.frames frames across, each FLAME.w × FLAME.h units at 2x, anchor (FLAME.ax, FLAME.ay)\nflameArt(sheetCtx);",
+  w:FLAME.w*2,h:FLAME.h*2,scale:3,bg:'#14100d',anims:{Burn:{frames:[0,1,2,3,4,5],ms:90}},draw:(c,{frame})=>cell(c,sheetOf('flames',FLAME.w*2*FLAME.frames,FLAME.h*2,flameArt),frame,0,FLAME.w*2,FLAME.h*2)},
  grime('blood-splat','Blood splat','A pool with thrown droplets and streaks, optionally sprayed in one direction.',b=>{b.splat(40,30,6,{spread:1.1,count:14});}),
  grime('blood-drips','Blood drips','Runs that thin as they fall and end in a bead.',b=>{b.blob(30,10,4,BLOOD[1]);b.drip(28,12,30,2);b.drip(33,11,18,1);b.blob(62,14,3,BLOOD[2]);b.drip(61,16,24,1);}),
  grime('hand-smear','Hand smear','A hand dragged through blood: a heavy patch, then finger streaks that break up.',b=>{b.smear(14,16,82,40,12,4,3,4);}),
@@ -130,10 +173,19 @@ const TYPE=[{id:'font-5x7',name:'Pixel font 5 × 7',category:'type',group:'Fonts
  draw:(c,{o})=>{const ink=['#ffffff','#f2c200','#7fe07f','#ff4a3a'][o.ink|0],all=Object.keys(GLYPHS).join('');let x=4,y=4;
   for(const ch of all){if(x+6>196){x=4;y+=9;}text(c,ch,x,y,'#8b93a1');x+=6;}text(c,(o.sample||'').toUpperCase().slice(0,32),4,y+14,ink);}}];
 
+TYPE.push({id:'map-markers',name:'Map markers',category:'type',group:'Icons',kind:'still',summary:'Station markers that float over a map: hammer, medical cross, bowl, lantern, arrow, target and sprout, on an ember tag.',
+ source:'assets/props/camp.js',usage:"import {ICON, ICONS, iconArt} from './assets/props/camp.js';\n// one strip: ICONS.length markers, each ICON.w × ICON.h units at 2x\niconArt(stripCtx);",
+ w:ICON.w*2,h:ICON.h*2,scale:4,options:[{key:'icon',label:'Marker',choices:['Hammer','Cross','Bowl','Lantern','Arrow','Target','Sprout']}],defaults:{icon:0},
+ draw:(c,{o})=>cell(c,sheetOf('icons',ICON.w*2*ICONS.length,ICON.h*2,iconArt),o.icon|0,0,ICON.w*2,ICON.h*2)},
+ {id:'spray-lettering',name:'Spray-paint lettering',category:'type',group:'Fonts',kind:'still',summary:'A rough block font for spray-painted signs, 3 to 5 pixels wide and 5 tall at any size, with paint splats.',
+ source:'assets/props/workshop.js',usage:"import {text, textWidth, splat} from './assets/props/workshop.js';\nimport {painter} from './assets/core/paint.js';\nconst g = painter(ctx); // ctx scaled 2x\ntext(g, 'ARENA', x, y, size, '#b33a2a');",
+ w:200,h:56,scale:3,bg:'#4b463f',options:[{key:'sample',label:'Sign text',type:'text',default:'NO ENTRY'},{key:'ink',label:'Paint',choices:['Red','Black','White','Ember'],swatches:['#b33a2a','#16171a','#e8e0d1','#dd6f2c']}],defaults:{sample:'NO ENTRY',ink:0},
+ draw:(c,{o})=>{c.scale(2,2);const g=painter(c),ink=['#b33a2a','#16171a','#e8e0d1','#dd6f2c'][o.ink|0];splat(g,86,20,4,ink,3,false);sprayText(g,(o.sample||'').toUpperCase().slice(0,14),6,7,2,ink);}});
+
 // ---------- Sounds ----------
 const SOUND_ENTRIES=SOUNDS.map(s=>({id:'sound-'+s.id,name:s.name,category:'sounds',group:s.group,kind:'sound',summary:`${s.dur < 1 ? Math.round(s.dur*1000)+' ms' : s.dur+' seconds'}, synthesised in the browser, so it ships as code with no audio file.`,
  source:'assets/sounds/library.js',usage:`import {SOUNDS, playSound} from './assets/sounds/library.js';\nplaySound(audioCtx, SOUNDS.find(s => s.id === '${s.id}'));`,
  dur:s.dur,sound:s,options:s.options,defaults:Object.fromEntries((s.options||[]).map(o=>[o.key,0]))}));
 
-export const CATALOG=[...CHARACTERS,...ANIMALS,...WEAPONS,...EFFECTS,...BROADCAST,...TYPE,...SOUND_ENTRIES];
+export const CATALOG=[...CHARACTERS,...ANIMALS,...WEAPONS,...ITEMS,...PROPS,...EFFECTS,...BROADCAST,...TYPE,...SOUND_ENTRIES];
 export const byId=id=>CATALOG.find(e=>e.id===id);

@@ -19,14 +19,15 @@ Pick a category, tap an asset, and the panel on the right (a full screen sheet o
 
 | Category | Assets | Code |
 |---|---|---|
-| Characters | Survivor (two body types, six skin tones, every hair, headwear, top, pants, shoes and pack, held guns), Zombie (rot, decay, eyes, wounds, shamble and lurch) | `assets/characters/` |
+| Characters | Survivor (two body types, six skin tones, every hair, headwear, top, pants, shoes and pack, held guns), Zombie (rot, decay, eyes, wounds, shamble and lurch), Training robot (seven looks), Brute | `assets/characters/` |
 | Animals | Dog (Shepherd, Lab, Terrier, Husky), Cat (Shorthair, Longhair), seven coats, markings, eyes, collars | `assets/animals/` |
 | Weapons | Light Pistol, Heavy Pistol, Hand Cannon, Tactical AR, Heavy AR, smoke, incendiary and explosive grenades | `assets/weapons/` |
-| Effects | Blood splat, drips, hand smear, claw gouges, scuffs and dirt, blood palette | `assets/effects/grime.js` |
+| Items | Sand perch, Inlet mackerel, Rock cod, Moonfin, each raw, cooking, cooked or burnt | `assets/props/camp.js` |
+| Props and scenery | 79 props in two sets. Camp: shelters, tents, furniture, storage, fire and cooking, lights and power, workshop, structures, shore and garden. Workshop: salvage walls, workshop interior, robot shop and yard | `assets/props/` |
+| Effects | Campfire flames, blood splat, drips, hand smear, claw gouges, scuffs and dirt, blood palette | `assets/effects/grime.js`, `assets/props/camp.js` |
 | Screens and broadcast | TV power-on logo, channel number, channel flip, digital breakup, NO SIGNAL, captions, lower third, ticker, corner bug | `assets/effects/tv.js`, `broadcast.js` |
-| Type | Pixel font 5 × 7 | `assets/ui/font5x7.js` |
+| Interface and type | Pixel font 5 × 7, spray-paint lettering, map markers | `assets/ui/font5x7.js`, `assets/props/` |
 | Sounds | 25 synthesised sounds: the room, the street, broadcast stings and beds, a TV voice, and game blips | `assets/sounds/` |
-| Props and scenery | Next build | |
 
 Shared drawing tools live in `assets/core/`: `paint.js` (the half-unit grid painter, noise, dithering) and `kit.js` (small canvas helpers and a seeded random number generator).
 
@@ -68,8 +69,7 @@ Both use the Chromium that Playwright can find; set `CHROMIUM` to point at anoth
 
 ## Roadmap
 
-1. **Props and scenery:** tents, crates, barrels, carts, fences, fires, lanterns, boats and the rest of Deadlight Hollow's camp and Training Grounds art, split into standalone props.
-2. **Enemies:** the training bots, the brute and the spitter.
-3. **Deadlight Hollow imports from here** instead of keeping its own copies.
-4. **Sprite sheet export** to PNG for engines and tools that want images.
-5. **New assets for the tutorial:** the pump-action shotgun, backpacks of several sizes and the apartment.
+1. **Deadlight Hollow imports from here** instead of keeping its own copies.
+2. **Ground and scenery tiles:** sand, rock walls, water and floors as reusable tiles, so new places can be laid out from them (today each of the game's maps paints its own ground).
+3. **Sprite sheet export** to PNG for engines and tools that want images.
+4. **New assets for the tutorial:** the pump-action shotgun, backpacks of several sizes and the apartment.

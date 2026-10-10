@@ -1,6 +1,6 @@
 {
   "name": "master-creator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A library of reusable pixel-art assets written as code.",
   "type": "module",
