@@ -2,7 +2,7 @@
 
 A library of reusable pixel-art assets: characters, animals, weapons, effects, screen overlays, type and sounds. Every asset is code, not an image file, so it can be recolored, re-dressed, turned to any of its facings and animated, and any game in this style can import it instead of rebuilding it.
 
-Deadlight Hollow is built from it. Future games in the same style use it too.
+Deadlight Hollow is built from it: the game keeps a copy of `assets/` and loads its shared art from that copy. Future games in the same style use it too.
 
 ## Open the library
 
@@ -69,7 +69,6 @@ Both use the Chromium that Playwright can find; set `CHROMIUM` to point at anoth
 
 ## Roadmap
 
-1. **Deadlight Hollow imports from here** instead of keeping its own copies.
-2. **Ground and scenery tiles:** sand, rock walls, water and floors as reusable tiles, so new places can be laid out from them (today each of the game's maps paints its own ground).
-3. **Sprite sheet export** to PNG for engines and tools that want images.
-4. **New assets for the tutorial:** the pump-action shotgun, backpacks of several sizes and the apartment.
+1. **Ground and scenery tiles:** sand, rock walls, water and floors as reusable tiles, so new places can be laid out from them (today each of the game's maps paints its own ground).
+2. **Sprite sheet export** to PNG for engines and tools that want images.
+3. **New assets for the tutorial:** the pump-action shotgun, backpacks of several sizes and the apartment.
