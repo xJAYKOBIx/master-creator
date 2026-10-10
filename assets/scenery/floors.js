@@ -1,0 +1,24 @@
+// Floors and ground, painted into a rectangle of world units: wood boards, kitchen and bathroom tile, carpet, lawn and concrete.
+// floorArt(g, {kind, x, y, w, h}) paints with a painter g already in world units; the pattern is tied to world position, so two
+// rectangles of the same floor side by side line up. Lighting and shadows come later, from the game.
+import {hash2 as hash} from '../core/paint.js';
+export const FLOORS={
+ wood:{name:'Wood boards',ramp:['#3d2a1e','#5a3e2a','#6a4a32','#7a573a','#8a6444']},
+ tile:{name:'Kitchen tile',ramp:['#4a4a46','#8a867a','#a8a394','#6a6a64']},
+ bathtile:{name:'Bathroom tile',ramp:['#5a6a6a','#9aaaa8','#b4c2c0','#7a8a88']},
+ carpet:{name:'Carpet',ramp:['#2e3442','#3a4252','#465062','#525e72']},
+ lawn:{name:'Lawn',ramp:['#141f16','#1c2b1e','#243826','#2e4730','#3b5a3a']},
+ concrete:{name:'Concrete',ramp:['#2e3034','#3b3e43','#474a50','#55585e']}};
+export const FLOOR_KINDS=Object.keys(FLOORS);
+export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLOORS.wood).ramp,x1=x+w,y1=y+h;
+ if(k==='wood'){// Boards run east to west, 6 units wide, with staggered joints and a little grain.
+  const BH=6;for(let by=Math.floor(y/BH)*BH;by<y1;by+=BH){const row=by/BH|0;let bx=x-((hash(row,7)*60)|0);
+   while(bx<x1){const len=48+((hash(row,bx|0)*60)|0),col=P[1+((hash(bx|0,row)*3)|0)],a=Math.max(x,bx),b=Math.min(x1,bx+len),t=Math.max(y,by),u=Math.min(y1,by+BH);
+    if(b>a&&u>t){r(a,t,b-a,u-t,col);if(by+BH<=y1&&by+BH-.5>=y)r(a,by+BH-.5,b-a,.5,P[0]);if(bx>=x&&bx<x1)r(bx,t,.5,u-t,P[0]);
+     for(let i=0;i<len/14;i++){const gx=bx+3+hash(i,(bx|0)+row)*(len-8);if(gx>a&&gx<b-4&&by+2>=y&&by+2<y1)r(gx,by+1.5+hash(row,i)*3,3+hash(i,row)*5,.5,P[(col===P[3]?2:3)]);}}
+    bx+=len;}}}
+ else if(k==='tile'||k==='bathtile'){const T=k==='tile'?12:7;for(let ty=Math.floor(y/T)*T;ty<y1;ty+=T)for(let tx=Math.floor(x/T)*T;tx<x1;tx+=T){const a=Math.max(x,tx),b=Math.min(x1,tx+T),t=Math.max(y,ty),u=Math.min(y1,ty+T);if(b<=a||u<=t)continue;
+   const odd=((tx/T|0)+(ty/T|0))%2,col=k==='tile'?(odd?P[1]:P[3]):(hash(tx|0,ty|0)>.85?P[2]:P[1]);r(a,t,b-a,u-t,col);if(tx>=x)r(tx,t,.5,u-t,P[0]);if(ty>=y)r(a,ty,b-a,.5,P[0]);if(hash(ty|0,tx|0)>.6&&tx+2>=x&&ty+2>=y&&tx+3<x1&&ty+3<y1)r(tx+1.5,ty+1.5,1,.5,'#ffffff22');}}
+ else if(k==='carpet'){r(x,y,w,h,P[1]);for(let i=0;i<w*h/6;i++){const px=x+hash(i,(x|0)+3)*w,py=y+hash((y|0)+5,i)*h;r(px,py,.5,.5,P[(i%3===0)?0:(i%3===1?2:3)]);}}
+ else if(k==='lawn'){r(x,y,w,h,P[1]);for(let i=0;i<w*h/10;i++){const px=x+hash(i,(x|0)+11)*w,py=y+hash((y|0)+13,i)*h,c=P[(hash(i,3)*5)|0];r(px,py,.5,1,c);if(i%4===0)r(px+.5,py-.5,.5,1,P[4]);}}
+ else{r(x,y,w,h,P[1]);for(let sx=Math.floor(x/40)*40;sx<x1;sx+=40)if(sx>=x)r(sx,y,.5,h,P[0]);for(let sy=Math.floor(y/40)*40;sy<y1;sy+=40)if(sy>=y)r(x,sy,w,.5,P[0]);for(let i=0;i<w*h/30;i++)r(x+hash(i,17)*w,y+hash(19,i)*h,.5,.5,i%2?P[2]:P[0]);}}

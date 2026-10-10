@@ -4,9 +4,10 @@
 import {painter} from '../core/paint.js';
 import {COATS,EYES,COLLARS} from './look.js';
 export const PET_FRAME={w:160,h:160,displayW:80,displayH:80,footX:40,footY:58};
-// Frames: 0-3 idle (breathing, tail wag), 4-9 walk, 10-15 run, 16-17 sit, 18 lie down.
-export const PET_ANIM={idle:[0,1,2,3],walk:[4,5,6,7,8,9],run:[10,11,12,13,14,15],sit:[16,17],lie:[18]};
-export const PET_FRAME_COUNT=19;
+// Frames: 0-3 idle (breathing, tail wag), 4-9 walk, 10-15 run, 16-17 sit, 18 lie down, 19-20 sniff (nose to the floor or the bowl),
+// 21-22 stretch (a dog's play bow, a cat's long reach forward). New poses are only ever added at the end.
+export const PET_ANIM={idle:[0,1,2,3],walk:[4,5,6,7,8,9],run:[10,11,12,13,14,15],sit:[16,17],lie:[18],sniff:[19,20],stretch:[21,22]};
+export const PET_FRAME_COUNT=23;
 export function petPose(frame){for(const [kind,list] of Object.entries(PET_ANIM)){const i=list.indexOf(frame);if(i>=0)return {kind,t:i/list.length};}return {kind:'idle',t:0};}
 const INK='#111319',WHITE=['#8f8b82','#c2beb2','#e6e2d6','#f8f6ee'],BLACK=COATS[0].ramp,NOSE='#1c1a1e',PINK='#d98a8e',TONGUE='#d4606a';
 // Ground depth is foreshortened so a dog facing the camera reads as a dog, not a long rug.
@@ -42,6 +43,11 @@ function skeleton(P,pose,cat){const {kind,t}=pose,TAU=Math.PI*2;
   legs=[leg(1,-1,0,0),leg(1,1,0,0)].map(l=>({...l,jf:chestF*.85,pf:chestF*.85+.5}));legs.push({sit:true,side:-1},{sit:true,side:1});wag=t<.5?-.5:.5;tailLift=-1;}
  else if(kind==='lie'){cU=P.rc*.95;hU=P.rh*.9;headU=P.rc*2+P.rH*.6;headF=P.L+P.rc*.35;
   legs=[{lie:true,front:1,side:-1},{lie:true,front:1,side:1},{sit:true,side:-1},{sit:true,side:1}];wag=.2;tailLift=-1;}
+ else if(kind==='sniff'){// Standing, head down and forward, nose working.
+  legs=[leg(1,-1,.8,0),leg(1,1,1.4,0),leg(0,-1,0,0),leg(0,1,0,0)];cU-=.6;headF=P.L+P.rc*.95;headU=P.rH*1.35+1+Math.sin(t*TAU)*.5;wag=Math.sin(t*TAU)*.35;}
+ else if(kind==='stretch'){// Chest down and front legs out, hips up, then leaning back into it.
+  const k=t<.5?0:1;cU=P.rc*.95+.8+k*.6;chestF=P.L*1.05-k*.6;hU=P.S*1.02;hipF=-P.L-k*.8;headU=P.rc*1.7+P.rH*.85;headF=P.L+P.rc*.75+1-k*.5;
+  legs=[{lie:true,front:1,side:-1},{lie:true,front:1,side:1},leg(0,-1,0,0),leg(0,1,0,0)];wag=k?.6:-.6;tailLift=.7;}
  else{legs=[leg(1,-1,0,0),leg(1,1,0,0),leg(0,-1,0,0),leg(0,1,0,0)];bob=Math.sin(t*Math.PI*2)*.25;wag=Math.sin(t*TAU)*.7;}
  if(cat&&kind!=='run')tailLift+=.3;
  return {hipF,chestF,cU:cU+bob,hU:hU+bob,headF,headU:headU+bob+headDip,legs,wag,tailLift,kind};}

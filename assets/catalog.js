@@ -27,6 +27,8 @@ import {SOUNDS} from './sounds/library.js';
 import {propArt as campProp,PROP_PAD,FLAME,flameArt,ICON,ICONS,iconArt,fishArt} from './props/camp.js';
 import {propArt as workshopProp,text as sprayText,splat} from './props/workshop.js';
 import {PROP_SAMPLES} from './props/samples.js';
+import {propArt as homeProp,HOME_DECOR} from './props/home.js';
+import {FLOORS,FLOOR_KINDS,floorArt} from './scenery/floors.js';
 import {BOT,BRUTE,botArt,bruteArt} from './characters/bots.js';
 import {painter} from './core/paint.js';
 
@@ -77,15 +79,23 @@ CHARACTERS.push(
 
 // ---------- Props and scenery ----------
 const propSize=o=>({w:Math.ceil(o.w+PROP_PAD*2)*2,h:Math.ceil(o.h+o.z+PROP_PAD*2)*2});
-const PROPS=PROP_SAMPLES.map(s=>{const sizes=s.samples.map(propSize),w=Math.max(...sizes.map(z=>z.w)),h=Math.max(...sizes.map(z=>z.h)),paint=s.set==='camp'?campProp:workshopProp,o0=s.samples[0],file=s.set==='camp'?'camp.js':'workshop.js';
- return {id:'prop-'+(s.set==='camp'?'':'workshop-')+s.kind,name:s.name,category:'props',group:s.group,kind:'still',
-  summary:`${s.set==='camp'?'Camp':'Workshop'} prop, drawn to fit its footprint.${s.samples.length>1?' '+s.samples.length+' variations.':''} Its wear and grain follow its size and position, so copies placed around a scene vary.`,
+const SETS={camp:{paint:campProp,file:'camp.js',id:'',label:'Camp'},workshop:{paint:workshopProp,file:'workshop.js',id:'workshop-',label:'Workshop'},home:{paint:homeProp,file:'home.js',id:'home-',label:'House'}};
+const PROPS=PROP_SAMPLES.map(s=>{const sizes=s.samples.map(propSize),w=Math.max(...sizes.map(z=>z.w)),h=Math.max(...sizes.map(z=>z.h)),set=SETS[s.set],o0=s.samples[0],file=set.file;
+ // Wall decorations are previewed on a piece of the wall they hang on.
+ const paint=s.set==='home'&&HOME_DECOR.has(s.kind)?(c,o)=>{homeProp(c,{...o,kind:'wall',paint:0});homeProp(c,o);}:set.paint;
+ return {id:'prop-'+set.id+s.kind,name:s.name,category:'props',group:s.group,kind:'still',
+  summary:`${set.label} prop, drawn to fit its footprint.${s.samples.length>1?' '+s.samples.length+' variations.':''} ${s.set==='home'?'Its pattern follows its size and position, so copies placed around a house vary.':'Its wear and grain follow its size and position, so copies placed around a scene vary.'}`,
   stats:{Footprint:`${o0.w} × ${o0.h} units`,Height:`${o0.z} units`},source:'assets/props/'+file,
   usage:`import {propArt, PROP_PAD} from './assets/props/${file}';
 // canvas: (w + 2 × PROP_PAD) × 2 wide, (h + z + 2 × PROP_PAD) × 2 tall
 propArt(ctx, ${JSON.stringify({...o0,x:o0.x|0,y:o0.y|0})});`,
   w,h,scale:2,bg:null,options:s.samples.length>1?[{key:'variant',label:'Variation',choices:s.samples.map((x,i)=>`${i+1} · ${x.w} × ${x.h}`)}]:undefined,defaults:{variant:0},
   draw:(c,{o})=>{const sm=s.samples[o.variant|0]||o0,sz=propSize(sm);c.translate(Math.round((w-sz.w)/2),h-sz.h);paint(c,sm);}};});
+// Floors: one swatch per kind, painted into a rectangle of world units.
+PROPS.push({id:'floor',name:'Floors',category:'props',group:'Floors and ground',kind:'still',summary:'Wood boards, kitchen and bathroom tile, carpet, lawn and concrete, painted into any rectangle. The pattern is tied to world position, so neighbouring rectangles line up.',
+ source:'assets/scenery/floors.js',usage:"import {floorArt} from './assets/scenery/floors.js';\nimport {painter} from './assets/core/paint.js';\nctx.scale(2,2); floorArt(painter(ctx), {kind: 'wood', x: 0, y: 0, w: 160, h: 100});",
+ w:320,h:200,scale:2,bg:null,options:[{key:'floor',label:'Floor',choices:FLOOR_KINDS.map(k=>FLOORS[k].name)}],defaults:{floor:0},
+ draw:(c,{o})=>{c.scale(2,2);floorArt(painter(c),{kind:FLOOR_KINDS[o.floor|0],x:0,y:0,w:160,h:100});}});
 
 // ---------- Items ----------
 const FISH=[['perch','Sand perch','Striped, common in the shallows.'],['mackerel','Inlet mackerel','Barred blue-green back.'],['cod','Rock cod','Heavy and spotted.'],['moonfin','Moonfin','The rare one: a pale glow along its side and fins.']];
@@ -97,7 +107,7 @@ fishArt(ctx, '${id}', cook, scale);`,
  draw:(c,{o})=>{c.translate(46,16);c.scale(2,2);fishArt(c,id,[null,.3,.7,.95][o.cook|0]);}}));
 
 // ---------- Animals ----------
-const petAnims={Idle:{frames:PET_ANIM.idle,ms:220},Walk:{frames:PET_ANIM.walk,ms:110},Run:{frames:PET_ANIM.run,ms:75},Sit:{frames:PET_ANIM.sit,ms:260},Lie:{frames:PET_ANIM.lie,ms:400}};
+const petAnims={Idle:{frames:PET_ANIM.idle,ms:220},Walk:{frames:PET_ANIM.walk,ms:110},Run:{frames:PET_ANIM.run,ms:75},Sit:{frames:PET_ANIM.sit,ms:260},Lie:{frames:PET_ANIM.lie,ms:400},Sniff:{frames:PET_ANIM.sniff,ms:300},Stretch:{frames:PET_ANIM.stretch,ms:700}};
 const petEntry=(species,id,name,summary)=>({id,name,category:'animals',group:species?'Cats':'Dogs',kind:'sprite',summary,
  source:'assets/animals/pet.js, look.js',usage:`import {pet} from './assets/animals/pet.js';\n// c is a 160 × 160 canvas context\nc.scale(2,2); pet(c, facing, frame, {species: ${species}, ...look});`,
  w:PET_FRAME.w,h:PET_FRAME.h,scale:2,facings:8,facing:1,anims:petAnims,
