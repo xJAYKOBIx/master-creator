@@ -1,4 +1,4 @@
-// Floors and ground, painted into a rectangle of world units: wood boards, kitchen and bathroom tile, carpet, lawn and concrete.
+// Floors and ground, painted into a rectangle of world units: wood boards, kitchen and bathroom tile, carpet, lawn, concrete and asphalt.
 // floorArt(g, {kind, x, y, w, h}) paints with a painter g already in world units; the pattern is tied to world position, so two
 // rectangles of the same floor side by side line up. Lighting and shadows come later, from the game.
 import {hash2 as hash} from '../core/paint.js';
