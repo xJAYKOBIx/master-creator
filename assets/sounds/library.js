@@ -9,6 +9,14 @@ function blip(k,start,f,dur,type='sine',vol=.025,end=f){const {ctx,at,out}=k,o=c
  o.frequency.setValueAtTime(f,at(start));o.frequency.exponentialRampToValueAtTime(Math.max(20,end),at(start+dur));g.gain.setValueAtTime(vol,at(start));g.gain.exponentialRampToValueAtTime(.001,at(start+dur));
  o.connect(g).connect(out);o.start(at(start));o.stop(at(start+dur));}
 
+// A throat: a buzz gliding from f to to (through mid, if given) with a wobble (wob times a second, by depth of its pitch), through a
+// vowel moving from vowel to vto. Returns the output gain, for shaping (a sob).
+function rasp(k,start,dur,dest,{type='sawtooth',f,to,mid,wob,depth,vowel,vto,q,gain}){const {ctx,at}=k,s=ctx.createOscillator();s.type=type;s.frequency.setValueAtTime(f,at(start));if(mid)s.frequency.linearRampToValueAtTime(mid,at(start+dur*.4));s.frequency.linearRampToValueAtTime(to,at(start+dur));
+ const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=wob;lg.gain.value=f*depth;lfo.connect(lg).connect(s.frequency);
+ const v=ctx.createBiquadFilter();v.type='bandpass';v.Q.value=q;v.frequency.setValueAtTime(vowel,at(start));v.frequency.linearRampToValueAtTime(vto,at(start+dur));
+ const g=ctx.createGain();g.gain.setValueAtTime(0,at(start));g.gain.linearRampToValueAtTime(gain,at(start+.04));g.gain.setValueAtTime(gain,at(start+dur*.7));g.gain.linearRampToValueAtTime(0,at(start+dur));
+ s.connect(v).connect(g).connect(dest);s.start(at(start));s.stop(at(start+dur+.02));lfo.start(at(start));lfo.stop(at(start+dur+.02));return g;}
+
 // A heart monitor that starts and speeds up, as in the live trial.
 const beats=(dur,first=.4)=>{const out=[];let t=first,gap=.62;while(t<dur){out.push(t);t+=gap;gap=Math.max(.32,gap*.9);}return out;};
 
@@ -100,7 +108,15 @@ export const SOUNDS=[
  // A shove: a short grunt of breath and a jacket swishing, then the flat thump of two hands into a body (none if it met only air).
  {id:'shove',name:'Shove',group:'Combat',dur:.35,options:[{key:'hit',label:'Lands on',choices:['Nothing','A body']}],play:(k,o={})=>{const {out}=k;
   k.noise(0,.12,out,{type:'bandpass',f:520,q:2.2,gain:.1,attack:.01,decay:true,sweep:300});k.noise(0,.16,out,{type:'bandpass',f:1500,q:.9,gain:.12,attack:.02,decay:true,sweep:700});
-  if((o.hit|0)===1){k.tone(.07,.12,out,{f:110,to:55,gain:.4,attack:.002,release:.09});k.noise(.07,.1,out,{f:600,gain:.3,attack:.001,decay:true,sweep:180});}}}];
+  if((o.hit|0)===1){k.tone(.07,.12,out,{f:110,to:55,gain:.4,attack:.002,release:.09});k.noise(.07,.1,out,{f:600,gain:.3,attack:.001,decay:true,sweep:180});}}},
+ // The special dead calling out as they come, each its own voice so you know which it is before you see it: the runner's rising shriek
+ // and hiss, the brute's footfalls and bellow, the screamer's sobbing wail, the bloater's wet gurgle, the spitter's gargle and hack.
+ {id:'special-call',name:'Special dead call',group:'Combat',dur:1.5,options:[{key:'kind',label:'Which',choices:['Runner','Brute','Screamer','Bloater','Spitter']}],play:(k,o={})=>{const {out}=k,n=o.kind|0;
+  if(n===0){rasp(k,0,.45,out,{f:300,to:720,wob:28,depth:.08,vowel:1400,vto:2200,q:3,gain:.45});k.noise(.3,.45,out,{type:'highpass',f:2500,gain:.12,attack:.02,decay:true});}
+  else if(n===1){for(const t of [0,.42]){k.tone(t,.16,out,{f:55,to:30,gain:.55,attack:.002,release:.12});k.noise(t,.12,out,{f:300,gain:.3,attack:.002,decay:true});}rasp(k,.15,.95,out,{f:70,to:58,wob:9,depth:.12,vowel:420,vto:320,q:2,gain:.7});}
+  else if(n===2){const w=rasp(k,0,1.4,out,{type:'triangle',f:620,to:600,mid:820,wob:6,depth:.02,vowel:1000,vto:1100,q:1.2,gain:.4});for(const t of [.38,.72,1.05]){w.gain.setValueAtTime(.4,k.at(t-.03));w.gain.linearRampToValueAtTime(.06,k.at(t));w.gain.linearRampToValueAtTime(.4,k.at(t+.06));}}
+  else if(n===3){rasp(k,0,1.05,out,{f:90,to:75,wob:11,depth:.3,vowel:500,vto:380,q:2.5,gain:.55});const r=rng(41);for(let i=0;i<9;i++){const t=.08+r()*.9;k.tone(t,.05,out,{f:200+r()*250,to:120+r()*120,gain:.08,attack:.003,release:.04});}}
+  else{rasp(k,0,.5,out,{f:160,to:120,wob:22,depth:.15,vowel:900,vto:700,q:3,gain:.5});for(const t of [.52,.64])k.noise(t,.09,out,{type:'bandpass',f:1200,q:1.5,gain:.4,attack:.003,decay:true});k.noise(.7,.3,out,{type:'highpass',f:3000,gain:.08,attack:.01,decay:true});}}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away.
