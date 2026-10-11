@@ -1,17 +1,24 @@
 // The sound kit: everything is synthesised in the browser with WebAudio, so sounds ship as code and can be rendered offline.
-// kit(ctx, t0, vol) returns helpers scheduled on the audio clock from t0, the whole sound at vol (1 is full). Two destinations: out (the room, through a gentle compressor)
+// kit(ctx, t0, vol) returns helpers scheduled on the audio clock from t0, the whole sound at vol (1 is full). Two destinations: out (the room, through a gentle compressor shared by every sound on the context)
 // and tv (a bandpass that makes anything sound like it comes out of a TV or radio speaker).
 import {rng} from '../core/kit.js';
-export function kit(ctx,t0,vol=1){const at=s=>t0+s;
- const out=ctx.createDynamicsCompressor();out.threshold.value=-18;out.ratio.value=4;const master=ctx.createGain();master.gain.value=.9*Math.max(0,Math.min(1,vol));out.connect(master).connect(ctx.destination);
- const tv=ctx.createBiquadFilter();tv.type='bandpass';tv.frequency.value=1300;tv.Q.value=.35;const tvg=ctx.createGain();tvg.gain.value=1.5;tv.connect(tvg).connect(out);
+// Built once per AudioContext and shared by every sound on it: the 2 s noise loop, and the gentle compressor every sound mixes into, so a burst of
+// gunfire is one compressor working on the mix instead of a new compressor and a fresh 2 s buffer for every shot.
+const rooms=new WeakMap();
+function room(ctx){let r=rooms.get(ctx);if(r)return r;
+ const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;const master=ctx.createGain();master.gain.value=.9;comp.connect(master).connect(ctx.destination);
  const len=ctx.sampleRate*2,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+ rooms.set(ctx,r={comp,buf});return r;}
+export function kit(ctx,t0,vol=1){const at=s=>t0+s,{comp,buf}=room(ctx);
+ const out=ctx.createGain();out.gain.value=Math.max(0,Math.min(1,vol));out.connect(comp);
+ // The TV speaker is only built for sounds that ask for it.
+ let tv=null;const speaker=()=>{if(!tv){tv=ctx.createBiquadFilter();tv.type='bandpass';tv.frequency.value=1300;tv.Q.value=.35;const tvg=ctx.createGain();tvg.gain.value=1.5;tv.connect(tvg).connect(out);}return tv;};
  const noise=(start,dur,dest,{type='lowpass',f=2000,q=.7,gain=.3,attack=.005,decay=false,sweep=null}={})=>{const s=ctx.createBufferSource();s.buffer=buf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,at(start));fl.Q.value=q;if(sweep)fl.frequency.exponentialRampToValueAtTime(sweep,at(start+dur));
   const g=ctx.createGain();g.gain.setValueAtTime(0,at(start));g.gain.linearRampToValueAtTime(gain,at(start+attack));if(decay)g.gain.exponentialRampToValueAtTime(.0005,at(start+dur));else{g.gain.setValueAtTime(gain,at(start+Math.max(attack,dur-.02)));g.gain.linearRampToValueAtTime(0,at(start+dur));}
   s.connect(fl).connect(g).connect(dest);s.start(at(start),Math.random());s.stop(at(start+dur+.05));return g;};
  const tone=(start,dur,dest,{type='sine',f=440,to=null,gain=.1,attack=.005,release=.05,detune=0}={})=>{const o=ctx.createOscillator();o.type=type;o.detune.value=detune;o.frequency.setValueAtTime(f,at(start));if(to)o.frequency.exponentialRampToValueAtTime(to,at(start+dur));
   const g=ctx.createGain();g.gain.setValueAtTime(0,at(start));g.gain.linearRampToValueAtTime(gain,at(start+attack));g.gain.setValueAtTime(gain,at(start+Math.max(attack,dur-release)));g.gain.linearRampToValueAtTime(0,at(start+dur));o.connect(g).connect(dest);o.start(at(start));o.stop(at(start+dur+.02));return o;};
- return {ctx,at,out,tv,noise,tone};}
+ return {ctx,at,out,get tv(){return speaker();},noise,tone};}
 // A voice through the speaker: a buzz at speaking pitch through two moving vowel formants, a breath of noise on some syllables.
 // Syllables for a stretch of speech: start, length and a vowel brightness.
 export function syllables(spans,seed){const r=rng(seed),out=[];for(const [a,b] of spans){let t=a;while(t<b-.06){const words=1+(r()*3|0);for(let i=0;i<words&&t<b-.06;i++){const d=.07+r()*.08;out.push([t,d,.3+r()*.7]);t+=d+.015;}t+=.04+r()*.06;}}return out;}
