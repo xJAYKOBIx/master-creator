@@ -96,7 +96,11 @@ export const SOUNDS=[
   s.frequency.setValueAtTime(f*.8,at(t));s.frequency.linearRampToValueAtTime(f,at(t+.03));s.frequency.exponentialRampToValueAtTime(f*.55,at(t+.16));
   const v=ctx.createBiquadFilter();v.type='bandpass';v.Q.value=2.5;v.frequency.setValueAtTime(1150,at(t));v.frequency.linearRampToValueAtTime(700,at(t+.16));
   const g=ctx.createGain();g.gain.setValueAtTime(0,at(t));g.gain.linearRampToValueAtTime(.5,at(t+.015));g.gain.exponentialRampToValueAtTime(.001,at(t+.18));s.connect(v).connect(g).connect(out);s.start(at(t));s.stop(at(t+.2));
-  k.noise(t,.12,out,{type:'bandpass',f:1600,q:1,gain:.12,attack:.003,decay:true});}}}];
+  k.noise(t,.12,out,{type:'bandpass',f:1600,q:1,gain:.12,attack:.003,decay:true});}}},
+ // A shove: a short grunt of breath and a jacket swishing, then the flat thump of two hands into a body (none if it met only air).
+ {id:'shove',name:'Shove',group:'Combat',dur:.35,options:[{key:'hit',label:'Lands on',choices:['Nothing','A body']}],play:(k,o={})=>{const {out}=k;
+  k.noise(0,.12,out,{type:'bandpass',f:520,q:2.2,gain:.1,attack:.01,decay:true,sweep:300});k.noise(0,.16,out,{type:'bandpass',f:1500,q:.9,gain:.12,attack:.02,decay:true,sweep:700});
+  if((o.hit|0)===1){k.tone(.07,.12,out,{f:110,to:55,gain:.4,attack:.002,release:.09});k.noise(.07,.1,out,{f:600,gain:.3,attack:.001,decay:true,sweep:180});}}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away.

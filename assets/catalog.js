@@ -26,7 +26,7 @@ import {text,width,GLYPHS} from './ui/font5x7.js';
 import {paintPlate,SAMPLE as PLATE_SAMPLE} from './ui/plate.js';
 import {BLOOD,brushes} from './effects/grime.js';
 import {GORE,GORE_PARTS,zombiePiece,CRAWL,crawlArt,GIBS,gibArt,BLOOD_KINDS,BLOOD_BOX,bloodArt} from './effects/gore.js';
-import {SPECIAL_KINDS,SPECIAL_LOOKS,special} from './characters/specials.js';
+import {SPECIAL_KINDS,SPECIAL_LOOKS,special,VARIANT_KINDS,VARIANT_LOOKS} from './characters/specials.js';
 import {ACID,GAS,ACID_BOX,acidArt,GLOB,globArt,GAS_BOX,gasArt} from './effects/hazards.js';
 import {logo,osd,breakup,flip,noSignal} from './effects/tv.js';
 import {captions,lowerThird,ticker,bug} from './effects/broadcast.js';
@@ -90,6 +90,13 @@ const CHARACTERS=[
   w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:{Idle:{frames:[0],ms:200},Walk:{frames:WALK_FRAMES,ms:125},Act:{frames:[-1,-2],ms:160}},
   options:[{key:'kind',label:'Kind',choices:['Screamer','Bloater','Spitter']},...INFECTION.map(lookOption),...PERSON.map(lookOption)],
   defaults:{kind:0},draw:(c,{facing,frame,o})=>{const kind=SPECIAL_KINDS[o.kind||0],look={...DEFAULT_APPEARANCE,...SPECIAL_LOOKS[kind]};for(const k of [...INFECTION,...PERSON])if(o[k]!==undefined)look[k]=o[k];c.scale(2,2);special(c,kind,facing,frame<0?0:frame,look,frame<0?(frame===-1?1:.5):0);}},
+ {id:'dead-variants',name:'Special dead looks',category:'characters',group:'Infected',kind:'sprite',summary:'Three looks each for the runner, the brute, the screamer, the bloater and the spitter, so a street of them is not one body over and over. They differ only in clothes, hair, skin and rot; the first of each is the look games already use.',
+  source:'assets/characters/specials.js',usage:"import {VARIANT_LOOKS} from './assets/characters/specials.js';\nimport {DEFAULT_APPEARANCE} from './assets/characters/appearance.js';\nconst look = {...DEFAULT_APPEARANCE, zombie: 1, pack: 1, ...VARIANT_LOOKS.runner[2]};\n// runner and brute: survivor(c, facing, frame, false, look); the rest: special(c, kind, facing, frame, look, act)",
+  w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:{Idle:{frames:[0],ms:200},Walk:{frames:WALK_FRAMES,ms:125}},
+  options:[{key:'kind',label:'Kind',choices:['Runner','Brute','Screamer','Bloater','Spitter']},{key:'variant',label:'Look',choices:['First','Second','Third']}],
+  defaults:{kind:0,variant:1},random:r=>({kind:Math.floor(r()*5),variant:Math.floor(r()*3)}),
+  draw:(c,{facing,frame,o})=>{const kind=VARIANT_KINDS[o.kind||0],look={...DEFAULT_APPEARANCE,zombie:1,pack:1,...VARIANT_LOOKS[kind][o.variant||0]};c.scale(2,2);
+   if(SPECIAL_KINDS.includes(kind))special(c,kind,facing,frame,look,0);else survivor(c,facing,kind==='runner'&&frame>0?frame+8:frame,false,look);}},
  {id:'zombie-pieces',name:'Zombie pieces',category:'characters',group:'Infected',kind:'sprite',summary:'Any zombie blown apart: the top and bottom halves at the waist, or the head and the rest at the neck, each with a ragged wound, a stub of spine and gut, lined up with the whole body it came from.',
   source:'assets/effects/gore.js',usage:"import {zombiePiece, GORE_PARTS} from './assets/effects/gore.js';\n// c: a 160 × 192 frame, the same as the zombie's own; part: 'upper', 'lower', 'head' or 'headless'\nzombiePiece(c, {...look, zombie: 1}, facing, 'upper', 0, seed);",
   w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:{Still:{frames:[0],ms:200}},

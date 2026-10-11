@@ -14,6 +14,32 @@ export const SPECIAL_KINDS=['screamer','bloater','spitter'];
 export const SPECIAL_LOOKS={screamer:{body:1,skin:0,top:2,shirt:1,bottom:3,pants:2,shoes:2,hair:7,color:3,rot:0,decay:1,eyes:1,wounds:2},
  bloater:{body:0,skin:2,top:6,shirt:2,bottom:1,pants:1,shoes:0,hair:3,beard:1,rot:1,decay:2,eyes:0,wounds:0},
  spitter:{body:0,skin:4,top:4,shirt:0,bottom:2,pants:3,shoes:1,hair:4,color:0,rot:1,decay:1,eyes:2,wounds:2}};
+// Three looks for each kind the dead come in that you fight one after another, so a street of them is not the same body over and over:
+// the runner (lean, dressed to move), the brute (a big man; games draw him half as big again), and the three above. The first of each
+// is the look games already use (for the three above, SPECIAL_LOOKS); the rest only change clothes, hair, skin and rot, so they act
+// the same. Each is a zombie look to lay over DEFAULT_APPEARANCE. Append new looks at the end of a list; never reorder them.
+export const VARIANT_KINDS=['runner','brute','screamer','bloater','spitter'];
+export const VARIANT_LOOKS={
+ // A jogger in a tank top and shorts; a lad in a red hoodie and jeans; a girl in a sky-blue tee with her ribs showing.
+ runner:[{body:1,top:6,shirt:5,bottom:4,shoes:1,hair:2,color:2,skin:1,decay:1,eyes:1,wounds:2,rot:3},
+  {body:0,top:3,coat:5,shirt:3,bottom:1,pants:6,shoes:1,hair:4,color:0,skin:4,decay:0,eyes:1,wounds:1,rot:0},
+  {body:1,top:1,shirt:7,bottom:4,pants:1,shoes:1,hair:6,color:4,skin:2,decay:1,eyes:1,wounds:3,rot:2}],
+ // A bearded man in a charcoal hoodie; a bald bouncer in black; a rancher in a rust jacket and a cowboy hat with a long beard.
+ brute:[{top:3,coat:2,bottom:5,pants:3,shoes:0,hair:4,beard:3,color:0,skin:5,decay:1,eyes:2,wounds:3,rot:1},
+  {top:1,shirt:4,bottom:1,pants:1,shoes:0,hair:3,beard:2,color:0,skin:1,decay:2,eyes:0,wounds:2,rot:2},
+  {top:0,coat:3,hat:4,bottom:1,pants:6,shoes:3,hair:1,beard:6,color:1,skin:3,decay:1,eyes:2,wounds:1,rot:1}],
+ // The nightgown; a woman in a sage tee with dark curls; a man in an office shirt with platinum hair, gone blue.
+ screamer:[SPECIAL_LOOKS.screamer,
+  {body:1,skin:4,top:1,shirt:5,bottom:3,pants:4,shoes:2,hair:8,color:0,rot:0,decay:1,eyes:1,wounds:1},
+  {body:0,skin:1,top:4,shirt:2,bottom:3,pants:1,shoes:2,hair:0,color:5,rot:3,decay:2,eyes:1,wounds:2}],
+ // The tank top; a red tee and khaki shorts with a full beard; an off-white vest and olive cargo pants, pallid.
+ bloater:[SPECIAL_LOOKS.bloater,
+  {body:0,skin:5,top:1,shirt:3,bottom:4,pants:2,shoes:1,hair:1,color:1,beard:3,rot:1,decay:2,eyes:0,wounds:0},
+  {body:0,skin:1,top:6,shirt:1,bottom:2,pants:3,shoes:0,hair:4,color:4,beard:0,rot:0,decay:2,eyes:2,wounds:0}],
+ // The work shirt; a woman in a navy hoodie and faded jeans; a man in a green field jacket and a knit hat.
+ spitter:[SPECIAL_LOOKS.spitter,
+  {body:1,skin:3,top:3,shirt:6,bottom:1,pants:7,shoes:1,hair:2,color:0,rot:1,decay:1,eyes:2,wounds:2},
+  {body:0,skin:0,top:0,coat:4,hat:2,bottom:0,pants:5,shoes:0,hair:1,beard:5,color:1,rot:3,decay:2,eyes:0,wounds:3}]};
 const INK='#111319',MOUTH='#2b1215',CAVITY='#1a080a',TEETH='#d6ccb0',BLOOD='#6e1a1d',BLOOD_DK='#3d0f12';
 // Pus and acid, dark to light.
 const PUS=['#3c4a16','#6f8a2a','#a8c246','#e4f08c'],ACID=['#2e3d0c','#5c7a12','#9ad13a','#e2ff8a'],BURN=['#1f2410','#38401a'];
