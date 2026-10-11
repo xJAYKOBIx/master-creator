@@ -127,6 +127,42 @@ export const STREET_ART={
   const x=w-11,yt=h-z-1;r(x-.5,yt-.5,11,z+1.5,EDGE);r(x,yt,10,3,A[2]);r(x,yt,10,.5,A[3]);r(x,yt+3,10,z-2.5,A[1]);r(x,yt+3,10,.5,A[2]);r(x,h-1,10,.5,A[0]);
   r(x+3,yt+.5,4,1,A[0]);r(x+3.5,yt+.5,3,.5,'#6b7a52');r(x+.5,yt+2.5,1,1.5,A[0]);r(x+2,yt+5,6,.5,'#c9b45a');r(x+2,yt+6,4,.5,'#c9b45a');
   r(x+4,yt-1.5,1,2,'#d0702e');r(x+4.5,yt-1,2.5,1,'#e8904a');r(x+6.5,yt-.5,1,5,'#d0702e');r(x+7.5,yt+3.5,1,2.5,'#e8904a');},
+ // A portable generator on its frame: a yellow tank and engine block, a black tube frame, two wheels and the pull cord. on starts it:
+ // the panel light goes green and smoke puffs from the exhaust.
+ generator(g,o){const {r,e,p}=g,w=o.w,h=o.h,z=o.z,Y=['#7a5a10','#b08a1c','#d8b030','#f0d060'],F=['#141518','#26282c','#3a3d42'],t=h-z;e(w/2,h,w/2+2,2.5,SHADOW);
+  // The frame: two loops of tube round the whole thing.
+  r(-.5,t-.5,w+1,z+1,EDGE);r(0,t,w,z,F[1]);r(0,t,w,.5,F[2]);r(1.5,t+1.5,w-3,z-3,F[0]);
+  // The tank on top and the engine below it, the panel with its sockets and light, the recoil starter and its cord.
+  r(2,t+1,w-4,h-2-t-z*.45,EDGE);r(2.5,t+1.5,w-5,h-3-t-z*.45,Y[2]);r(2.5,t+1.5,w-5,1,Y[3]);r(w/2-2,t-.5,4,2,EDGE);r(w/2-1.5,t,3,1,F[2]);
+  const ey=t+z*.55;r(2,ey,w*.55,h-ey-2,EDGE);r(2.5,ey+.5,w*.55-1,h-ey-3,Y[1]);r(3,ey+1.5,w*.55-2,.5,Y[0]);r(3,ey+3,w*.55-2,.5,Y[0]);
+  e(w*.3,ey+(h-ey)/2-1,2.5,2.5,EDGE);e(w*.3,ey+(h-ey)/2-1,1.8,1.8,F[2]);r(w*.3-.25,ey+(h-ey)/2-1,3.5,.5,'#c84a2a');
+  r(w*.62,ey,w*.38-2,h-ey-2,EDGE);r(w*.62+.5,ey+.5,w*.38-3,h-ey-3,F[2]);r(w*.62+1.5,ey+1.5,1.5,1.5,F[0]);r(w*.62+4,ey+1.5,1.5,1.5,F[0]);r(w-4.5,ey+1.5,1.5,1.5,o.on?'#7aff7a':'#2a3a2a');if(o.on)r(w-5,ey+1,2.5,2.5,'#7aff7a40');
+  e(3,h-.5,2.5,2.5,EDGE);e(3,h-.5,1.8,1.8,'#0c0d10');e(w-3,h-.5,2.5,2.5,EDGE);e(w-3,h-.5,1.8,1.8,'#0c0d10');
+  // The exhaust on the side, and its smoke when running.
+  r(w-1,ey-2,2.5,1.5,EDGE);r(w-.5,ey-1.5,1.5,.5,F[2]);if(o.on)for(const [x,y,s] of [[w+2,ey-5,1.5],[w+4,ey-9,2],[w+3,ey-14,2.5]])e(x,y,s,s*.8,'#8a8a8a60');},
+ // A work light on a tripod: three legs, a pole and a square lamp head angled down. on lights the face.
+ floodlight(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,cx=w/2,F=['#1e2024','#33363b','#55585e'];e(cx,h-1,7,2.5,SHADOW);
+  for(const dx of [-6,0,6])l(cx,h-14,cx+dx,h-(dx?0:2),1.5,EDGE);for(const dx of [-6,6])l(cx,h-14,cx+dx,h,.75,F[2]);
+  r(cx-1.5,-z+6,3,z+h-18,EDGE);r(cx-1,-z+6.5,2,z+h-19,F[1]);r(cx-1,-z+6.5,.5,z+h-19,F[2]);
+  r(cx-6.5,-z-.5,13,9,EDGE);r(cx-6,-z,12,8,F[1]);r(cx-5,-z+1,10,6,o.on?'#fff6d8':'#2a2c30');if(o.on){r(cx-5,-z+1,10,1,'#ffffff');r(cx-4,-z+3,3,2,'#fffbe8');}r(cx-6,-z,12,.5,F[2]);},
+ // An evacuation truck: an olive cargo truck with a canvas cover over the back, the cab on the right. Like the cars, w is its length,
+ // h its depth and z its height to the top of the canvas. open drops the tailgate and ties back the canvas so you can climb in.
+ truck(g,o){const {r,p,e,l}=g,L=o.w,D=o.h,Z=o.z,O=['#1e2416','#2c3420','#3c462c','#4e5a3a'],C=['#2a2a1e','#3e3e2c','#525038','#66634a'],H0=8,cab=Math.round(L*.27),cx0=L-cab,Hb=Math.round(Z*.46),Hc=Math.round(Z*.84);
+  e(L/2,D-1,L/2+6,6,SHADOW);r(4,D-H0-1,L-8,H0+1,'#0a0b0d');
+  // The cargo bed: the floor, the sides, and the canvas cover arching over it on its hoops.
+  r(-.5,-Hb-.5,cx0-1,D+Hb-H0+1,EDGE);r(0,-Hb+1,cx0-2,D-2,O[2]);r(0,D-Hb,cx0-2,Hb-H0,O[1]);r(0,D-Hb,cx0-2,1,O[3]);r(0,D-H0-3,cx0-2,2.5,O[0]);
+  p([[1,-Z+4],[cx0-3,-Z+4],[cx0-3,D-Hb],[1,D-Hb]],EDGE);p([[1.5,-Z+4.5],[cx0-3.5,-Z+4.5],[cx0-3.5,D-Hb-.5],[1.5,D-Hb-.5]],C[1]);r(1.5,-Z+4.5,cx0-5,D-8,C[2]);r(1.5,-Z+4.5,cx0-5,1,C[3]);
+  for(let x=14;x<cx0-8;x+=22){r(x,-Z+5,1,D-7,C[1]);r(x,D-Z+2,1,Z-Hb-6,C[0]);}r(1.5,D-Hb-3,cx0-5,1,C[0]);
+  // The tailgate on the left: down and open, or up with the canvas flap shut.
+  if(o.open){r(-9,D-Hb+2,9,Hb-H0-2,EDGE);r(-8.5,D-Hb+2.5,8,Hb-H0-3,O[1]);r(-8.5,D-Hb+2.5,8,1,O[3]);p([[1.5,D-Z+2],[8,D-Z+2],[4,D-Hb-1],[1.5,D-Hb-1]],'#0a0b0d');r(-2,D-Hb-2,4,3,'#6a5a3a');}
+  else{r(-1,D-Z+2,3,Z-Hb,C[0]);r(-1,D-Hb,3,Hb-H0,O[0]);}
+  // The cab: hood and roof from the top, the door and window on the near side, the grille and a headlight on the front.
+  r(cx0-1.5,-Hc-.5,cab*.55+2,D+Hc-H0+1,EDGE);r(cx0-1.5,-Hb-.5,cab+2,D+Hb-H0+1,EDGE);r(cx0-1,-Hb+1,cab+1,D-2,O[2]);r(cx0-1,D-Hb,cab+1,Hb-H0,O[1]);r(cx0-1,D-Hb,cab+1,1,O[3]);r(cx0-1,D-H0-3,cab+1,2.5,O[0]);
+  r(cx0,-Hc,cab*.55,D-4,O[3]);r(cx0,-Hc,cab*.55,1,'#62704a');r(cx0-1,D-Hc,cab*.55+1,Hc-Hb,O[2]);r(cx0-1,D-Hc,cab*.55+1,1,O[3]);r(cx0+2,D-Hc+3,cab*.55-5,(Hc-Hb)*.6,EDGE);r(cx0+2.5,D-Hc+3.5,cab*.55-6,(Hc-Hb)*.6-1,'#1a2430');r(cx0+3,D-Hc+4,3,(Hc-Hb)*.6-2,'#2c3c4c');p([[cx0+cab*.55,D-Hc],[cx0+cab*.55+5,D-Hb],[cx0+cab*.55,D-Hb]],O[1]);
+  r(cx0+2,D-Hb+3,cab*.55-4,Hb-H0-7,O[2]);r(cx0+cab*.55-5,D-Hb+8,3,1,'#9aa0a6');r(L-3,D-Hb+1,3,Hb-H0-3,EDGE);for(let y=D-Hb+2;y<D-H0-3;y+=2)r(L-2.5,y,2,.5,'#55585e');r(L-1,-Hb+3,1.5,4,'#e8e2c4');r(L-3,D-Hb+1,2.5,3,'#e8e2c4');
+  // A white star on the door, and the big wheels: two at the back, one at the front.
+  r(cx0+cab*.2,D-Hb+6,3,3,'#d8d6cf');for(const x of [L*.12,L*.3,L-cab*.45]){e(x,D-H0-3,10,7,'#0a0b0d');e(x,D-7,8.5,8,EDGE);e(x,D-7,8,7.5,'#0c0d10');e(x,D-7,4,3.8,'#3a3d42');e(x,D-7,1.5,1.4,'#1e2024');}
+  l(cx0-2,-Hb+2,cx0-2,D-H0-2,1,O[0]);},
  // A garden shed: a tin roof with its ridge along the length, plank walls and double doors.
  shed(g,o){const {r,l}=g,w=o.w,h=o.h,z=o.z,zf=Math.round(z*.72),yb=-zf,yr=Math.round(h/2-z),yf=h-zf,W=['#231e1a','#322a24','#40362d','#4e4236'],R=['#1e2024','#2a2d33','#363a42','#454952'];
   r(-1.5,Math.min(yb,yr)-1,w+3,yf-Math.min(yb,yr)+2,EDGE);if(yr>yb)r(-1,yb,w+2,yr-yb,R[1]);r(-1,yr,w+2,yf-yr,R[2]);for(let x=1;x<w;x+=3){r(x,yr,.5,yf-yr,R[1]);r(x+1,yr,.5,yf-yr,R[3]);}r(-1,yr-.5,w+2,1.5,R[3]);r(-1,yf,w+2,1.5,'#0d0e11');
