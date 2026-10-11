@@ -26,19 +26,34 @@ export const origin=L=>[(FRAME.w/2-L.x)/L.w,(FRAME.footY*2-L.y)/L.h];
 // Frame ids match the full sheet: facing + frame × 8 for legs and body, the facing for the head, the angle step for the arms, and
 // TURNED + the angle step for the turned body and head.
 function paint(ctx,L,i,draw){const [x,y]=cell(L,i);ctx.save();ctx.beginPath();ctx.rect(x,y,L.w,L.h);ctx.clip();ctx.translate(x-L.x,y-L.y);ctx.scale(2,2);draw(ctx);ctx.restore();}
+// Returns whether the turned frames are in the sheets (pose(m, true) needs them); false when unarmed or they could not be painted.
 export function paintLayers(sheets,look){
  for(const k of ORDER){const L=LAYERS[k],c=sheets[k];c.clearRect(0,0,...sheetSize(L));c.imageSmoothingEnabled=false;}
  for(let f=0;f<FRAME_COUNT;f++)for(let d=0;d<8;d++){const i=f*8+d;paint(sheets.legs,LAYERS.legs,i,c=>survivorLegs(c,d,f,look));paint(sheets.body,LAYERS.body,i,c=>survivorBody(c,d,f,true,look,'under'));}
  for(let d=0;d<8;d++)paint(sheets.head,LAYERS.head,d,c=>survivorBody(c,d,0,true,look,'over'));
- if(armed(look)){for(let a=0;a<AIM_ANGLES;a++)paint(sheets.arms,LAYERS.arms,a,c=>gunArms(c,a/AIM_ANGLES*Math.PI*2,look,0));paintTurns(sheets,look);}}
-// The turned body and head: each drawn facing once, whole-frame, then turned to the angles nearest it.
-// Scratch canvases come from the page, or from the sheets' own canvas type where there is no page (node tests); with neither, no turns.
-const scratch=(like,w,h)=>{try{return canvas(w,h);}catch{try{return new like.canvas.constructor(w,h);}catch{return null;}}};
-function paintTurns(sheets,look){const F=[FRAME.w,FRAME.h],out=scratch(sheets.body,...F);if(!out)return;const full=part=>d=>{const c=scratch(sheets.body,...F),x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=false;x.scale(2,2);survivorBody(x,d,0,true,look,part);return x.getImageData(0,0,...F);};
+ if(!armed(look))return false;
+ for(let a=0;a<AIM_ANGLES;a++)paint(sheets.arms,LAYERS.arms,a,c=>gunArms(c,a/AIM_ANGLES*Math.PI*2,look,0));
+ return paintTurns(sheets,look);}
+// The turned body and head: each facing drawn once, whole-frame, on one scratch canvas and read back, then turned to the angles
+// nearest it and written straight into the sheet cells with putImageData. Nothing is drawn from a scratch canvas into a sheet:
+// Safari can draw an OffscreenCanvas from before its last change, which put other cells' pixels (or none) into the turned frames.
+// Every cell is read back and checked; if any is wrong the turned cells are cleared and false is returned, so a game falls back
+// to the eight facings rather than show a body with parts missing.
+const scratch=(like,w,h)=>{for(const make of [()=>Object.assign(document.createElement('canvas'),{width:w,height:h}),()=>canvas(w,h),()=>new like.canvas.constructor(w,h)]){
+ try{const c=make(),x=c?.getContext?.('2d',{willReadFrequently:true});if(x?.getImageData&&x.createImageData)return x;}catch{}}return null;};
+const same=(got,want,w,h,F,x0,y0)=>{let bad=0;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4,j=((y+y0)*F+x+x0)*4,A=want[j+3];
+ if(Math.abs(got[i+3]-A)>2||A>0&&(Math.abs(got[i]-want[j])>8||Math.abs(got[i+1]-want[j+1])>8||Math.abs(got[i+2]-want[j+2])>8))bad++;}return bad<=w*h/200;};
+function paintTurns(sheets,look){const [W,H]=[FRAME.w,FRAME.h],x=scratch(sheets.body,W,H);if(!x)return false;x.imageSmoothingEnabled=false;
+ const full=part=>d=>{x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);x.scale(2,2);survivorBody(x,d,0,true,look,part);return x.getImageData(0,0,W,H);};
  const under=[...Array(8).keys()].map(full('under')),over=[...Array(8).keys()].map(full('over')),rows=under.map((u,d)=>rowsOf([u,over[d]]));
- const o=out.getContext('2d');
+ const img=x.createImageData(W,H),cells=[];let ok=true;
  for(let a=0;a<TURNS;a++){const {d,delta}=nearest(a/TURNS*Math.PI*2),[u,v]=turnLayers([under[d],over[d]],delta,rows[d]);
-  for(const [k,px] of [['body',u],['head',v]]){const L=LAYERS[k],[x,y]=cell(L,TURNED[k]+a);const img=o.createImageData(...F);img.data.set(px);o.putImageData(img,0,0);sheets[k].drawImage(out,L.x,L.y,L.w,L.h,x,y,L.w,L.h);}}}
+  for(const [k,px] of [['body',u],['head',v]]){const L=LAYERS[k],[cx,cy]=cell(L,TURNED[k]+a);img.data.set(px);sheets[k].putImageData(img,cx-L.x,cy-L.y,L.x,L.y,L.w,L.h);cells.push([k,cx,cy,px]);}}
+ const back={};try{for(const k of ['body','head'])back[k]=sheets[k].getImageData(0,0,...sheetSize(LAYERS[k]));}catch{}
+ if(back.head)for(const [k,cx,cy,px] of cells){const L=LAYERS[k],B=back[k],got=new Uint8ClampedArray(L.w*L.h*4);
+  for(let y=0;y<L.h;y++)got.set(B.data.subarray(((cy+y)*B.width+cx)*4,((cy+y)*B.width+cx+L.w)*4),y*L.w*4);if(!same(got,px,L.w,L.h,W,L.x,L.y)){ok=false;break;}}
+ if(!ok){for(const [k,cx,cy] of cells)sheets[k].clearRect(cx,cy,LAYERS[k].w,LAYERS[k].h);if(typeof console!=='undefined')console.warn('survivor turns: read back wrong, using the eight facings');}
+ return ok;}
 // Which frame of each layer to show, and how far the head and arms ride with the body's bob and lean (rides: the layers that
 // move with it; a turned body is the standing frame, so it rides too).
 // turn: the look is armed and painted with the turned frames, so the body and head follow the aim at 64 angles.
