@@ -19,7 +19,7 @@ import {SKIN_TONES,DYES,ROT_TONES,rotRamp} from './characters/palette.js';
 import {pet,PET_FRAME,PET_ANIM} from './animals/pet.js';
 import {BREEDS,MARKINGS,COATS,EYES,COLLARS,DEFAULT_PET,randomPet} from './animals/look.js';
 import {GUNS,HELD,GRENADES,PAINT,gunArt,grenadeArt} from './weapons/equipment.js';
-import {DIVE,paintDive,layerSheets,sheetSize} from './characters/layers.js';
+import {DIVE,paintDive,layerSheets,sheetSize,drawLayers} from './characters/layers.js';
 import {vectorPainter} from './core/paint.js';
 import {R,hash,canvas} from './core/kit.js';
 import {text,width,GLYPHS} from './ui/font5x7.js';
@@ -56,7 +56,7 @@ const GUN_IDS=Object.keys(GUNS);
 const survivorLook=(o,zombie)=>{const l={...DEFAULT_APPEARANCE,...o,zombie:zombie?1:0};delete l.gunChoice;delete l.paintball;
  if(!zombie&&o.gunChoice>0){l.gun=GUN_IDS[o.gunChoice-1];if(o.paintball)l.paint=PAINT[l.gun];}return l;};
 const personAnims=zombie=>({Idle:{frames:[0],ms:200},Walk:{frames:WALK_FRAMES,ms:zombie?125:85},Run:{frames:RUN_FRAMES,ms:zombie?80:60}});
-const diveCache=new Map();
+const diveCache=new Map(),turnCache=new Map();
 const personDraw=zombie=>(c,{facing,frame,o})=>{c.scale(2,2);survivor(c,facing,frame,true,survivorLook(o,zombie));};
 const CHARACTERS=[
  {id:'survivor',name:'Survivor',category:'characters',group:'People',kind:'sprite',summary:'The modular survivor: two body types, six skin tones and every hair, clothing and pack choice, in 8 facings with idle, walk and run.',
@@ -72,6 +72,13 @@ const CHARACTERS=[
   presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),defaults:{...pickKeys(DEFAULT_APPEARANCE,PERSON),gunChoice:1},
   draw:(c,{facing,frame,o})=>{const look=survivorLook(o,false),key=JSON.stringify(look);let D=diveCache.get(key);if(!D){D=canvas(...sheetSize(DIVE)).getContext('2d');paintDive(D,layerSheets(look),look);diveCache.set(key,D);if(diveCache.size>6)diveCache.delete(diveCache.keys().next().value);}
    const i=facing+(frame%3)*8;c.drawImage(D.canvas,(i%DIVE.cols)*DIVE.w,Math.floor(i/DIVE.cols)*DIVE.h,DIVE.w,DIVE.h,0,0,DIVE.w,DIVE.h);}},
+ {id:'survivor-turn',name:'Survivor turning',category:'characters',group:'People',kind:'sprite',summary:'The armed survivor turning all the way round at 64 angles: body, face and gun follow the aim, filled in between the eight drawn facings.',
+  source:'assets/characters/layers.js, turn.js',usage:"import {paintLayers, pose, drawLayers, layerSheets, AIM_ANGLES} from './assets/characters/layers.js';\n// With a gun or the flashlight in hand, pose(model, true) picks the turned body and head for model.aim (radians)\ndrawLayers(c, layerSheets(look), {direction, frame, aim}, x, y, scale, true, true);",
+  w:FRAME.w,h:FRAME.h,scale:2,facings:1,anims:{Turn:{frames:[...Array(64).keys()],ms:110}},
+  options:[...PERSON.map(lookOption),{key:'gunChoice',label:'Held',choices:GUN_IDS.map(id=>GUNS[id].name)}],
+  presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),defaults:{...pickKeys(DEFAULT_APPEARANCE,PERSON),gunChoice:0},
+  draw:(c,{frame,o})=>{const look={...survivorLook(o,false),gun:GUN_IDS[o.gunChoice|0]||GUN_IDS[0]},key=JSON.stringify(look);let S=turnCache.get(key);if(!S){S=layerSheets(look);turnCache.set(key,S);if(turnCache.size>4)turnCache.delete(turnCache.keys().next().value);}
+   const a=(frame|0)%64*Math.PI/32,d=((Math.round(a/(Math.PI/4))%8)+8)%8;drawLayers(c,S,{direction:d,frame:0,aim:a},FRAME.w/2,FRAME.footY*2,1,true,true);}},
  {id:'zombie',name:'Zombie',category:'characters',group:'Infected',kind:'sprite',summary:'Any survivor look, turned: rot tones, three stages of decay, eyes and wounds, with the shamble walk and lurching run.',
   source:'assets/characters/character.js, zombie.js',usage:"import {survivor} from './assets/characters/character.js';\nc.scale(2,2); survivor(c, facing, frame, true, {...look, zombie: 1});",
   w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:personAnims(true),
