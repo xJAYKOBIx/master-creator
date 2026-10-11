@@ -116,8 +116,23 @@ export const SOUNDS=[
   else if(n===1){for(const t of [0,.42]){k.tone(t,.16,out,{f:55,to:30,gain:.55,attack:.002,release:.12});k.noise(t,.12,out,{f:300,gain:.3,attack:.002,decay:true});}rasp(k,.15,.95,out,{f:70,to:58,wob:9,depth:.12,vowel:420,vto:320,q:2,gain:.7});}
   else if(n===2){const w=rasp(k,0,1.4,out,{type:'triangle',f:620,to:600,mid:820,wob:6,depth:.02,vowel:1000,vto:1100,q:1.2,gain:.4});for(const t of [.38,.72,1.05]){w.gain.setValueAtTime(.4,k.at(t-.03));w.gain.linearRampToValueAtTime(.06,k.at(t));w.gain.linearRampToValueAtTime(.4,k.at(t+.06));}}
   else if(n===3){rasp(k,0,1.05,out,{f:90,to:75,wob:11,depth:.3,vowel:500,vto:380,q:2.5,gain:.55});const r=rng(41);for(let i=0;i<9;i++){const t=.08+r()*.9;k.tone(t,.05,out,{f:200+r()*250,to:120+r()*120,gain:.08,attack:.003,release:.04});}}
-  else{rasp(k,0,.5,out,{f:160,to:120,wob:22,depth:.15,vowel:900,vto:700,q:3,gain:.5});for(const t of [.52,.64])k.noise(t,.09,out,{type:'bandpass',f:1200,q:1.5,gain:.4,attack:.003,decay:true});k.noise(.7,.3,out,{type:'highpass',f:3000,gain:.08,attack:.01,decay:true});}}}];
+  else{rasp(k,0,.5,out,{f:160,to:120,wob:22,depth:.15,vowel:900,vto:700,q:3,gain:.5});for(const t of [.52,.64])k.noise(t,.09,out,{type:'bandpass',f:1200,q:1.5,gain:.4,attack:.003,decay:true});k.noise(.7,.3,out,{type:'highpass',f:3000,gain:.08,attack:.01,decay:true});}}},
+ // The title screen. The night outside: rain on the street and a low drone under it, eight seconds that fade in and out at the ends,
+ // so playing one every six and a half seconds makes an unbroken bed.
+ {id:'title-night',name:'Night bed',group:'Title',dur:8,options:[{key:'part',label:'Layers',choices:['Rain and drone','Rain only']}],play:(k,o={})=>{const {ctx,at,out}=k;
+  k.noise(0,8,out,{type:'highpass',f:2600,gain:.045,attack:1.5});k.noise(0,8,out,{f:900,gain:.05,attack:1.5});k.noise(0,8,out,{type:'bandpass',f:5200,q:.6,gain:.018,attack:1.5});
+  if((o.part|0)===1)return;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(180,at(0));lp.frequency.linearRampToValueAtTime(320,at(4));lp.frequency.linearRampToValueAtTime(180,at(8));lp.connect(out);
+  for(const [f,d] of [[55,0],[55,9],[82.4,-6],[110,4]])k.tone(0,8,lp,{type:'sawtooth',f,gain:.035,attack:1.5,release:1.5,detune:d});}},
+ // Moving through a menu: a soft, dry tick. Choosing: a low thunk with a short ring over it.
+ {id:'menu-move',name:'Menu move',group:'Title',dur:.08,play:k=>{const {out}=k;k.noise(0,.03,out,{type:'bandpass',f:2400,q:4,gain:.12,attack:.001,decay:true});k.tone(0,.04,out,{f:880,to:660,gain:.02,attack:.001,release:.03});}},
+ {id:'menu-select',name:'Menu choose',group:'Title',dur:.4,play:k=>{const {out}=k;k.tone(0,.18,out,{f:140,to:70,gain:.32,attack:.002,release:.14});k.noise(0,.15,out,{f:700,gain:.25,attack:.002,decay:true});k.tone(.01,.3,out,{type:'triangle',f:1320,gain:.025,attack:.002,release:.28});}},
+ // The title coming up: a deep boom, a dark sweep down, and a cold ring of metal that hangs.
+ {id:'title-hit',name:'Title hit',group:'Title',dur:2.6,play:k=>{const {out}=k;k.tone(0,1.8,out,{f:48,to:28,gain:.7,attack:.004,release:1.5});k.noise(0,1.6,out,{f:420,gain:.5,attack:.004,decay:true,sweep:60});
+  for(const [f,g] of [[1180,.014],[1586,.011],[2213,.008]])k.tone(.02,2.5,out,{type:'triangle',f,gain:g,attack:.004,release:2.3});k.noise(0,.05,out,{type:'highpass',f:3000,gain:.25,attack:.001,decay:true});}},
+ // Thunder a long way off: a soft crack, then a rumble that rolls and dies away.
+ {id:'thunder',name:'Distant thunder',group:'Title',dur:4,play:k=>{const {out}=k,r=rng(77);k.noise(0,.25,out,{f:1400,gain:.12,attack:.01,decay:true,sweep:300});k.noise(.1,3.8,out,{f:240,gain:.4,attack:.35,decay:true,sweep:90});
+  for(let i=0;i<6;i++){const t=.3+r()*2.4;k.noise(t,.5+r()*.6,out,{f:160+r()*120,gain:.18+r()*.14,attack:.08,decay:true});}}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
-// for something further away.
-export function playSound(ctx,sound,options={},when=ctx.currentTime+.03){const k=kit(ctx,when,options.vol);sound.play(k,options);return when;}
+// for something further away; options.bus (kit.js bus) sends it through a volume of the game's own.
+export function playSound(ctx,sound,options={},when=ctx.currentTime+.03){const k=kit(ctx,when,options.vol,options.bus);sound.play(k,options);return when;}

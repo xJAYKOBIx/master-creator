@@ -1,7 +1,10 @@
 // The sound kit: everything is synthesised in the browser with WebAudio, so sounds ship as code and can be rendered offline.
-// kit(ctx, t0, vol) returns helpers scheduled on the audio clock from t0, the whole sound at vol (1 is full). Two destinations: out (the room, through a gentle compressor shared by every sound on the context)
+// kit(ctx, t0, vol, into) returns helpers scheduled on the audio clock from t0, the whole sound at vol (1 is full). Two destinations: out (the room, through a gentle compressor shared by every sound on the context)
 // and tv (a bandpass that makes anything sound like it comes out of a TV or radio speaker).
 import {rng} from '../core/kit.js';
+// A bus: a volume of its own into the shared compressor, for a set of sounds a game wants to fade or silence together (music, a
+// title screen's night); pass it as into (or options.bus to playSound).
+export function bus(ctx){const g=ctx.createGain();g.connect(room(ctx).comp);return g;}
 // Built once per AudioContext and shared by every sound on it: the 2 s noise loop, and the gentle compressor every sound mixes into, so a burst of
 // gunfire is one compressor working on the mix instead of a new compressor and a fresh 2 s buffer for every shot.
 const rooms=new WeakMap();
@@ -9,8 +12,8 @@ function room(ctx){let r=rooms.get(ctx);if(r)return r;
  const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;const master=ctx.createGain();master.gain.value=.9;comp.connect(master).connect(ctx.destination);
  const len=ctx.sampleRate*2,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
  rooms.set(ctx,r={comp,buf});return r;}
-export function kit(ctx,t0,vol=1){const at=s=>t0+s,{comp,buf}=room(ctx);
- const out=ctx.createGain();out.gain.value=Math.max(0,Math.min(1,vol));out.connect(comp);
+export function kit(ctx,t0,vol=1,into=null){const at=s=>t0+s,{comp,buf}=room(ctx);
+ const out=ctx.createGain();out.gain.value=Math.max(0,Math.min(1,vol));out.connect(into||comp);
  // The TV speaker is only built for sounds that ask for it.
  let tv=null;const speaker=()=>{if(!tv){tv=ctx.createBiquadFilter();tv.type='bandpass';tv.frequency.value=1300;tv.Q.value=.35;const tvg=ctx.createGain();tvg.gain.value=1.5;tv.connect(tvg).connect(out);}return tv;};
  const noise=(start,dur,dest,{type='lowpass',f=2000,q=.7,gain=.3,attack=.005,decay=false,sweep=null}={})=>{const s=ctx.createBufferSource();s.buffer=buf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,at(start));fl.Q.value=q;if(sweep)fl.frequency.exponentialRampToValueAtTime(sweep,at(start+dur));
