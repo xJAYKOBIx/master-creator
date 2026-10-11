@@ -154,7 +154,13 @@ export const SOUNDS=[
  // wash of air under them, and the click of the can letting go overhead.
  {id:'drone',name:'Drone pass',group:'Operation',dur:2.4,play:k=>{const {ctx,at,out}=k,g=ctx.createGain();g.gain.setValueAtTime(0,at(0));g.gain.linearRampToValueAtTime(1,at(1.1));g.gain.linearRampToValueAtTime(.8,at(1.5));g.gain.linearRampToValueAtTime(0,at(2.4));g.connect(out);
   for(const [f,d] of [[196,0],[203,7],[392,-5],[410,4]])k.tone(0,2.4,g,{type:'sawtooth',f,to:f*.93,gain:.012,attack:.3,release:.6,detune:d});
-  k.noise(0,2.4,g,{type:'bandpass',f:1600,q:2,gain:.05,attack:.4});k.tone(1.2,.05,out,{type:'square',f:1200,to:900,gain:.02,attack:.002,release:.02});}}];
+  k.noise(0,2.4,g,{type:'bandpass',f:1600,q:2,gain:.05,attack:.4});k.tone(1.2,.05,out,{type:'square',f:1200,to:900,gain:.02,attack:.002,release:.02});}},
+ // Down on the ground, your own heart: two low, muffled thumps, the second softer. A game plays it about once a second while you lie there.
+ {id:'heartbeat',name:'Heartbeat',group:'Operation',dur:.7,play:k=>{const {out}=k;for(const [t,f,g] of [[0,64,.55],[.24,56,.38]]){k.tone(t,.17,out,{f,to:f*.62,gain:g,attack:.004,release:.12});k.noise(t,.14,out,{f:170,gain:g*.45,attack:.003,decay:true});}}},
+ // Hauled back onto your feet: webbing and cloth dragged over the road, two boots finding it, and the sling's clips settling.
+ {id:'revive',name:'Back on your feet',group:'Operation',dur:.9,play:k=>{const {out}=k;k.noise(0,.38,out,{type:'bandpass',f:850,q:1.1,gain:.16,attack:.06,decay:true,sweep:1900});k.noise(.08,.3,out,{type:'bandpass',f:2400,q:.8,gain:.07,attack:.04,decay:true,sweep:3600});
+  for(const t of [.36,.52]){k.noise(t,.09,out,{f:380,gain:.3,attack:.002,decay:true});k.tone(t,.07,out,{f:95,to:60,gain:.18,attack:.002,release:.05});}
+  for(const [t,f] of [[.64,3100],[.71,2500]])k.noise(t,.035,out,{type:'bandpass',f,q:6,gain:.22,attack:.0005,decay:true});}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away; options.bus (kit.js bus) sends it through a volume of the game's own.
