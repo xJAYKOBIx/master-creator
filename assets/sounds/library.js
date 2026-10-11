@@ -69,7 +69,19 @@ export const SOUNDS=[
   const g=ctx.createGain();g.gain.setValueAtTime(0,at(0));g.gain.linearRampToValueAtTime(.5,at(.15));g.gain.setValueAtTime(.5,at(1));g.gain.linearRampToValueAtTime(0,at(1.38));s.connect(v).connect(g).connect(out);s.start(at(0));s.stop(at(1.4));am.start(at(0));am.stop(at(1.4));
   k.noise(0,1.35,out,{type:'bandpass',f:900,q:1.5,gain:.06,attack:.2});}},
  {id:'zombie-hit',name:'Hit',group:'Combat',dur:.2,play:k=>{const {out}=k;k.noise(0,.15,out,{f:700,gain:.4,attack:.001,decay:true,sweep:150});k.tone(0,.1,out,{f:120,to:60,gain:.2,attack:.001,release:.08});}},
- {id:'bite',name:'Bite',group:'Combat',dur:.35,play:k=>{const {out}=k;k.noise(0,.08,out,{type:'bandpass',f:1200,q:2,gain:.4,attack:.001,decay:true});k.noise(.06,.25,out,{f:600,gain:.3,attack:.01,decay:true});blip(k,.02,110,.2,'sawtooth',.05,55);}}];
+ {id:'bite',name:'Bite',group:'Combat',dur:.35,play:k=>{const {out}=k;k.noise(0,.08,out,{type:'bandpass',f:1200,q:2,gain:.4,attack:.001,decay:true});k.noise(.06,.25,out,{f:600,gain:.3,attack:.01,decay:true});blip(k,.02,110,.2,'sawtooth',.05,55);}},
+ // Weight under a gunshot: a deep thump felt more than heard and a click on the front, played with the shot itself.
+ {id:'gun-thump',name:'Gun thump',group:'Combat',dur:.3,options:[{key:'size',label:'Gun',choices:['Pistol','Shotgun']}],play:(k,o={})=>{const {out}=k,big=(o.size|0)===1;
+  k.noise(0,.012,out,{type:'highpass',f:4200,gain:.35,attack:.0005,decay:true});k.tone(0,big?.26:.15,out,{f:big?72:88,to:big?28:38,gain:big?.75:.55,attack:.001,release:big?.2:.11});
+  k.noise(0,big?.22:.13,out,{f:big?220:280,gain:big?.5:.38,attack:.001,decay:true});}},
+ // Throwing yourself down: cloth through the air, then the body hitting the ground and a scrape of grit.
+ {id:'dive',name:'Dive',group:'Combat',dur:.6,play:k=>{const {out}=k;k.noise(0,.3,out,{type:'bandpass',f:900,q:1.2,gain:.14,attack:.08,decay:true,sweep:380});
+  k.tone(.28,.13,out,{f:92,to:44,gain:.42,attack:.002,release:.1});k.noise(.28,.16,out,{f:420,gain:.36,attack:.002,decay:true});k.noise(.31,.22,out,{type:'highpass',f:2600,gain:.06,attack:.01,decay:true});}},
+ // A spent casing landing: a bright brass tink, or the dull tock of a shotgun's plastic hull.
+ {id:'casing',name:'Casing drop',group:'Combat',dur:.12,options:[{key:'kind',label:'Casing',choices:['Brass','Hull']}],play:(k,o={})=>{const {out}=k;
+  if((o.kind|0)===1){k.noise(0,.03,out,{type:'bandpass',f:1500,q:3,gain:.16,attack:.001,decay:true});k.tone(0,.04,out,{f:620,to:420,gain:.04,release:.03});return;}
+  k.tone(0,.07,out,{f:4200,to:3900,gain:.05,attack:.001,release:.06});k.tone(0,.04,out,{f:6100,gain:.025,attack:.001,release:.035});k.noise(0,.02,out,{type:'bandpass',f:5000,q:4,gain:.07,attack:.0005,decay:true});}}];
 
-// Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0).
-export function playSound(ctx,sound,options={},when=ctx.currentTime+.03){const k=kit(ctx,when);sound.play(k,options);return when;}
+// Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
+// for something further away.
+export function playSound(ctx,sound,options={},when=ctx.currentTime+.03){const k=kit(ctx,when,options.vol);sound.play(k,options);return when;}

@@ -28,7 +28,7 @@ Pick a category, tap an asset, and the panel on the right (a full screen sheet o
 | Effects | Campfire flames, blood splat, drips, hand smear, claw gouges, scuffs and dirt, blood palette | `assets/effects/grime.js`, `assets/props/camp.js` |
 | Screens and broadcast | TV power-on logo, channel number, channel flip, digital breakup, NO SIGNAL, captions, lower third, ticker, corner bug | `assets/effects/tv.js`, `broadcast.js` |
 | Interface and type | Pixel font 5 × 7, spray-paint lettering, map markers | `assets/ui/font5x7.js`, `assets/props/` |
-| Sounds | 36 synthesised sounds: the room, the street (a cruiser speeding past, the crash), broadcast stings and beds, a TV voice, game blips, and combat: pistol and shotgun shots, the pump, loading, an empty click, zombie groans, hits and a bite | `assets/sounds/` |
+| Sounds | 39 synthesised sounds: the room, the street (a cruiser speeding past, the crash), broadcast stings and beds, a TV voice, game blips, and combat: pistol and shotgun shots with a thump to layer under them, the pump, loading, an empty click, a dive, casings landing, zombie groans, hits and a bite. Any sound can be played quieter (`vol`) for something further away | `assets/sounds/` |
 
 Shared drawing tools live in `assets/core/`: `paint.js` (the half-unit grid painter, noise, dithering) and `kit.js` (small canvas helpers and a seeded random number generator).
 

@@ -1,9 +1,9 @@
 // The sound kit: everything is synthesised in the browser with WebAudio, so sounds ship as code and can be rendered offline.
-// kit(ctx, t0) returns helpers scheduled on the audio clock from t0. Two destinations: out (the room, through a gentle compressor)
+// kit(ctx, t0, vol) returns helpers scheduled on the audio clock from t0, the whole sound at vol (1 is full). Two destinations: out (the room, through a gentle compressor)
 // and tv (a bandpass that makes anything sound like it comes out of a TV or radio speaker).
 import {rng} from '../core/kit.js';
-export function kit(ctx,t0){const at=s=>t0+s;
- const out=ctx.createDynamicsCompressor();out.threshold.value=-18;out.ratio.value=4;const master=ctx.createGain();master.gain.value=.9;out.connect(master).connect(ctx.destination);
+export function kit(ctx,t0,vol=1){const at=s=>t0+s;
+ const out=ctx.createDynamicsCompressor();out.threshold.value=-18;out.ratio.value=4;const master=ctx.createGain();master.gain.value=.9*Math.max(0,Math.min(1,vol));out.connect(master).connect(ctx.destination);
  const tv=ctx.createBiquadFilter();tv.type='bandpass';tv.frequency.value=1300;tv.Q.value=.35;const tvg=ctx.createGain();tvg.gain.value=1.5;tv.connect(tvg).connect(out);
  const len=ctx.sampleRate*2,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
  const noise=(start,dur,dest,{type='lowpass',f=2000,q=.7,gain=.3,attack=.005,decay=false,sweep=null}={})=>{const s=ctx.createBufferSource();s.buffer=buf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,at(start));fl.Q.value=q;if(sweep)fl.frequency.exponentialRampToValueAtTime(sweep,at(start+dur));
