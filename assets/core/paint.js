@@ -1,7 +1,20 @@
 // Drawing primitives every painter shares. Art is drawn in world units with edges snapped to a half-unit grid, on 2x canvases,
 // so one world unit is two screen pixels and half units are single pixels.
 export const snap=v=>Math.round(v*2)/2;
+// Smooth mode: the same shapes drawn as anti-aliased paths off the grid, for a game that scales its pictures smoothly
+// (Deadlight Hollow from v0.57). Off by default, so every asset paints exactly as before; a game turns it on once, before it paints.
+// Contexts without paths (the outline and mask recorders) keep the grid either way.
+export const STYLE={smooth:false};
+export const smoothOn=c=>STYLE.smooth&&typeof c.beginPath==='function';
+export function smoothPainter(c){
+ const r=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
+ const p=(pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
+ const e=(cx,cy,rx,ry,col)=>{if(rx<=0||ry<=0)return;c.fillStyle=col;c.beginPath();c.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);c.fill();};
+ const l=(x1,y1,x2,y2,w,col)=>{const dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy)||1,nx=-dy/d*w/2,ny=dx/d*w/2;p([[x1+nx,y1+ny],[x2+nx,y2+ny],[x2-nx,y2-ny],[x1-nx,y1-ny]],col);};
+ return {r,p,e,l};
+}
 export function painter(c){
+ if(smoothOn(c))return smoothPainter(c);
  const r=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(snap(x),snap(y),snap(w),snap(h));};
  const p=(pts,col)=>{let top=Math.floor(Math.min(...pts.map(v=>v[1]))*2)/2,bottom=Math.ceil(Math.max(...pts.map(v=>v[1]))*2)/2;c.fillStyle=col;for(let y=top;y<bottom;y+=.5){let hits=[];for(let i=0;i<pts.length;i++){let a=pts[i],b=pts[(i+1)%pts.length],scan=y+.25;if((a[1]<=scan&&b[1]>scan)||(b[1]<=scan&&a[1]>scan))hits.push(a[0]+(scan-a[1])*(b[0]-a[0])/(b[1]-a[1]));}hits.sort((a,b)=>a-b);for(let i=0;i+1<hits.length;i+=2){let x=snap(hits[i]),end=snap(hits[i+1]);if(end>x)c.fillRect(x,y,end-x,.5);}}};
  const e=(cx,cy,rx,ry,col)=>{const pts=[];for(let i=0;i<28;i++){const a=i/28*Math.PI*2;pts.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]);}p(pts,col);};

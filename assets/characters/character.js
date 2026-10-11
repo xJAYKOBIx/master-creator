@@ -1,5 +1,6 @@
 import {holds,heldGun,weaponArms,grenadeArt,facingOf} from '../weapons/equipment.js';
 import {colorMaps,tint} from './palette.js';
+import {smoothOn,smoothPainter} from '../core/paint.js';
 import {zombieFace,zombieTorso,zombieBite,zombieLegs,zombieReach,reachPainter} from './zombie.js';
 import {skull,faceFeatures,styledHead,hairBehind,facialHair as moreFacialHair} from './hair.js';
 // Survivor 01: authored pixel silhouettes, rasterized once into directional frames.
@@ -8,8 +9,9 @@ export const FRAME={w:160,h:192,displayW:80,displayH:96,footX:40,footY:85};
 export const DIRECTIONS=['Right','Front right','Front','Front left','Left','Back left','Back','Back right'];
 const C={ink:'#111319',edge:'#1c2027',hair:'#282328',hairDeep:'#201d23',hairMid:'#352a2e',hairLight:'#463439',skin:'#d99b73',skinHi:'#ecb18a',skinLo:'#ae7356',skinDeep:'#85513d',coat:'#29465a',coatHi:'#3d5c72',coatLight:'#47677c',coatMid:'#304f64',coatLo:'#1b3040',coatDeep:'#172731',shirt:'#b8a082',shirtHi:'#d3b897',shirtLo:'#8d755e',pants:'#213344',pantsHi:'#30495c',pantsLo:'#162531',leather:'#5b4030',leatherHi:'#806044',leatherLight:'#947353',leatherLo:'#3c2c25',metal:'#928c7a'};
 const snap=v=>Math.round(v*2)/2;
-// Scan-converted polygons keep every edge on the half-world-pixel grid.
+// Scan-converted polygons keep every edge on the half-world-pixel grid (in smooth mode, anti-aliased paths instead: core/paint.js).
 function painter(c){
+ if(smoothOn(c)){const {r,p}=smoothPainter(c);return {r,p};}
  const r=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(snap(x),snap(y),snap(w),snap(h));};
  const p=(pts,col)=>{let top=Math.floor(Math.min(...pts.map(v=>v[1]))*2)/2,bottom=Math.ceil(Math.max(...pts.map(v=>v[1]))*2)/2;c.fillStyle=col;for(let y=top;y<bottom;y+=.5){let hits=[];for(let i=0;i<pts.length;i++){let a=pts[i],b=pts[(i+1)%pts.length],scan=y+.25;if((a[1]<=scan&&b[1]>scan)||(b[1]<=scan&&a[1]>scan))hits.push(a[0]+(scan-a[1])*(b[0]-a[0])/(b[1]-a[1]));}hits.sort((a,b)=>a-b);for(let i=0;i+1<hits.length;i+=2){let x=snap(hits[i]),end=snap(hits[i+1]);if(end>x)c.fillRect(x,y,end-x,.5);}}};
  return {r,p};

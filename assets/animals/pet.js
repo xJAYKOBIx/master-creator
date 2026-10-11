@@ -1,7 +1,7 @@
 // Companion art: dogs and cats built from a small posed skeleton, seen from the same angled top-down camera as the camp.
 // Every part is a sphere, a limb or a flat shape in the animal's own space (f forward, s to its right, u up),
 // projected for each of the eight facings and painted back to front with the character ink outline.
-import {painter} from '../core/paint.js';
+import {painter,smoothOn} from '../core/paint.js';
 import {COATS,EYES,COLLARS} from './look.js';
 export const PET_FRAME={w:160,h:160,displayW:80,displayH:80,footX:40,footY:58};
 // Frames: 0-3 idle (breathing, tail wag), 4-9 walk, 10-15 run, 16-17 sit, 18 lie down, 19-20 sniff (nose to the floor or the bowl),
@@ -178,9 +178,9 @@ export function pet(c,direction=2,frame=0,look={}){
   for(const s of G.shapes)if(s.sil){if(s.k==='p'){for(const [ox,oy] of [[-1,0],[1,0],[0,-1],[0,1],[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5]])draw(g,s,INK,ox,oy);}else draw(g,s,INK,0,0,1);}
   for(const s of G.shapes)draw(g,s,s.col,0,0,false);}
  c.restore();}
-// Ellipses are filled row by row on the half-unit grid; much quicker than the general polygon fill, with the same pixels.
+// Ellipses are filled row by row on the half-unit grid; much quicker than the general polygon fill, with the same pixels (smooth mode: a path).
 const snap=v=>Math.round(v*2)/2;
-function fastEllipse(c){return (cx,cy,rx,ry,col)=>{if(rx<=0||ry<=0)return;c.fillStyle=col;const top=Math.floor((cy-ry)*2)/2,bottom=Math.ceil((cy+ry)*2)/2;
+function fastEllipse(c){return (cx,cy,rx,ry,col)=>{if(rx<=0||ry<=0)return;c.fillStyle=col;if(smoothOn(c)){c.beginPath();c.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);c.fill();return;}const top=Math.floor((cy-ry)*2)/2,bottom=Math.ceil((cy+ry)*2)/2;
  for(let y=top;y<bottom;y+=.5){const v=(y+.25-cy)/ry;if(v<=-1||v>=1)continue;const hw=rx*Math.sqrt(1-v*v),x0=snap(cx-hw),x1=snap(cx+hw);if(x1>x0)c.fillRect(x0,y,x1-x0,.5);}};}
 // Outlines grow each round shape by one unit, the same weight as the character ink line.
 function draw(g,s,col,ox,oy,grow=0){
