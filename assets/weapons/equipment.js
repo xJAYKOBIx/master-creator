@@ -19,16 +19,20 @@ export function normalizeLoadout(v){return {gun:v?.gun==='none'||Object.hasOwn(G
 export function readLoadout(storage){try{return normalizeLoadout(JSON.parse(storage.getItem(LOADOUT_KEY)));}catch{return normalizeLoadout();}}
 export function saveLoadout(storage,v){try{storage.setItem(LOADOUT_KEY,JSON.stringify(normalizeLoadout(v)));return true;}catch{return false;}}
 // Author-sized half-pixel silhouettes translated from the approved design sheets.
-export function gunArt(g,id,paint){gunShape(g,id);if(paint&&GUNS[id])paintKit(g,id,paint);}
-function gunShape(g,id){const{p,r}=g,ink='#10151c',steel='#535c65',hi='#a1a7aa';if(!GUNS[id])return;
- if(id==='pump-shotgun'){shotgun(g,ink,steel,hi);return;}
+// act: the gun mid-action, as it fires (0 at rest, 1 racked): a pistol's slide locked back over a spent case, a shotgun's pump
+// pulled back along the tube. Rifles and the revolver look the same either way.
+export function gunArt(g,id,paint,act=0){gunShape(g,id,act);if(paint&&GUNS[id])paintKit(g,id,paint);}
+function gunShape(g,id,act=0){const{p,r}=g,ink='#10151c',steel='#535c65',hi='#a1a7aa';if(!GUNS[id])return;
+ if(id==='pump-shotgun'){shotgun(g,ink,steel,hi,act);return;}
  if(!GUNS[id].rifle){const heavy=id==='heavy-pistol',rev=id==='hand-cannon',len=heavy?15:rev?13:11;
  p([[-3,-3],[len,-3],[len+1,-1],[len+1,2],[4,2],[2,8],[-3,8],[-1,2],[-4,1]],ink);
- r(-2,-2,len+2,3,heavy?'#88858b':steel);r(-1,-2,len, .5,hi);r(len,-1,1.5,2,'#282e36');
+ // Racked: the slide rides 2.5 back, past the frame, baring the barrel's end in front and a brass case in the port.
+ const b=act&&!rev?-2.5:0;if(b){r(-5.5,-3,3,4,ink);r(len-3,-2.5,3.5,3,ink);r(len-2.5,-1.5,3,1.5,'#3a4048');}
+ r(-2+b,-2,len+2,3,heavy?'#88858b':steel);r(-1+b,-2,len, .5,hi);if(!b)r(len,-1,1.5,2,'#282e36');if(b)r(4,-2,2.5,1,'#d8b45a');
  p([[-1,2],[3,2],[1,7],[-2,7]],heavy||rev?'#80503b':'#38646d');r(-1,3,1,3,heavy?'#a77050':'#60818a');r(0,6,.5,.5,'#c6a06a');
- r(3,2,4,3,ink);r(4,2,2,2,'#56606a');r(4,2,2,1,'#202933');r(len-2,-3.5,1.5,1,ink);
+ r(3,2,4,3,ink);r(4,2,2,2,'#56606a');r(4,2,2,1,'#202933');r(len-2+b,-3.5,1.5,1,ink);
  if(rev){r(-3,-2,7,5,ink);r(-2,-2,5,4,'#687580');r(-1,-1,3,1,hi);r(-1,1,3,1,'#27313c');p([[-4,-3],[-2,-2],[-3,-1],[-5,-2]],hi);r(4,1,8,1,'#38434e');}
- else{for(let x=-1;x<3;x++)r(x,-1.5,.5,2,'#303640');r(5,-2,3,1,heavy?'#43454e':'#899aa2');if(heavy)r(-2,7,3,.5,'#856078');}return;
+ else{for(let x=-1;x<3;x++)r(x+b,-1.5,.5,2,'#303640');if(!b)r(5,-2,3,1,heavy?'#43454e':'#899aa2');if(heavy)r(-2,7,3,.5,'#856078');}return;
  }
  const heavy=id==='heavy-ar',body=heavy?'#ac8b60':'#344a54',edge=heavy?'#d0b18a':'#739298';
  p([[-12,-4],[-5,-4],[-5,-2],[1,-2],[1,-4],[19,-4],[20,-2],[27,-2],[27,1],[19,1],[18,3],[9,3],[10,10],[4,11],[2,4],[-1,3],[-3,8],[-6,7],[-4,2],[-10,2],[-12,5]],ink);
@@ -40,8 +44,9 @@ function gunShape(g,id){const{p,r}=g,ink='#10151c',steel='#535c65',hi='#a1a7aa';
  if(!heavy){r(12,2,2,5,ink);r(12.5,3,1,3,'#64828a');}else r(14,0,3,2,'#30343b');
 }
 // The pump shotgun: walnut stock to the wrist, a short steel receiver over the trigger guard, the long barrel with the
-// magazine tube under it, and the ribbed walnut pump the support hand rides on. A brass bead at the muzzle.
-function shotgun(g,ink,steel,hi){const{p,r}=g,wood='#6b3f27',woodHi='#8f5a37',woodLo='#4a2a1a';
+// magazine tube under it, and the ribbed walnut pump the support hand rides on. A brass bead at the muzzle. Racked, the pump
+// is pulled 4 back toward the receiver and the bare tube shows in front of it.
+function shotgun(g,ink,steel,hi,act=0){const{p,r}=g,wood='#6b3f27',woodHi='#8f5a37',woodLo='#4a2a1a';
  p([[-14.5,-3.5],[-1,-3.5],[30.5,-3.5],[30.5,0],[25.5,0],[25.5,1],[19.5,1],[19.5,2.5],[10.5,2.5],[10.5,1],[7,1],[6,4.5],[1.5,4.5],[.5,2.5],[-3,3],[-7,2.5],[-14.5,6]],ink);
  // Stock: the butt is tall and the comb slopes down to the wrist behind the trigger.
  p([[-14,-2.5],[-3,-2.5],[-.5,-1.5],[-.5,2],[-3,2.5],[-7,1.8],[-14,5.2]],wood);r(-13.5,-2.5,10,.5,woodHi);r(-14,-2.5,1.2,7.5,'#2a1a12');r(-9,0,5,.5,woodLo);
@@ -49,7 +54,7 @@ function shotgun(g,ink,steel,hi){const{p,r}=g,wood='#6b3f27',woodHi='#8f5a37',wo
  r(-.5,-3,8,4,'#3b4148');r(0,-3,7,.5,hi);r(2.5,-2.2,3,1,'#1d2228');p([[1.5,1],[6,1],[5.5,4],[2,4]],ink);r(2.5,1.5,2.5,2,'#2a3038');r(3.2,1.5,.6,1.6,'#8a8f94');
  // Barrel over the tube, then the pump.
  r(7.5,-3,23,1.6,steel);r(7.5,-3,23,.5,hi);r(7.5,-1.4,18,1.4,'#3f464d');r(25,-1.4,.5,1.4,'#262c33');r(30,-3,.5,1.6,'#262c33');r(29.5,-3.8,1,.8,'#c6a06a');
- r(11,-1.3,8.5,3.3,wood);r(11,-1.3,8.5,.5,woodHi);for(let x=12;x<19;x+=1.5)r(x,-.3,.5,2,woodLo);}
+ const k=act?-4:0;if(k){r(15,-1.4,5,1.4,'#2c3238');r(15,-1.4,5,.5,'#4a525a');}r(11+k,-1.3,8.5,3.3,wood);r(11+k,-1.3,8.5,.5,woodHi);for(let x=12;x<19;x+=1.5)r(x+k,-.3,.5,2,woodLo);}
 // The paintball twin: a hopper of paint balls on top and a painted muzzle, so you can tell at a glance it is not the real thing.
 function paintKit(g,id,paint){const{p,r}=g,ink='#10151c',rifle=GUNS[id].rifle,x0=rifle?7:1,w=rifle?9:6,t=rifle?-4:-3,hh=rifle?6:4.5;
  p([[x0,t],[x0+w,t],[x0+w+1,t-hh+1.5],[x0+w-1,t-hh],[x0+1,t-hh],[x0-1,t-hh+1.5]],ink);r(x0+.5,t-hh+1,w-.5,hh-1.5,'#2c3138');r(x0+1.5,t-hh+1.5,w-2.5,hh-3,paint);r(x0+1.5,t-hh+1.5,1,.5,'#f4efe2');r(x0+w-2.5,t-1.5,1,.5,'#00000055');
@@ -64,16 +69,16 @@ export function aimPose(angle){const d=facingOf(angle),side=d===0||d===4,back=d>
  // A true rotation (not a shear) keeps every gun's silhouette intact at each angle. Grip is gun-local (0,0).
  return {d,side,back,quarter,mirror,flip,point:([u,v])=>[ax+u*L*c-v*flip*n,ay+u*L*n+v*flip*c]};}
 // Where each hand closes on the gun: the trigger grip, and the fore-end for rifles (pistols use a cupped support hand).
-function gunHands(P,id){const grip=P.point([0,3]);return {grip,support:id==='pump-shotgun'?P.point([15,2.5]):GUNS[id]?.rifle?P.point([12,3]):[grip[0]-1.5*P.flip,grip[1]+1]};}
+function gunHands(P,id,act=0){const grip=P.point([0,3]);return {grip,support:id==='pump-shotgun'?P.point([act?11:15,2.5]):GUNS[id]?.rifle?P.point([12,3]):[grip[0]-1.5*P.flip,grip[1]+1]};}
 const MUZZLE={'light-pistol':12.5,'heavy-pistol':16.5,'hand-cannon':14.5,'tactical-ar':27,'heavy-ar':27,'pump-shotgun':30.5};
 // The end of the barrel on screen, relative to the feet, so shots leave the gun you see.
 export function muzzle(angle,id){const P=aimPose(angle),[x,y]=P.point([MUZZLE[id]??12,-.25]);return {x:P.mirror?-x:x,y};}
 function hand(g,[x,y],near){g.p([[x-2.5,y-1.5],[x+2.5,y-1.5],[x+2.5,y+2.5],[x-1,y+3.5],[x-3.5,y+1.5]],'#111319');g.p([[x-2,y-1],[x+2,y-1],[x+2,y+2],[x-1,y+3],[x-3,y+1]],near?'#d99b73':'#ae7356');g.r(x-1,y-.5,2,1.5,near?'#ecb18a':'#d99b73');}
-export function heldGun(g,id,angle,paint){if(!GUNS[id])return;const P=aimPose(angle),{point}=P;
+export function heldGun(g,id,angle,paint,act=0){if(!GUNS[id])return;const P=aimPose(angle),{point}=P;
  const projected={p:(pts,col)=>g.p(pts.map(point),col),r:(x,y,w,h,col)=>g.p([[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(point),col)};
- gunArt(projected,id,paint);
+ gunArt(projected,id,paint,act);
  // Hands close around the trigger and the fore-end, over the gun.
- if(P.back&&!P.quarter)return;const h=gunHands(P,id);hand(g,h.support,false);hand(g,h.grip,true);
+ if(P.back&&!P.quarter)return;const h=gunHands(P,id,act);hand(g,h.support,false);hand(g,h.grip,true);
 }
 // Two-bone arm: upper sleeve, bent elbow and forearm with the same thickness and shading as the walking arms.
 // sleeve: 0 jacket, 1 short (bare forearm), 2 long, 3 ribbed cuff, 4 shirt cuff, 5 bare arm, 6 fatigue, 7 SWAT padded.
@@ -93,7 +98,7 @@ function limb(g,s,e,h,near,sleeve){const short=sleeve===1||sleeve===true,bare=sl
 function elbow(s,h,out,lu=9,lf=9){const dx=h[0]-s[0],dy=h[1]-s[1],d=Math.min(Math.hypot(dx,dy)||1,lu+lf-.5),ux=dx/(Math.hypot(dx,dy)||1),uy=dy/(Math.hypot(dx,dy)||1),a=(lu*lu-lf*lf+d*d)/(2*d),k=Math.sqrt(Math.max(0,lu*lu-a*a)),px=s[0]+ux*a,py=s[1]+uy*a;
  const c1=[px-uy*k,py+ux*k],c2=[px+uy*k,py-ux*k];return out(c1)>=out(c2)?c1:c2;}
 // shoulderX scales shoulder spread for narrower bodies.
-export function weaponArms(g,id,angle,sleeve=0,shoulderX=x=>x){if(!GUNS[id])return;const P=aimPose(angle),{side,back,quarter}=P,h=gunHands(P,id);
+export function weaponArms(g,id,angle,sleeve=0,shoulderX=x=>x,act=0){if(!GUNS[id])return;const P=aimPose(angle),{side,back,quarter}=P,h=gunHands(P,id,act);
  // Far arm (support hand) first, then near arm (trigger hand); elbows bend outward and down, never across the chest.
  // Front diagonals put the near (right) shoulder on screen-left, matching the walking arms and legs.
  const fq=quarter&&!back,far=side?[-1,-46]:[shoulderX(back&&quarter?-12:fq?9:-10),-46],near=side?[1,-45]:[shoulderX(fq?-9:quarter?9:10),-45];

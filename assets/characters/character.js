@@ -452,9 +452,9 @@ export function survivorLegs(c,direction=1,frame=0,look={}){const zombie=look.zo
  const L=legLayout(dir,frame,zombie);
  leg(g,L.far.x,L.far.foot,side,false,L.far.depth,boots,look.bottom||0,look.shoes||0);leg(g,L.near.x,L.near.foot,side,true,0,boots,look.bottom||0,look.shoes||0);if(zombie)zombieLegs(c,g,L,look.bottom||0,look);c.restore();}
 // The arms and gun at any angle: shoulders from the body's facing, hands on the gun, the gun along the aim.
-export function gunArms(c,angle,look={},frame=0){if(look.zombie===1||!GUNS[look.gun])return;const {side,back,quarter,mirror}=view(facingOf(angle)),G=gait(frame,side,back,quarter),maps=colorMaps(look),T=TOPS[look.top]||TOPS[0],female=look.body===1;
+export function gunArms(c,angle,look={},frame=0,act=0){if(look.zombie===1||!GUNS[look.gun])return;const {side,back,quarter,mirror}=view(facingOf(angle)),G=gait(frame,side,back,quarter),maps=colorMaps(look),T=TOPS[look.top]||TOPS[0],female=look.body===1;
  const shoulder=x=>female&&!side?-.5+(x+.5)*.86:x;
- c.save();c.translate(40,85);if(mirror)c.scale(-1,1);c.translate(G.lean,G.bob);const g=tint(painter(c),maps.main);weaponArms(g,look.gun,angle,T.sleeve,shoulder);heldGun(g,look.gun,angle,look.paint);c.restore();}
+ c.save();c.translate(40,85);if(mirror)c.scale(-1,1);c.translate(G.lean,G.bob);const g=tint(painter(c),maps.main);weaponArms(g,look.gun,angle,T.sleeve,shoulder,act);heldGun(g,look.gun,angle,look.paint,act);c.restore();}
 // Everything above the legs. 'under' is the torso, walking arms (when no gun is held) and belt grenade; 'over' is the neck and head,
 // and from behind the backpack when a gun is held, so the arms and gun show between the coat and the pack. 'over' never changes
 // from frame to frame except by bodyShift, so the game draws it once per facing.
