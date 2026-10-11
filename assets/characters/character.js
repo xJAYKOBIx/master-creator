@@ -78,6 +78,8 @@ function arm(base,x,y,hand,near,sleeve=0){const warp=(px,py)=>{const t=Math.max(
  p([[x-2,y+2],[x,y+2],[x,y+5],[x-1,y+12],[x-3,y+11],[x-3,y+5]],bare?(near?C.skinHi:C.skin):near?C.coatHi:C.coatMid);
  if(sleeve<2){r(x-2,y+11,4,2,C.coatLo);r(x-1,y+8,2,2,near?'#4b514f':'#303c40');}
  else if(sleeve===2)r(x-2,y+11,4,2,C.coatLo);
+ // A suit sleeve ends in a pressed cuff with the shirt cuff just showing under it.
+ else if(sleeve===8){r(x-2,y+11,4,1.5,C.coatLo);r(x-2,y+12.5,4,.5,C.shirtHi);}
  else if(sleeve===3){r(x-3,y+11,5.5,2.5,C.coatDeep);for(let i=0;i<3;i++)r(x-2.5+i*2,y+11.5,.5,1.5,C.coatLo);}
  else if(sleeve===4){r(x-3,y+11,5.5,2,near?C.coatLight:C.coatHi);r(x+1,y+11.5,.5,.5,C.coatLo);}
  // Fatigue sleeves carry camouflage blotches in the jacket's own shades; SWAT sleeves add shoulder and elbow pads.
@@ -161,8 +163,10 @@ function framePack(g,back,quarter,side){const {p,r}=g,seam='#352a26';
 export function packArt(c,look={}){const g=tint(painter(c),colorMaps(look).pack);backpack(g,true,false,false,look.pack|0);}
 // Tops: closed fronts share the T-shirt body; extra details are drawn on top of it.
 // Uniforms: 7 fatigues with a plate carrier, 8 the same carrier taped LEET AF, 9 police patrol shirt, 10 SWAT armor.
+// 11 is a suit: the open jacket over a shirt (in the shirt dye) and tie, buttoned at the waist.
 const TOPS=[{sleeve:0},{sleeve:1,closed:1},{sleeve:2,closed:1},{sleeve:3,closed:1,hood:1},{sleeve:4,closed:1,collar:1},{sleeve:4,closed:1,collar:1,tie:1},{sleeve:5,closed:1,scoop:1},
- {sleeve:6,closed:1,vest:'mil'},{sleeve:6,closed:1,vest:'leet'},{sleeve:1,closed:1,collar:1,police:1},{sleeve:7,closed:1,vest:'swat'}];
+ {sleeve:6,closed:1,vest:'mil'},{sleeve:6,closed:1,vest:'leet'},{sleeve:1,closed:1,collar:1,police:1},{sleeve:7,closed:1,vest:'swat'},
+ {sleeve:8,suit:1}];
 // Plate carriers keep their own colors whatever the jacket dye: base, light, shadow, webbing.
 const VESTS={mil:['#6b6446','#837b58','#4f4a34','#3a3727'],leet:['#4a5136','#5f6845','#363b28','#272b1d'],swat:['#26272b','#3a3b41','#1a1b1e','#121215']};
 const TAPE='#1a1c16',TAPE_TEXT='#e3dcc6',SWAT_TEXT='#e8e6df',DUTY='#16171b',DUTY_HI='#2e3036',BADGE=['#8a6d2a','#d9b54a','#f3df8f'];
@@ -218,6 +222,7 @@ function torso(g,back,quarter,side,T=TOPS[0],strapG=g){let {p,r}=g;const top=T.c
   if(T.hood){p([[2,-37],[6,-37],[6.5,-31],[2,-31]],C.coatLo);r(2,-37,4.5,.5,C.coatDeep);r(-6,-28,11,1.5,C.coatDeep);}
   if(T.collar){r(4,-41,.5,.5,C.coatLight);r(4,-36,.5,.5,C.coatLight);r(4,-31,.5,.5,C.coatLight);}
   if(T.tie)p([[4,-47],[6,-46.5],[6.5,-37],[5,-35.5],[4,-37]],TIE[0]);
+  if(T.suit){p([[3,-48],[5.5,-47.5],[5,-38],[3,-38]],C.shirt);p([[4.5,-47],[6,-46.5],[6,-38.5],[5.25,-37.5],[4.5,-38.5]],TIE[0]);r(5,-46,.5,7,TIE[1]);r(2.5,-38,.5,9,C.coatDeep);r(2,-33,1,1,C.coatDeep);}
   if(T.vest)vest(g,'side',quarter,T.vest);if(T.police)policeKit(g,'side',quarter,0);
   return;}
  p([[-8,-51],[5,-51],[11,-47],[13,-39],[11,-25],[-10,-25],[-14,-33],[-13,-45]],C.ink);
@@ -231,6 +236,14 @@ function torso(g,back,quarter,side,T=TOPS[0],strapG=g){let {p,r}=g;const top=T.c
    r(x-1,-47,.5,5,STRING);r(x+3,-47,.5,4.5,STRING);r(x-1.5,-42,1,.5,STRING);r(x+3,-42.5,1,.5,STRING);}
   if(T.collar){r(x+1,-46,.5,18,C.coatLo);for(const y of [-44,-40,-36,-32])r(x+1.5,y,.5,.5,C.coatLight);if(!T.tie){p([[x+3.5,-44],[x+6.5,-44],[x+6.5,-40.5],[x+3.5,-40.5]],C.coatMid);r(x+3.5,-44,3,.5,C.coatLo);}}
   if(T.tie){p([[x+.3,-47],[x+2.2,-47],[x+2.8,-37],[x+1.2,-35],[x-.3,-37]],TIE[0]);r(x+1,-45,.5,7,TIE[1]);r(x+.3,-37.5,2.4,.5,TIE[2]);}if(T.vest)vest(g,'front',quarter,T.vest);if(T.police)policeKit(g,'front',quarter,x);if(strapG&&!T.vest){strapG.p([[-9,-48],[-7,-48],[-6,-40],[-6,-31],[-8,-32]],C.leatherLo);strapG.r(-8,-46,1,10,C.leatherHi);if(!quarter){strapG.r(7,-46,1.5,11,C.leatherLo);strapG.r(7,-44,.5,7,C.leatherHi);}}}
+ // The suit: a V of shirt and tie down to the one button at the waist, a lapel either side of it, a pocket square and two flaps.
+ else if(!back&&T.suit){const x=quarter?1:-2;p([[x-2.5,-48.5],[x+4.5,-48],[x+2.25,-33.5],[x+.25,-33.5]],C.shirtLo);p([[x-1.5,-48],[x+3.5,-47.5],[x+1.75,-35],[x+.5,-35]],C.shirt);r(x-1,-46,1,3,C.shirtHi);
+  p([[x+.25,-46.5],[x+1.75,-46.5],[x+2.25,-37.5],[x+1,-36],[x-.25,-37.5]],TIE[0]);r(x+.75,-45.5,.5,7,TIE[1]);
+  p([[x-3.5,-49.5],[x-.5,-48.5],[x+.75,-33],[x-.25,-33],[x-4.5,-40],[x-5.5,-44],[x-3.75,-45]],C.coatDeep);p([[x-3,-48.75],[x-1,-48],[x+.25,-34.5],[x-3.75,-40.25],[x-4.5,-43.75],[x-3,-44.5]],C.coatMid);
+  p([[x+4.5,-49.5],[x+7.5,-46],[x+6,-44.5],[x+7,-43],[x+2.25,-33],[x+1.25,-33],[x+3.75,-48.5]],C.coatHi);
+  r(x+1,-33,.5,6,C.coatLo);r(x+.5,-31.5,1.5,1.5,C.coatDeep);r(x+.75,-31.25,.75,.75,C.coatLight);
+  r(-8,-42.5,3.5,.5,C.coatDeep);p([[-7.5,-43.75],[-5.5,-44],[-5.25,-42.5],[-7.5,-42.5]],'#e9e4d8');r(-8.5,-31,4.5,.5,C.coatDeep);r(6,-31,3,.5,C.coatDeep);
+  if(strapG){strapG.p([[-9,-48],[-7,-48],[-6,-40],[-6,-31],[-8,-32]],C.leatherLo);strapG.r(-8,-46,1,10,C.leatherHi);if(!quarter){strapG.r(7,-46,1.5,11,C.leatherLo);strapG.r(7,-44,.5,7,C.leatherHi);}}}
  else if(!back){let x=quarter?1:-2;p([[x-2,-48],[x+4,-47],[x+5,-28],[x-3,-28]],C.shirtLo);p([[x-1,-47],[x+3,-46],[x+3,-30],[x-2,-30]],C.shirt);r(x-1,-44,3,3,C.shirtHi);r(x-1,-37,3,1,C.shirtHi);r(x-2,-32,5,1,C.shirtLo);p([[x-3,-49],[x,-48],[x-1,-42],[x-4,-39]],C.coatDeep);p([[x+4,-49],[x+7,-46],[x+4,-39],[x+3,-43]],C.coatHi);r(x-3,-27,7,1,C.leather);r(x,-27,2,1,C.metal);
   r(-8,-37,4,5,C.coatLo);r(-8,-37,4,1,C.coatLight);r(6,-35,2,5,C.coatDeep);r(6,-35,2,.5,C.coatHi);
   if(strapG){strapG.p([[-9,-48],[-7,-48],[-6,-40],[-6,-31],[-8,-32]],C.leatherLo);strapG.r(-8,-46,1,10,C.leatherHi);if(!quarter){strapG.r(7,-46,1.5,11,C.leatherLo);strapG.r(7,-44,.5,7,C.leatherHi);}}
@@ -431,6 +444,9 @@ function hood(g,back,quarter,side){const {p,r}=g;
 function neckline(g,back,quarter,side,T){const {p,r}=g;
  if(T.scoop&&!back){if(!side){const x=quarter?1:0;p([[-6.5+x,-51],[6.5+x,-51],[4+x,-42.5],[-4+x,-42.5]],C.coatDeep);p([[-5.5+x,-51],[5.5+x,-51],[3.3+x,-43.5],[-3.3+x,-43.5]],C.skin);r(-2+x,-47,4,1,C.skinLo);r(-1+x,-45,2,.5,C.skinLo);
   p([[-7,-49],[-6,-49],[-6,-46],[-9.5,-44.5],[-10.5,-44.5]],C.skin);p([[5.5,-49],[7,-48.5],[9.5,-45],[6.5,-45.5]],C.skin);}else p([[1,-50],[5,-49],[4,-45],[1,-46]],C.skin);return;}
+ // A suit shows the shirt's collar points and the tie knot in its V, and a strip of collar above the jacket at the back.
+ if(T.suit){if(back){r(-5,-51.5,10,1,C.shirtHi);return;}if(side){p([[1,-50.5],[4.5,-49],[3.5,-46.5],[1,-48]],C.shirtHi);return;}const x=quarter?2:-1;
+  p([[x-3,-48.75],[x-.25,-47.25],[x-1.25,-44.75],[x-3.5,-46.75]],C.shirtHi);p([[x+.25,-47.25],[x+3,-48.75],[x+3.5,-46.75],[x+1.25,-44.75]],C.shirtHi);p([[x-1,-47.25],[x+1,-47.25],[x+.75,-45.25],[x-.75,-45.25]],TIE[2]);return;}
  if(!T.collar)return;
  if(back){r(-6,-51,12,1.5,C.coatLight);return;}
  if(side){p([[1,-50.5],[5,-49],[3.5,-46],[1,-48]],C.coatLight);return;}
