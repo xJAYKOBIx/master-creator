@@ -23,6 +23,7 @@ import {DIVE,paintDive,layerSheets,sheetSize} from './characters/layers.js';
 import {vectorPainter} from './core/paint.js';
 import {R,hash,canvas} from './core/kit.js';
 import {text,width,GLYPHS} from './ui/font5x7.js';
+import {paintPlate,SAMPLE as PLATE_SAMPLE} from './ui/plate.js';
 import {BLOOD,brushes} from './effects/grime.js';
 import {GORE,GORE_PARTS,zombiePiece,CRAWL,crawlArt,GIBS,gibArt,BLOOD_KINDS,BLOOD_BOX,bloodArt} from './effects/gore.js';
 import {SPECIAL_KINDS,SPECIAL_LOOKS,special} from './characters/specials.js';
@@ -256,6 +257,12 @@ TYPE.push({id:'map-markers',name:'Map markers',category:'type',group:'Icons',kin
 const SOUND_ENTRIES=SOUNDS.map(s=>({id:'sound-'+s.id,name:s.name,category:'sounds',group:s.group,kind:'sound',summary:`${s.dur < 1 ? Math.round(s.dur*1000)+' ms' : s.dur+' seconds'}, synthesised in the browser, so it ships as code with no audio file.`,
  source:'assets/sounds/library.js',usage:`import {SOUNDS, playSound} from './assets/sounds/library.js';\nplaySound(audioCtx, SOUNDS.find(s => s.id === '${s.id}'));`,
  dur:s.dur,sound:s,options:s.options,defaults:Object.fromEntries((s.options||[]).map(o=>[o.key,0]))}));
+
+// The control center's steel faceplate: a game passes where its sticks, buttons and readouts sit, and the plate is painted to fit.
+TYPE.push({id:'control-plate',name:'Control center plate',category:'type',group:'Controls',kind:'still',summary:'Worn gunmetal under the touch controls: recessed wells for the sticks, sockets for buttons, dark glass for readouts, a hazard lip, rust, blood, and the G.U.N. and LEET AF stamps side by side.',
+ source:'assets/ui/plate.js',usage:"import {paintPlate} from './assets/ui/plate.js';\n// one canvas pixel per art pixel; show it at 2x\npaintPlate(ctx, {w, h, split, band:8, wells:[{x,y,r}], sockets:[{x,y,r}], insets:[{x,y,w,h}], names:{left, right}});",
+ w:PLATE_SAMPLE.w,h:PLATE_SAMPLE.h,scale:3,options:[{key:'blood',label:'Blood',choices:['On','Off']},{key:'seed',label:'Wear',choices:['One','Two','Three']}],defaults:{blood:0,seed:0},
+ draw:(c,{o})=>paintPlate(c,{...PLATE_SAMPLE,blood:!(o.blood|0),seed:0x51ee1+(o.seed|0)*7919})});
 
 export const CATALOG=[...CHARACTERS,...ANIMALS,...WEAPONS,...ITEMS,...PROPS,...EFFECTS,...BROADCAST,...TYPE,...SOUND_ENTRIES];
 export const byId=id=>CATALOG.find(e=>e.id===id);
