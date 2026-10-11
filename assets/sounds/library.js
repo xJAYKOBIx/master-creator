@@ -90,7 +90,13 @@ export const SOUNDS=[
   else if(n===1){k.tone(.03,.12,out,{f:1800,gain:.04,attack:.001,release:.1});k.tone(.03,.1,out,{f:2650,gain:.025,attack:.001,release:.08});}}},
  // A car alarm going off: the two-tone whoop and a horn, over and over, from somewhere down the street.
  {id:'car-alarm',name:'Car alarm',group:'Scavenging',dur:3.2,play:k=>{const {out}=k;for(let i=0;i<4;i++){const t=i*.8;k.tone(t,.36,out,{type:'square',f:780,to:1250,gain:.05,attack:.01,release:.03});
-  k.tone(t+.4,.36,out,{type:'square',f:1250,to:780,gain:.05,attack:.01,release:.03});k.tone(t,.2,out,{type:'sawtooth',f:410,gain:.035,attack:.005,release:.04});k.tone(t,.2,out,{type:'sawtooth',f:520,gain:.03,attack:.005,release:.04});}}}];
+  k.tone(t+.4,.36,out,{type:'square',f:1250,to:780,gain:.05,attack:.01,release:.03});k.tone(t,.2,out,{type:'sawtooth',f:410,gain:.035,attack:.005,release:.04});k.tone(t,.2,out,{type:'sawtooth',f:520,gain:.03,attack:.005,release:.04});}}},
+ // A dog barking in the next room: two short, rough barks, each a buzz that drops in pitch through an open vowel, and a puff of breath.
+ {id:'dog-bark',name:'Dog bark',group:'Animals',dur:.6,play:k=>{const {ctx,at,out}=k;for(const [t,f] of [[0,560],[.3,500]]){const s=ctx.createOscillator();s.type='sawtooth';
+  s.frequency.setValueAtTime(f*.8,at(t));s.frequency.linearRampToValueAtTime(f,at(t+.03));s.frequency.exponentialRampToValueAtTime(f*.55,at(t+.16));
+  const v=ctx.createBiquadFilter();v.type='bandpass';v.Q.value=2.5;v.frequency.setValueAtTime(1150,at(t));v.frequency.linearRampToValueAtTime(700,at(t+.16));
+  const g=ctx.createGain();g.gain.setValueAtTime(0,at(t));g.gain.linearRampToValueAtTime(.5,at(t+.015));g.gain.exponentialRampToValueAtTime(.001,at(t+.18));s.connect(v).connect(g).connect(out);s.start(at(t));s.stop(at(t+.2));
+  k.noise(t,.12,out,{type:'bandpass',f:1600,q:1,gain:.12,attack:.003,decay:true});}}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away.
