@@ -1,5 +1,5 @@
 // Floors and ground, painted into a rectangle of world units: wood boards, kitchen and bathroom tile, carpet, lawn, concrete, asphalt,
-// dirt, gravel and long field grass.
+// dirt, gravel, long field grass and still water.
 // floorArt(g, {kind, x, y, w, h}) paints with a painter g already in world units; the pattern is tied to world position, so two
 // rectangles of the same floor side by side line up. Lighting and shadows come later, from the game.
 import {hash2 as hash} from '../core/paint.js';
@@ -13,7 +13,8 @@ export const FLOORS={
  asphalt:{name:'Asphalt',ramp:['#141518','#1c1d21','#24262a','#2e3034']},
  dirt:{name:'Dirt',ramp:['#18140f','#221c15','#2c241b','#372d22']},
  gravel:{name:'Gravel',ramp:['#222326','#2e2f32','#3b3c40','#4a4b50']},
- field:{name:'Field',ramp:['#141710','#1b1f14','#23281a','#2d3320','#3a4128']}};
+ field:{name:'Field',ramp:['#141710','#1b1f14','#23281a','#2d3320','#3a4128']},
+ water:{name:'Water',ramp:['#0b1216','#101a1f','#16242a','#22343b','#3a5058']}};
 export const FLOOR_KINDS=Object.keys(FLOORS);
 export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLOORS.wood).ramp,x1=x+w,y1=y+h;
  if(k==='wood'){// Boards run east to west, 6 units wide, with staggered joints and a little grain.
@@ -35,4 +36,8 @@ export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLO
    if(k==='gravel'){if(v>.45)r(gx,gy,1,.5,v>.9?P[3]:P[2]);else if(v<.12)r(gx,gy+.5,.5,.5,P[0]);}else{if(v>.86)r(gx,gy,v>.97?1:.5,.5,v>.95?P[3]:P[2]);else if(v<.1)r(gx,gy,1,.5,P[0]);}}}
  else if(k==='field'){r(x,y,w,h,P[1]);for(let gy=Math.floor(y/3)*3;gy<y1;gy+=3)for(let gx=Math.floor(x/3)*3;gx<x1;gx+=3){if(gx<x||gy<y)continue;const v=hash(gx|0,(gy|0)+71);if(v<.45)continue;
    const t=1+((v*17)%1)*2.5,c=P[2+((v*31%1)*3|0)];r(gx,Math.max(y,gy-t),.5,Math.min(t,gy-y)+.5,c);if(v>.9)r(gx+.5,Math.max(y,gy-t+1),.5,Math.min(t-1,gy-y)+.5,P[4]);else if(v<.5)r(gx+1,gy,.5,.5,P[0]);}}
+ // Water: dark and still, with ripples drawn as short pale streaks across the flow, tied to world position so a creek painted
+ // in pieces lines up.
+ else if(k==='water'){r(x,y,w,h,P[1]);for(let gy=Math.floor(y/5)*5;gy<y1;gy+=5)for(let gx=Math.floor(x/23)*23;gx<x1;gx+=23){if(gy<y)continue;const v=hash(gx|0,(gy|0)+307);if(v<.55)continue;
+   const len=3+v*9,a=Math.max(x,gx+((v*13)%1)*12),b=Math.min(x1,a+len);if(b>a)r(a,gy,b-a,.5,v>.92?P[4]:v>.75?P[3]:P[2]);}}
  else{r(x,y,w,h,P[1]);for(let sx=Math.floor(x/40)*40;sx<x1;sx+=40)if(sx>=x)r(sx,y,.5,h,P[0]);for(let sy=Math.floor(y/40)*40;sy<y1;sy+=40)if(sy>=y)r(x,sy,w,.5,P[0]);for(let i=0;i<w*h/30;i++)r(x+hash(i,17)*w,y+hash(19,i)*h,.5,.5,i%2?P[2]:P[0]);}}
