@@ -143,7 +143,18 @@ export const SOUNDS=[
  {id:'apc-ramp',name:'Ramp coming down',group:'Vehicles',dur:3.2,play:k=>{const {out}=k;k.tone(0,2.1,out,{type:'triangle',f:190,to:150,gain:.035,attack:.15,release:.2});k.noise(0,2.1,out,{type:'bandpass',f:620,q:2,gain:.06,attack:.15});
   k.tone(2.1,.6,out,{f:72,to:38,gain:.55,attack:.002,release:.5});k.noise(2.1,.7,out,{f:1300,gain:.5,attack:.002,decay:true,sweep:160});for(const [f,d] of [[1240,.9],[1730,.7],[2410,.5]])k.tone(2.1,d,out,{type:'square',f,gain:.012,attack:.002,release:d*.9});}},
  {id:'hull-thump',name:'Hit on the hull',group:'Vehicles',dur:.9,play:k=>{const {out}=k;k.tone(0,.35,out,{f:58,to:34,gain:.6,attack:.002,release:.3});k.noise(0,.3,out,{f:520,gain:.45,attack:.002,decay:true,sweep:120});k.tone(.01,.8,out,{f:410,gain:.018,attack:.002,release:.75});k.tone(.01,.6,out,{f:655,gain:.01,attack:.002,release:.55});}},
- {id:'radio-in',name:'Radio opening',group:'Vehicles',dur:.3,play:k=>{const {out}=k;k.noise(0,.11,out,{type:'bandpass',f:1900,q:.9,gain:.22,attack:.002,decay:true});k.tone(.1,.05,out,{type:'square',f:1450,gain:.018,attack:.002,release:.03});}}];
+ {id:'radio-in',name:'Radio opening',group:'Vehicles',dur:.3,play:k=>{const {out}=k;k.noise(0,.11,out,{type:'bandpass',f:1900,q:.9,gain:.22,attack:.002,decay:true});k.tone(.1,.05,out,{type:'square',f:1450,gain:.018,attack:.002,release:.03});}},
+ // Operation Bell Jar, on the ground: the rifle's crack (short, so a burst stays a string of shots), the beacon arming, its uplink
+ // chattering while it talks to the drone, and the cold case's latches and the hiss as it seals.
+ {id:'rifle',name:'Rifle shot',group:'Combat',dur:.3,play:k=>{const {out}=k;k.noise(0,.05,out,{type:'highpass',f:2400,gain:.42,attack:.001,decay:true});k.noise(0,.24,out,{f:1900,gain:.34,attack:.001,decay:true,sweep:260});k.tone(0,.09,out,{f:190,to:62,gain:.24,attack:.001,release:.07});}},
+ {id:'beacon-on',name:'Beacon arming',group:'Operation',dur:1.1,play:k=>{const {out}=k;[[0,880],[.16,1175],[.32,1480]].forEach(([t,f])=>k.tone(t,.09,out,{type:'square',f,gain:.022,attack:.003,release:.02}));k.tone(.5,.55,out,{f:1760,gain:.05,attack:.01,release:.3});k.noise(.5,.2,out,{type:'bandpass',f:3200,q:4,gain:.05,attack:.003,decay:true});}},
+ {id:'uplink',name:'Uplink chatter',group:'Operation',dur:1.3,play:k=>{const {out}=k;for(let i=0;i<14;i++){const t=i*.085,f=[1320,1980,1650,2640,1100,2200,1760][i*5%7];k.tone(t,.05,out,{type:'square',f,gain:.012,attack:.002,release:.015});}k.noise(0,1.2,out,{type:'bandpass',f:2400,q:1.2,gain:.025,attack:.05});}},
+ {id:'case-seal',name:'Cold case sealed',group:'Operation',dur:1,play:k=>{const {out}=k;for(const t of [0,.18])k.noise(t,.05,out,{type:'bandpass',f:2600,q:4,gain:.4,attack:.001,decay:true});k.tone(0,.05,out,{f:320,to:180,gain:.12,attack:.001,release:.04});k.noise(.28,.6,out,{type:'highpass',f:4200,gain:.09,attack:.02,decay:true});}},
+ // Gadget's drone coming in low and away again: four rotors a little out of tune with each other, falling in pitch as it passes, the
+ // wash of air under them, and the click of the can letting go overhead.
+ {id:'drone',name:'Drone pass',group:'Operation',dur:2.4,play:k=>{const {ctx,at,out}=k,g=ctx.createGain();g.gain.setValueAtTime(0,at(0));g.gain.linearRampToValueAtTime(1,at(1.1));g.gain.linearRampToValueAtTime(.8,at(1.5));g.gain.linearRampToValueAtTime(0,at(2.4));g.connect(out);
+  for(const [f,d] of [[196,0],[203,7],[392,-5],[410,4]])k.tone(0,2.4,g,{type:'sawtooth',f,to:f*.93,gain:.012,attack:.3,release:.6,detune:d});
+  k.noise(0,2.4,g,{type:'bandpass',f:1600,q:2,gain:.05,attack:.4});k.tone(1.2,.05,out,{type:'square',f:1200,to:900,gain:.02,attack:.002,release:.02});}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away; options.bus (kit.js bus) sends it through a volume of the game's own.

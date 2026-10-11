@@ -1,9 +1,10 @@
 // Base props: LEET AF's staging hangar at Harlan Field, where the opening mission is briefed. The hangar's corrugated walls and its
 // steel columns, the stage with its podium and the pull-down projector screen (six slides for the briefing), the folding chairs the
 // unit sits in, the projector cart, the armory cage, a bank of lockers, the unit's banner, an armored personnel carrier with its ramp
-// down, sample cases, a briefing board and the coffee table. Same conventions as street.js: footprint top left at (0, 0), height
-// rising into negative y, a box's top seen as y in [-z, h-z] and its front face below that. Kinds this file does not draw fall
-// through to the town set and from there to every other set.
+// down, sample cases, a briefing board and the coffee table; and out in the Hollow, the containment beacon and its case, the Marrow
+// courier on its roof at the crash, the ammo cans by the ramp and Gadget's drone. Same conventions as street.js: footprint top left
+// at (0, 0), height rising into negative y, a box's top seen as y in [-z, h-z] and its front face below that. Kinds this file does
+// not draw fall through to the town set and from there to every other set.
 import {painter,hash2 as hash} from '../core/paint.js';
 import {EDGE,SHADOW,PROP_PAD} from './camp.js';
 import {propArt as townPropArt} from './town.js';
@@ -20,6 +21,8 @@ const TL=['#0f3a34','#1a5a4e','#2a8a74','#4cc0a0','#8ae8cc'],LZ='#b8ffd8',MAP=['
 // Letters from the 5 × 7 screen font at k units a pixel, for the slides and small labels.
 function type(g,s,x,y,k,col){[...s].forEach((ch,i)=>{const h=GLYPHS[ch]||GLYPHS[' '];for(let row=0;row<7;row++){const b=parseInt(h.slice(row*2,row*2+2),16);for(let c=0;c<5;c++)if(b>>(4-c)&1)g.r(x+(i*6+c)*k,y+row*k,k,k,col);}});}
 const typeW=(s,k)=>(s.length*6-1)*k,mid=(g,s,cx,y,k,col)=>type(g,s,cx-typeW(s,k)/2,y,k,col);
+// The same, turned upside down (on something lying on its roof): the whole line spun half a turn about its middle.
+const type180=(g,s,x,y,k,col)=>{const W=typeW(s,k),H=7*k;type({r:(px,py,w,h,c)=>g.r(2*x+W-px-w,2*y+H-py-h,w,h,c)},s,x,y,k,col);};
 // A box on footprint (x, y, w, d) from height z0 up to z1: its outline, top face and front face, the top edge lit.
 function bx(g,x,y,w,d,z0,z1,top,front,hi){const {r}=g,yt=y-z1,yf=y+d-z1,yb=y+d-z0;r(x-.5,yt-.5,w+1,yb-yt+1,EDGE);r(x,yt,w,yf-yt,top);r(x,yf,w,yb-yf,front);if(hi)r(x,yt,w,.5,hi);return yf;}
 // Yellow and black hazard stripes running down to the left, in a rectangle.
@@ -313,7 +316,71 @@ export const BASE_ART={
   r(0,-z,w,h,OD[3]);r(1.5,-z+1.5,w-3,h-3,'#2a2b2e');for(let i=0;i<10;i++)r(2+hash(i,5)*(w-5),-z+2+hash(5,i)*(h-5),1,.5,'#34363a');
   e(6,-z+h/2,3.6,3.2,EDGE);e(6,-z+h/2,3,2.6,RED[1]);e(5.2,-z+h/2-.8,1,.8,RED[2]);
   for(const y of [-z+3,-z+6])r(11,y,w-14,1.5,ST[4]);r(11,-z+h-6,9,4,OD[3]);r(11,-z+h-6,9,.5,OD[5]);r(12,-z+h-5,7,1.5,HZ[2]);
-  for(let k=0;k<3;k++)l(22+k*1.5,-z+h-3,26+k*1.5,-z+h-10,.75,ST[3]);stencil(g,'BEACON',w/2-stencilWidth('BEACON',.5)/2,yf+4.5,.5,'#d8d0b0');}};
+  for(let k=0;k<3;k++)l(22+k*1.5,-z+h-3,26+k*1.5,-z+h-10,.75,ST[3]);stencil(g,'BEACON',w/2-stencilWidth('BEACON',.5)/2,yf+4.5,.5,'#d8d0b0');},
+ // Steel ammo cans in olive drab, o.n of them side by side: the lid with its carry handle and latch, AMMO stencilled on the
+ // front. o.open throws the lids back on rows of brass.
+ ammocan(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,n=o.n||1,cw=w/n;e(w/2,h,w/2+2,2.5,SHADOW);
+  for(let i=0;i<n;i++){const x=i*cw+.5,W=cw-1;if(o.open){r(x-.5,-z-h*.7-.5,W+1,h*.7+1,EDGE);r(x,-z-h*.7,W,h*.7,OD[2]);r(x,-z-h*.7,W,.5,OD[4]);}
+   const yf=bx(g,x,0,W,h,0,z,OD[3],OD[2],OD[4]);r(x,yf,W,1,OD[4]);r(x,yf+1,W,.5,OD[1]);r(x+W-2.5,yf+1.5,1.5,3,EDGE);r(x+W-2,yf+2,.5,2,'#8a8e94');
+   if(o.open){r(x+1,-z+1,W-2,h-2,'#2a2418');for(let yy=-z+1.5;yy<h-z-1.5;yy+=1.5)for(let xx=x+1.5;xx<x+W-1.5;xx+=1.5){r(xx,yy,1,1,'#b8923a');r(xx,yy,.5,.5,'#f0d888');}}
+   else{l(x+W*.28,-z+h/2,x+W*.72,-z+h/2,1.25,EDGE);l(x+W*.28,-z+h/2,x+W*.72,-z+h/2,.5,'#55595e');}
+   stencil(g,'AMMO',x+W/2-stencilWidth('AMMO',.5)/2,yf+(z-1)/2-.5,.5,HZ[3]);}},
+ // Gadget's drone, a quadcopter seen from above and a little to the south: the grey body with its camera slung under the nose, four
+ // arms out to the motors and each rotor a pale blur (o.f turns the blades between frames), red and green running lights at the
+ // front and a white one behind. o.can hangs an ammo can under it on two straps. It is drawn at the top of its box; the game lifts it.
+ drone(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,cx=w/2,cy=-z+5,f=o.f|0,can=!!o.can;
+  if(can){const cw=7,ch=2.5,cz=4.5,x=cx-cw/2,y=cy+12;for(const dx of [-2,2])l(cx+dx*.6,cy+1,cx+dx,y-cz+.5,.5,'#5a5e64');const yf=bx(g,x,y,cw,ch,0,cz,OD[3],OD[2],OD[4]);
+   r(x,yf,cw,.75,OD[4]);r(x+1.5,y-cz+ch/2-.25,cw-3,.5,EDGE);r(x+cw-1.5,yf+1.25,1,1.75,EDGE);r(x+1,yf+2,2.5,.5,HZ[3]);}
+  for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const mx=cx+sx*8,my=cy+sy*4;l(cx+sx*2,cy+sy*1.2,mx,my,1.5,EDGE);l(cx+sx*2,cy+sy*1.2,mx,my,.5,ST[3]);}
+  for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const mx=cx+sx*8,my=cy+sy*4;e(mx,my-1,5,2.5,'rgba(200,206,214,.16)');e(mx,my-1,3.4,1.7,'rgba(220,226,232,.14)');
+   const a=(f+(sx*sy>0?0:1))%2?.5:-.5,c=Math.cos(a)*4.6,s=Math.sin(a)*2.3;l(mx-c,my-1-s,mx+c,my-1+s,.75,'rgba(236,240,244,.5)');e(mx,my-.75,.9,.7,EDGE);r(mx-.25,my-1.25,.5,.5,ST[5]);}
+  e(cx,cy+2.5,1.6,1.3,EDGE);e(cx,cy+2.5,1,.8,'#2a2b2e');r(cx-.25,cy+2.25,.5,.5,'#8ab4d8');
+  r(cx-3.5,cy-2.5,7,5,EDGE);r(cx-3,cy-2,6,4,ST[2]);r(cx-3,cy-2,6,1.5,ST[3]);r(cx-3,cy-2,6,.5,ST[5]);r(cx-1,cy-.5,2,1,ST[1]);
+  r(cx-3.5,cy+1.5,1,1,RED[3]);r(cx+2.5,cy+1.5,1,1,'#5aff8a');r(cx-.5,cy-3,1,1,'#f6f5f0');},
+ // The Marrow courier that went off Route 9: a white box van on its roof. Its underside faces the sky (the frame rails, the axles, the
+ // driveshaft, the exhaust and the tank), its wheels in the air, its near side upside down with the teal stripe and MARROW read the
+ // wrong way up, the cab crushed down onto its roof and the glass all over the road. The crash tore the side of the hold open: through
+ // it, the samples' cold cases where they fell, venting cold. o.open swings the rear door ajar; o.taken empties the hold.
+ wreck(g,o){const {r,p,e,l}=g,L=o.w,D=o.h,Z=o.z,Hb=Math.min(44,Z-14),xb=Math.round(L*.72),xc=xb+2,s=(o.x|0)+(o.y|0)*7,yt=D-Hb,GL='#1a2430',RU='#4a3a2c',TY='#0c0d10';
+  e(L/2,D-1,L/2+6,6,SHADOW);e(L-22,D+4,16,4.5,'#0a0b0d88');e(L-30,D+6,7,2,'#0a0b0d66');
+  // The near rear door, hanging open off its hinge at the back corner of the box.
+  if(o.open){p([[.5,yt-1],[.5,D-.5],[-11.5,D-6],[-11.5,yt-12]],EDGE);p([[0,yt-.5],[0,D-1],[-11,D-6.5],[-11,yt-11]],SC[1]);p([[-1.5,yt+3],[-1.5,D-4],[-9.5,D-8],[-9.5,yt-6]],SC[2]);l(-2,yt+20,-9,yt+12,.5,SC[0]);r(-11,yt-11,.5,Hb+5,SC[3]);}
+  // The underside, now the top: grimy steel, the frame rails, cross members, both axles, the driveshaft, the tank and the exhaust.
+  r(-.5,-Hb-.5,L+1,D+1,EDGE);r(0,-Hb,L,D,'#1c1f23');for(let i=0;i<40;i++)r(hash(i,s)*(L-4)+1,-Hb+hash(s,i)*(D-2)+.5,1+hash(i,s+3)*3,.5,i%3?'#24282d':'#2c2620');
+  for(const d of [14,44]){r(1,d-Hb-1.5,L-2,3,EDGE);r(1,d-Hb-1,L-2,2,'#2c3036');r(1,d-Hb-1,L-2,.5,'#40464e');}for(let x=12;x<L-10;x+=22)r(x,14-Hb,2,30,'#262a2f');
+  const ra=Math.round(L*.24),fa=Math.round(L*.86);for(const x of [ra,fa]){r(x-2.5,-Hb+1,5,D-2,EDGE);r(x-2,-Hb+1,4,D-2,'#30353b');r(x-2,-Hb+1,4,.5,'#454b53');e(x,29-Hb,5.5,4.5,EDGE);e(x,29-Hb,5,4,'#383d44');e(x-1,28-Hb,2,1.4,'#4c535b');}
+  l(ra+5,29-Hb,fa-8,29-Hb,2.5,EDGE);l(ra+5,29-Hb,fa-8,29-Hb,1.5,'#3a3f46');r(xb-38,20-Hb,26,13,EDGE);r(xb-37.5,20.5-Hb,25,12,'#2a2e34');r(xb-37.5,20.5-Hb,25,.5,'#3c424a');
+  r(fa-24,6-Hb,26,16,'#16181b');r(fa-22,8-Hb,10,6,'#22262b');l(L-10,49-Hb,8,49-Hb,1.75,EDGE);l(L-10,49-Hb,8,49-Hb,1,RU);r(xb-70,46-Hb,24,6,EDGE);r(xb-69.5,46.5-Hb,23,5,RU);r(xb-69.5,46.5-Hb,23,.5,'#6a5640');
+  // The far wheels, up in the air at the back of it.
+  const wheel=(x,y,big)=>{const R=big?9:8.5;e(x,y,R+.5,R,EDGE);e(x,y,R,R-.5,TY);e(x,y,R-2.5,R-3,'#17181b');e(x,y,4.6,4.4,'#55585e');e(x,y,2,1.9,'#2a2b2e');for(let k=0;k<5;k++){const a=k*Math.PI*2/5+.4;r(x+Math.cos(a)*3.2-.25,y+Math.sin(a)*3.1-.25,.5,.5,'#8a8e94');}r(x-R+1.5,y-2,.5,4,'#26282c');};
+  for(const x of [ra,fa])wheel(x,-Hb-8,x===ra);
+  // The box's near side, upside down: white panels with their seams, the floor rail along the top, the teal stripe and the name.
+  r(-.5,yt-.5,xb+1,Hb+1,EDGE);r(0,yt,xb,Hb,SC[2]);r(0,yt,xb,3,ST[2]);r(0,yt,xb,.5,ST[4]);r(0,yt+3,xb,.5,ST[0]);r(0,D-2.5,xb,2.5,SC[0]);
+  for(let x=16;x<xb-2;x+=19)r(x,yt+3,.5,Hb-5.5,SC[1]);for(let i=0;i<18;i++)r(hash(i,s+9)*(xb-6)+2,yt+4+hash(s+9,i)*(Hb-8),2+hash(i,s+2)*5,.5,i%2?SC[1]:'#9a968c');
+  r(0,yt+9,xb,3,TL[2]);r(0,yt+9,xb,.5,TL[3]);r(0,yt+12,xb,.5,TL[0]);
+  const N='MARROW',T='NOBODY HAS TO STAY DEAD',nx=xb*.66;type180(g,N,nx-typeW(N,1.5)/2,yt+21,1.5,TL[1]);type180(g,T,nx-typeW(T,.5)/2,yt+15.5,.5,TL[1]);
+  // Where the side tore open: the dark hold, its shelving down, and the cold cases on what was the ceiling, misting.
+  const gx=7,gw=Math.round(xb*.33);p([[gx,yt+6],[gx+9,yt+4],[gx+16,yt+8],[gx+27,yt+5],[gx+gw,yt+9],[gx+gw-3,yt+20],[gx+gw+2,yt+30],[gx+gw-4,D-5],[gx+12,D-4],[gx+2,D-7],[gx-2,yt+24]],SC[3]);
+  p([[gx+1.5,yt+7.5],[gx+9,yt+6],[gx+16,yt+10],[gx+26,yt+7],[gx+gw-1.5,yt+10.5],[gx+gw-4.5,yt+20],[gx+gw,yt+30],[gx+gw-5.5,D-6.5],[gx+12,D-5.5],[gx+3,D-8.5],[gx,yt+24]],'#0b0d10');
+  r(gx+2,D-9,gw-6,1,'#22252a');l(gx+4,yt+12,gx+gw-8,yt+26,.75,'#3a3f46');l(gx+10,yt+9,gx+16,D-10,.75,'#2c3036');r(gx+gw-10,yt+14,6,.75,'#2c3036');
+  if(!o.taken)for(const [cx,cw,tl] of [[gx+5,12,0],[gx+19,10,1]]){const cy=D-9-7;r(cx-.5,cy-.5-tl,cw+1,8,EDGE);r(cx,cy-tl,cw,7,SC[3]);r(cx,cy-tl,cw,.5,SC[4]);r(cx,cy+3-tl,cw,1.5,TL[2]);r(cx+cw-4,cy+5-tl,2.5,1,'#5aff8a');r(cx+1.5,cy+1-tl,.5,5,SC[1]);}
+  else{r(gx+6,D-11,9,2,SC[1]);r(gx+6,D-11,9,.5,SC[3]);r(gx+17,D-12,1,3,'#2c3036');}
+  if(!o.taken)for(let k=0;k<3;k++)e(gx+10+k*5,yt+5-k*3,2+k*.9,1+k*.45,k?'#eef6fa30':'#eef6fa60');
+  for(const [x0,y0,x1,y1] of [[gx+9,yt+4,gx+12,yt+1],[gx+gw,yt+9,gx+gw+4,yt+7],[gx+gw+2,yt+30,gx+gw+6,yt+32],[gx+2,D-7,gx-2,D-4]]){l(x0,y0,x1,y1,1.25,EDGE);l(x0,y0,x1,y1,.6,SC[4]);}
+  // The cab, crushed down onto its roof: the door, the window flattened near the ground and burst, the nose upside down at the
+  // east end (bumper up top, headlights under it), the mirror hanging.
+  const cy0=yt,cab=[[xc,cy0],[L,cy0],[L,cy0+15],[L-7,cy0+20],[L-12,D-6],[L-16,D-1],[xc+30,D-.5],[xc+22,D-2.5],[xc+10,D-.5],[xc,D]];
+  p(cab.map(([x,y])=>[x+(x>xc?.5:-.5),y+(y>cy0?.5:-.5)]),EDGE);p(cab,SC[2]);r(xc,cy0,L-xc,3,ST[2]);r(xc,cy0,L-xc,.5,ST[4]);r(xc,cy0+9,L-xc-1,2,TL[2]);
+  p([[xc+3,D-15],[L-19,D-14],[L-15,D-5],[xc+28,D-3.5],[xc+20,D-5],[xc+4,D-4]],EDGE);p([[xc+3.5,D-14.5],[L-19.5,D-13.5],[L-16,D-5.5],[xc+28,D-4.5],[xc+20,D-5.5],[xc+4,D-4.5]],GL);
+  for(const [x0,y0,x1,y1] of [[xc+10,D-12,xc+16,D-6],[xc+16,D-12,xc+9,D-7],[xc+22,D-13,xc+30,D-6],[L-24,D-12,L-20,D-6]])l(x0,y0,x1,y1,.5,'#5a7088');
+  r(xc+2,cy0+4,.5,D-cy0-20,SC[0]);r(xc+12,cy0+5,4,1,'#8a8e94');r(xc+20,cy0+13,7,5,TL[2]);r(xc+20.5,cy0+13.5,6,4,TL[1]);r(xc+22,cy0+14.5,3,2,SC[4]);
+  r(L-2.5,cy0+3,3,5,'#2a2b2e');r(L-2,cy0+3.5,2,4,'#3a3d42');r(L-6,cy0+9.5,4,3,EDGE);r(L-5.5,cy0+10,3,2,'#e8e2c4');l(L-7,cy0+17,L-12,D-6,.75,'#9a968c');
+  l(xc+30,D-14,xc+34,D-6,1,EDGE);r(xc+32,D-7,4,3,EDGE);r(xc+32.5,D-6.5,3,2,GL);
+  // Arches in the near side and the near wheels in the air over them.
+  for(const x of [ra,fa]){e(x,yt+1,11,4.5,'#0a0b0d');wheel(x,yt-7,x===ra);}r(ra-2,yt-7,4,1,'#2a2b2e');
+  // Glass and bits of the van all over the road in front of it.
+  for(let i=0;i<46;i++){const x=hash(i,s+31)*(L+16)-8,y=D+1+hash(s+31,i)*11,big=i%9===0;r(x,y,big?1.5:.5,.5,i%4?'#a8bccb':'#d8e6ee');}
+  for(let i=0;i<5;i++){const x=hash(i,s+41)*(L-30)+10,y=D+3+hash(s+41,i)*8;r(x-.5,y-.5,4,2.5,EDGE);r(x,y,3,1.5,i%2?SC[2]:'#6a5a40');}}};
 // The library's samples: real sizes from the hangar in Deadlight Hollow.
 export const BASE_SAMPLES=[
  {set:'base',kind:'hangarwall',name:'Hangar wall',group:'Hangar',samples:[{kind:'hangarwall',x:0,y:0,w:300,h:10,z:100,sign:'HANGAR 3',signX:20}]},
@@ -334,5 +401,8 @@ export const BASE_SAMPLES=[
  {set:'base',kind:'apcbay',name:'Armored truck, inside',group:'Vehicles',samples:[{kind:'apcbay',x:0,y:0,w:300,h:76,z:60,cab:66,mark:'H6'}]},
  {set:'base',kind:'cabseat',name:'Driver\'s seat back',group:'Vehicles',samples:[{kind:'cabseat',x:0,y:0,w:4,h:14,z:30}]},
  {set:'base',kind:'beaconcase',name:'Beacon case',group:'Operation',samples:[{kind:'beaconcase',x:0,y:0,w:34,h:18,z:12},{kind:'beaconcase',x:0,y:0,w:34,h:18,z:12,open:true}]},
- {set:'base',kind:'beacon',name:'Containment beacon',group:'Operation',samples:[{kind:'beacon',x:0,y:0,w:16,h:12,z:46},{kind:'beacon',x:0,y:0,w:16,h:12,z:46,on:true}]}];
+ {set:'base',kind:'beacon',name:'Containment beacon',group:'Operation',samples:[{kind:'beacon',x:0,y:0,w:16,h:12,z:46},{kind:'beacon',x:0,y:0,w:16,h:12,z:46,on:true}]},
+ {set:'base',kind:'ammocan',name:'Ammo cans',group:'Operation',samples:[{kind:'ammocan',x:0,y:0,w:30,h:10,z:11,n:2},{kind:'ammocan',x:0,y:0,w:30,h:10,z:11,n:2,open:true}]},
+ {set:'base',kind:'wreck',name:'Courier wreck',group:'Operation',samples:[{kind:'wreck',x:0,y:0,w:180,h:58,z:62,open:true},{kind:'wreck',x:0,y:0,w:180,h:58,z:62,open:true,taken:true}]},
+ {set:'base',kind:'drone',name:'Drone',group:'Operation',samples:[{kind:'drone',x:0,y:0,w:24,h:12,z:20},{kind:'drone',x:0,y:0,w:24,h:12,z:20,f:1,can:true}]}];
 export function propArt(c,o){if(!BASE_ART[o.kind])return townPropArt(c,o);c.save();c.scale(2,2);c.translate(PROP_PAD,o.z+PROP_PAD);BASE_ART[o.kind](painter(c),o);c.restore();}
