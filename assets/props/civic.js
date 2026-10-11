@@ -83,7 +83,7 @@ export const CIVIC_ART={
   const cx0=dx-37,cw=74;r(cx0+3,h-41,cw-6,3,'#00000044');for(const x of [cx0+2,cx0+cw-4.5]){r(x-.5,h-42,3.5,h+9.5-(h-42),EDGE);r(x,h-42,2.5,h+9-(h-42),FRAME[1]);r(x,h-42,.5,h+9-(h-42),FRAME[2]);}
   r(cx0-.5,h-56.5,cw+1,15,EDGE);r(cx0,h-56,cw,10,CONC[2]);r(cx0,h-56,cw,.5,CONC[3]);r(cx0,h-46,cw,4,FRAME[1]);r(cx0,h-46,cw,.5,FRAME[2]);r(cx0,h-42.5,cw,.5,FRAME[0]);},
  // The school gym: a tall brick box under a low metal roof (ridge across the middle, standing seams), a ribbon of high windows,
- // a faded paw-print crest and the double steel doors in the middle of the front. boarded nails planks over the doors.
+ // a faded paw-print crest and the double steel doors in the middle of the front. boarded nails planks over the doors; open bursts them.
  gym(g,o){const {r,p,e,l}=g,w=o.w,h=o.h,z=o.z,F=h-z,s=((o.x|0)*5+(o.y|0)*9)&1023,yr=Math.round(h/2)-z-10,dx=w/2;
   r(dx-30,h,60,8,CONC[1]);r(dx-30,h,60,.5,CONC[2]);r(-3,h-1,w+6,4,SHADOW);r(-1,h-1,w+2,2,SHADOW);r(-2,-z-.5,w+4,h+z+1,EDGE);
   // The roof: the far slope in shade, the near slope lit, seams down both, a ridge cap and two turbine vents on it.
@@ -96,7 +96,7 @@ export const CIVIC_ART={
   r(0,h-20,w,16,CONC[1]);for(let y=h-16;y<h-4;y+=4)r(0,y,w,.5,CONC[0]);for(let x=4,k=0;x<w;x+=8,k++)for(let y=h-20;y<h-4;y+=8)r(x+((y/4|0)%2)*4,y,.5,4,CONC[0]);r(0,h-20,w,.5,CONC[2]);r(0,h-4,w,4,CONC[0]);
   for(const x of [3,w-6]){r(x-.5,F+2,3,h-F-4,EDGE);r(x,F+2,2,h-F-4,MET[1]);r(x,F+2,.5,h-F-4,MET[3]);}
   // The clerestory: a ribbon of wired glass high up, mullions every so often, a sill under it.
-  const cy=F+14,ch=20;r(10.5,cy-1,w-21,ch+2,EDGE);r(11,cy-.5,w-22,ch+1,FRAME[1]);for(let x=12;x<w-12;x+=18){const q=Math.min(16,w-12-x);if(q<4)continue;pane(g,x,cy,q,ch);for(let k=x+3;k<x+q;k+=4)r(k,cy,.25,ch,'#00000030');r(x,cy+ch/2,q,.25,'#00000030');}
+  const cy=F+14,ch=20;r(10.5,cy-1,w-21,ch+2,EDGE);r(11,cy-.5,w-22,ch+1,FRAME[1]);for(let x=12;x<w-12;x+=18){const q=Math.min(16,w-12-x);if(q<4)continue;if(o.open&&hash(x|0,s+5)<.3)smash(g,x,cy,q,ch);else pane(g,x,cy,q,ch);for(let k=x+3;k<x+q;k+=4)r(k,cy,.25,ch,'#00000030');r(x,cy+ch/2,q,.25,'#00000030');}
   r(9,cy+ch+1,w-18,2.5,CONC[2]);r(9,cy+ch+1,w-18,.5,CONC[3]);
   // The crest: a faded painted disc with a paw print, centred over the doors.
   const my=F+(h-F)*.46;e(dx,my,19,19,'#5e4e3444');e(dx,my,16.5,16.5,'#2e221c55');e(dx,my+3,6,5,'#7a6a4466');for(const [ax,ay] of [[-7,-4],[-2.5,-8],[2.5,-8],[7,-4]])e(dx+ax,my+ay,2.4,2.8,'#7a6a4466');
@@ -104,6 +104,11 @@ export const CIVIC_ART={
   const ex=dx-22,ey=h-46;r(ex-2,ey-2,48,48,EDGE);r(ex-1.5,ey-1.5,47,47.5,STEEL[0]);r(dx-4,ey-8,8,4,EDGE);r(dx-3.5,ey-7.5,7,3,STEEL[2]);r(dx-3,ey-5,6,1,'#3a3c34');
   for(const x of [ex,dx+.5]){r(x,ey,21.5,46,STEEL[2]);r(x,ey,21.5,.5,STEEL[3]);r(x+.5,ey+38,20.5,7,STEEL[1]);r(x+(x<dx?14:3),ey+5,4,14,EDGE);pane(g,x+(x<dx?14.5:3.5),ey+5.5,3,13);r(x+2,ey+23,17.5,2.5,EDGE);r(x+2.5,ey+23.5,16.5,1.5,FRAME[2]);}
   r(dx-.25,ey,.5,46,EDGE);
+  // open: burst outward from inside, the leaves flung back against the wall either side, the gym black behind them, smears
+  // dragged out across the step and some of the high windows broken.
+  if(o.open){r(ex-.5,ey-.5,45,46.5,EDGE);r(ex,ey,44,46,'#060708');r(ex,ey+32,44,14,'#0d0e11');r(ex,ey,44,.5,'#1c1e22');
+   for(const x of [ex-8,dx+23]){r(x-.5,ey-.5,8,47,EDGE);r(x,ey,7,46,STEEL[1]);r(x,ey,7,.5,STEEL[3]);r(x+(x<dx?.5:4.5),ey+5,2,14,'#1a1b1e');r(x+.5,ey+23,6,2,FRAME[2]);}
+   for(let i=0;i<4;i++){const x=dx-15+i*9+hash(i,s)*4;l(x,ey+40,x+(hash(s,i)-.5)*12,h+7,2+hash(i,s+3),'#4a1612a0');}}
   if(o.boarded){// Planks nailed across both leaves, one on the slant.
    const pl=(x1,y1,x2,y2,t)=>{p([[x1,y1-.5],[x2,y2-.5],[x2,y2+t+.5],[x1,y1+t+.5]],EDGE);p([[x1+.5,y1],[x2-.5,y2],[x2-.5,y2+t],[x1+.5,y1+t]],WOOD[2]);l(x1+.5,y1+.5,x2-.5,y2+.5,.5,WOOD[3]);l(x1+.5,y1+t-.5,x2-.5,y2+t-.5,.5,WOOD[0]);for(const f of [.06,.94]){r(x1+(x2-x1)*f-.5,y1+(y2-y1)*f+t/2-.5,1,1,'#8a8e94');}};
    pl(ex-6,ey+6,ex+50,ey+8,5);pl(ex-5,ey+20,ex+49,ey+19,5.5);pl(ex-6,ey+34,ex+50,ey+35,5);pl(ex-2,ey+42,ex+46,ey+2,5);}},
@@ -269,7 +274,7 @@ const LAMP='#e8e2c4',TAIL='#8a1c1c';
 // Library samples: the sizes the suburbs map uses, with each option shown.
 export const CIVIC_SAMPLES=[
  {set:'town',kind:'school',name:'Elementary school',group:'School',samples:[{kind:'school',x:40,y:40,w:720,h:170,z:96},{kind:'school',x:40,y:40,w:720,h:170,z:96,broken:true,door:250}]},
- {set:'town',kind:'gym',name:'School gym',group:'School',samples:[{kind:'gym',x:40,y:40,w:380,h:220,z:150},{kind:'gym',x:40,y:40,w:380,h:220,z:150,boarded:true}]},
+ {set:'town',kind:'gym',name:'School gym',group:'School',samples:[{kind:'gym',x:40,y:40,w:380,h:220,z:150},{kind:'gym',x:40,y:40,w:380,h:220,z:150,boarded:true},{kind:'gym',x:40,y:40,w:380,h:220,z:150,open:true}]},
  {set:'town',kind:'schoolbus',name:'School bus',group:'School',samples:[{kind:'schoolbus',x:40,y:40,w:230,h:56,z:66},{kind:'schoolbus',x:40,y:40,w:230,h:56,z:66,crashed:true}]},
  {set:'town',kind:'flagpole',name:'Flagpole',group:'School',samples:[{kind:'flagpole',x:40,y:40,w:8,h:8,z:170}]},
  {set:'town',kind:'bikerack',name:'Bike rack',group:'School',samples:[{kind:'bikerack',x:40,y:40,w:60,h:10,z:14}]},
