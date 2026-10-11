@@ -25,6 +25,8 @@ import {R,hash,canvas} from './core/kit.js';
 import {text,width,GLYPHS} from './ui/font5x7.js';
 import {BLOOD,brushes} from './effects/grime.js';
 import {GORE,GORE_PARTS,zombiePiece,CRAWL,crawlArt,GIBS,gibArt,BLOOD_KINDS,BLOOD_BOX,bloodArt} from './effects/gore.js';
+import {SPECIAL_KINDS,SPECIAL_LOOKS,special} from './characters/specials.js';
+import {ACID,GAS,ACID_BOX,acidArt,GLOB,globArt,GAS_BOX,gasArt} from './effects/hazards.js';
 import {logo,osd,breakup,flip,noSignal} from './effects/tv.js';
 import {captions,lowerThird,ticker,bug} from './effects/broadcast.js';
 import {SOUNDS} from './sounds/library.js';
@@ -74,6 +76,11 @@ const CHARACTERS=[
   w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:personAnims(true),
   options:[...INFECTION.map(lookOption),...PERSON.map(lookOption)],presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),
   defaults:pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON]),random:r=>pickKeys(randomAppearance(r),[...INFECTION,...PERSON]),draw:personDraw(true)},
+ {id:'special-dead',name:'Special dead',category:'characters',group:'Infected',kind:'sprite',summary:'Three that are worse: the screamer, whose jaw hangs open to its chest; the bloater, swollen tight under a top that no longer covers it; and the spitter, with a sac of acid under its chin. Any zombie look works; Act is the moment before it screams, bursts or spits.',
+  source:'assets/characters/specials.js',usage:"import {special, SPECIAL_LOOKS} from './assets/characters/specials.js';\n// c: a 160 × 192 frame at 2x; kind 'screamer', 'bloater' or 'spitter'; act 1 for the scream, the swell or the spit\nc.scale(2,2); special(c, 'bloater', facing, frame, look, act);",
+  w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:{Idle:{frames:[0],ms:200},Walk:{frames:WALK_FRAMES,ms:125},Act:{frames:[-1,-2],ms:160}},
+  options:[{key:'kind',label:'Kind',choices:['Screamer','Bloater','Spitter']},...INFECTION.map(lookOption),...PERSON.map(lookOption)],
+  defaults:{kind:0},draw:(c,{facing,frame,o})=>{const kind=SPECIAL_KINDS[o.kind||0],look={...DEFAULT_APPEARANCE,...SPECIAL_LOOKS[kind]};for(const k of [...INFECTION,...PERSON])if(o[k]!==undefined)look[k]=o[k];c.scale(2,2);special(c,kind,facing,frame<0?0:frame,look,frame<0?(frame===-1?1:.5):0);}},
  {id:'zombie-pieces',name:'Zombie pieces',category:'characters',group:'Infected',kind:'sprite',summary:'Any zombie blown apart: the top and bottom halves at the waist, or the head and the rest at the neck, each with a ragged wound, a stub of spine and gut, lined up with the whole body it came from.',
   source:'assets/effects/gore.js',usage:"import {zombiePiece, GORE_PARTS} from './assets/effects/gore.js';\n// c: a 160 × 192 frame, the same as the zombie's own; part: 'upper', 'lower', 'head' or 'headless'\nzombiePiece(c, {...look, zombie: 1}, facing, 'upper', 0, seed);",
   w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:{Still:{frames:[0],ms:200}},
@@ -183,6 +190,14 @@ const EFFECTS=[
  grime('hand-smear','Hand smear','A hand dragged through blood: a heavy patch, then finger streaks that break up.',b=>{b.smear(14,16,82,40,12,4,3,4);}),
  grime('claw-gouges','Claw gouges','Scraped metal with a shadow on one side, deepest mid-scratch.',b=>{b.claw(24,10,68,54,3,4);}),
  grime('scuffs-dirt','Scuffs and dirt','Worn paint, chips and grime for panels and props.',b=>{b.dirt(6,6,84,52,3,.6);for(let i=0;i<9;i++)b.scuff(10+i*9,14+(i%3)*14,14,.4+i*.2,.14);for(let i=0;i<12;i++)b.chip(8+i*7,50-(i%4)*9);}),
+ {id:'acid',name:'Acid',category:'effects',group:'Hazards',kind:'motion',summary:'A spitter\'s acid: the glob in flight with its tail, and the pool it leaves, bubbling as it eats into the ground and drying to a scorched stain.',source:'assets/effects/hazards.js',
+  usage:"import {acidArt, ACID_BOX, globArt, GLOB} from './assets/effects/hazards.js';\n// a pool: ACID_BOX units at 2x, centred on the spot; frame 0 to 3 bubbles, fade 0 to 1 dries it\nacidArt(c, seed, frame, fade);\n// the glob: GLOB units at 2x; angle is the way it flies\nglobArt(c, frame, angle);",
+  dur:2,w:ACID_BOX.w*2+GLOB.w*2,h:ACID_BOX.h*2,scale:3,bg:'#3a3f46',options:[{key:'fade',label:'Drying',choices:['Fresh','Drying','Dry']},seedOpt],defaults:{fade:0,seed:0},
+  draw:(c,{o,t=0})=>{const f=Math.floor(t*6)%4;acidArt(c,o.seed*11+3,f,[0,.4,.8][o.fade||0]);c.save();c.translate(ACID_BOX.w*2,ACID_BOX.h-GLOB.h);globArt(c,f,Math.PI*.15);c.restore();}},
+ {id:'gas',name:'Bloater gas',category:'effects',group:'Hazards',kind:'still',summary:'Puffs of the sour green cloud a bloater bursts into, soft and dithered at the edge so a few overlapping read as one thin, drifting cloud.',source:'assets/effects/hazards.js',
+  usage:"import {gasArt, GAS_BOX} from './assets/effects/hazards.js';\n// a GAS_BOX.w × GAS_BOX.h unit puff at 2x; shade 0 dark to 2 light\ngasArt(c, seed, shade);",
+  w:GAS_BOX.w*2*3,h:GAS_BOX.h*2,scale:2,bg:'#3a3f46',options:[seedOpt],defaults:{seed:0},
+  draw:(c,{o})=>{for(let s=0;s<3;s++){const t=canvas(GAS_BOX.w*2,GAS_BOX.h*2);gasArt(t.getContext('2d'),o.seed*7+s,s);c.drawImage(t,s*GAS_BOX.w*2,0);}}},
  {id:'gibs',name:'Gibs',category:'effects',group:'Gore',kind:'still',summary:'What a close blast throws: meat, a rib, a bone, gut, a hand, a scrap of clothing and scalp. Each fits in 10 × 10 units round its middle.',source:'assets/effects/gore.js',
   usage:"import {GIBS, gibArt} from './assets/effects/gore.js';\n// a 20 × 20 canvas per chunk; col is the clothing scrap's color\ngibArt(c, 'rib', seed, '#4c5566');",w:GIBS.length*20,h:20,scale:4,bg:'#3a3f46',options:[seedOpt],defaults:{seed:0},
   draw:(c,{o})=>GIBS.forEach((k,i)=>{c.save();c.translate(i*20,0);gibArt(c,k,o.seed*7+i);c.restore();})},

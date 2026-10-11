@@ -443,8 +443,9 @@ function neckline(g,back,quarter,side,T){const {p,r}=g;
 export function survivor(c,direction=1,frame=0,pack=true,look={}){const dir=((direction%8)+8)%8;
  survivorLegs(c,dir,frame,look);survivorBody(c,dir,frame,pack,look,'under');gunArms(c,dir*Math.PI/4,look,frame);survivorBody(c,dir,frame,pack,look,'over');}
 const view=direction=>{const dir=((direction%8)+8)%8;return {dir,side:dir===0||dir===4,back:dir>=5,quarter:dir%2===1,mirror:dir===3||dir===4||dir===5};};
-// How far the upper body rises, dips and leans on this frame, on screen. The gun layer follows it.
-export function bodyShift(direction,frame){const {side,back,quarter,mirror}=view(direction),G=gait(frame,side,back,quarter);return {x:mirror?-G.lean:G.lean,y:G.bob};}
+// How far the upper body rises, dips and leans on this frame, on screen. The gun layer follows it, and so do the special dead's
+// changes of shape (zombie: true for the shamble).
+export function bodyShift(direction,frame,zombie=false){const {side,back,quarter,mirror}=view(direction),G=gait(frame,side,back,quarter,zombie);return {x:mirror?-G.lean:G.lean,y:G.bob};}
 // Shadow, legs and shoes. Feet keep their own ground plane.
 export function survivorLegs(c,direction=1,frame=0,look={}){const zombie=look.zombie===1,{dir,side,mirror}=view(direction),maps=colorMaps(look);MIRROR=mirror;
  c.save();c.translate(40,85);if(mirror)c.scale(-1,1);const g=tint(painter(c),maps.main),boots=tint(painter(c),maps.boots);
