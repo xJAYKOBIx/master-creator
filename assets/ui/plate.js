@@ -1,21 +1,36 @@
 // The phone controller's faceplate: the worn gunmetal plate the portrait controls sit in. Two halves with a seam down the middle, a
 // hazard stripe along the top, screws, a recessed well under each stick and a socket under each button, dark glass behind the
-// readouts, and the two names stamped along the bottom edge at the same size: G.U.N. as a clean stencil on the left, LEET AF cut in
-// by hand on the right. Then scratches, rust round the screws and some blood, kept out of the wells and off the names.
+// readouts, and the two names cut into the bottom edge with a knife at the same size: G.U.N. on the left in careful straight cuts
+// with stabbed stops, LEET AF on the right, hacked in fast with slips past the corners. Then scratches, rust round the screws and some blood, kept out of the wells and off the names.
 // Everything is in art pixels (a game shows it at two screen pixels each) and comes from fixed seeds, so it paints the same every time.
 import {brushes,BLOOD,rng} from '../effects/grime.js';
-import {text,width,HEIGHT} from './font5x7.js';
+import {HEIGHT} from './font5x7.js';
 export const STEEL=['#0f1013','#17181c','#1f2126','#292b31','#363940','#4b4f58','#6b6f78'];
 export const RUST=['#2b170d','#45230f','#603115','#7b431f'];
-const HAZARD=['#c39a2a','#8f6f1c'],INK='#0a0b0d',CUT='#b3afa6',PAINT='#cfc7b4';
+const HAZARD=['#c39a2a','#8f6f1c'],INK='#0a0b0d',CUT='#bdb9b0',BARE='#8d8a83';
 const hash=(x,y,s)=>{let n=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math.imul(s|0,982451653)|0;n=Math.imul(n^n>>>13,1274126177);return((n^n>>>16)>>>0)/4294967296;};
 const rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
-// The names. Each is a list of pixels from the 5 × 7 font; the stencil leaves a bridge across every vertical stroke's middle row.
-function glyphs(s){const out=[];const c={fillStyle:'',fillRect:(x,y)=>out.push([x,y])};text(c,s,0,0,'#fff');return out;}
-function stencil(s){const p=glyphs(s),on=new Set(p.map(([x,y])=>x+','+y));return p.filter(([x,y])=>!(y===3&&on.has(x+','+(y-1))&&on.has(x+','+(y+1))));}
+// The names, as knife cuts: each letter is a few straight strokes in a 5 × 7 box like the font's (a knife cannot draw a curve, so the G and U are
+// faceted), and a stop is a stab. Letters sit 6 apart, with 4 for a space.
+const CUTS={L:[[0,0,0,6],[0,6,4,6]],E:[[0,0,0,6],[0,0,4,0],[0,3,3,3],[0,6,4,6]],T:[[0,0,4,0],[2,0,2,6]],A:[[0,6,2,0],[2,0,4,6],[1,4,3,4]],
+ F:[[0,0,0,6],[0,0,4,0],[0,3,3,3]],G:[[4,1,3,0],[3,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,4,6],[4,6,4,3],[4,3,2,3]],
+ U:[[0,0,0,5],[0,5,1,6],[1,6,3,6],[3,6,4,5],[4,5,4,0]],N:[[0,6,0,0],[0,0,4,6],[4,6,4,0]]};
+const ADV=c=>c===' '?4:c==='.'?3:6;
+export const nameWidth=s=>[...s].reduce((a,c,i)=>a+(i<s.length-1?ADV(c):c==='.'?1:5),0);
+// Scores one name into a depth map (x,y → 0..1): each stroke walked in half-pixel steps from a jittered start, biting deepest
+// a little after the start and lifting off at the end. A hasty hand overshoots the corners and sometimes goes over a cut twice.
+function score(s,x0,y0,seed,hasty){const m=new Map(),dig=(x,y,v)=>{const k=Math.round(x)+','+Math.round(y);m.set(k,Math.max(m.get(k)||0,v));};let cx=x0,n=0;
+ for(const ch of s){if(ch==='.'){dig(cx,y0+6,1);dig(cx,y0+5,.5);}
+  for(const [a,b,c,d] of CUTS[ch]||[]){n++;const j=(k,amt)=>(hash(n,k,seed)-.5)*amt,over=hasty?.6+hash(n,9,seed)*1.6:.15+hash(n,9,seed)*.35,
+    X0=cx+a+j(1,.7),Y0=y0+b+j(2,.5),X1=cx+c+j(3,.7),Y1=y0+d+j(4,.5),L=Math.hypot(X1-X0,Y1-Y0)||1,ux=(X1-X0)/L,uy=(Y1-Y0)/L,end=L+over;
+   for(let t=-.2;t<=end;t+=.5){const f=t/end,v=Math.min(1,.55+f*3)*(f>.8?1-(f-.8)*2.6:1)*(.62+hash(n,Math.round(t*2),seed+1)*.38),w=hasty&&t>L*.5&&hash(n,7,seed)<.35?1:0;dig(X0+ux*t+(Math.abs(uy)>.7?w:0),Y0+uy*t+(Math.abs(uy)>.7?0:w),v);}
+   // A second pass, a pixel off and fainter, on some of the hasty cuts; and a slip that scratches on past the end of a few.
+   if(hasty&&hash(n,5,seed)<.3){const ox=Math.abs(uy)>.7?1:0,oy=ox?0:1;for(let t=.5;t<L-.5;t+=.5)dig(X0+ux*t+ox,Y0+uy*t+oy,.32);}
+   if(hasty&&hash(n,6,seed)<.22)for(let t=end;t<end+3;t+=.5)dig(X0+ux*t,Y0+uy*t,.18);}
+  cx+=ADV(ch);}
+ return m;}
 export const NAMES={gun:'G.U.N.',leet:'LEET AF'};
-export const nameWidth=s=>width(s);
 // w × h: the plate. split: x of the seam between the halves. band: the strip along the bottom the names sit in (art pixels tall).
 // wells: [{x, y, r}] under the sticks. sockets: [{x, y, r}] under the buttons. insets: [{x, y, w, h}] behind readouts.
 // names: {left: x where G.U.N. starts, right: x where LEET AF ends, y: top of the letters}. blood: false leaves it clean.
@@ -44,13 +59,13 @@ export function paintPlate(c,{w,h,split=Math.round(w/2),band=8,wells=[],sockets=
  for(const [x,y] of [[3,9],[split-4,9],[split+5,9],[w-4,9],[3,foot-4],[split-4,foot-4],[split+5,foot-4],[w-4,foot-4]])screw(x,y);
  // Rust along the bottom and in the corners.
  for(let y=foot-8;y<h;y++)for(let x=0;x<w;x++){const n=hash(x>>1,y>>1,seed+7)*.6+hash(x>>3,y>>2,seed+8)*.4,edge=Math.min(x,w-1-x)<10?.18:0;if(n+edge>.86)px(x,y,RUST[Math.floor(hash(x,y,seed+9)*4)],.28);}
- // The names, the same size: the stencil sprayed on in pale paint, worn a little; the hand-cut one scratched bright with a wobble.
+ // The names, cut into the metal: each cut scraped through the paint to bright bare steel, its upper and left wall in shadow (the
+ // light comes from the top left), a faint lit lip below it, and a few raised burrs along the deepest cuts.
  const keep=new Set();
- if(names){const top=names.y??foot+Math.max(0,Math.floor((band-HEIGHT)/2));
-  for(const [x,y] of stencil(NAMES.gun)){const X=names.left+x,Y=top+y,worn=hash(x,y,seed+14);if(worn<.07)continue;px(X,Y+1,'#000',.35);px(X,Y,PAINT,worn<.25?.35:.72);keep.add(X+','+Y);}
-  const lw=width(NAMES.leet),x0=names.right-lw;let wob=0;
-  for(const [x,y] of glyphs(NAMES.leet)){if(hash(x,y,seed+10)<.08)continue;wob=hash(x>>1,y,seed+11)<.2?1:0;const X=x0+x+(y>4?wob:0),Y=top+y;px(X,Y+1,'#000',.45);px(X,Y,CUT,.55+hash(x,y,seed+12)*.3);keep.add(X+','+Y);
-   if(hash(x,y,seed+13)<.12)px(X+1,Y-1,CUT,.25);}}
+ if(names){const top=names.y??foot+Math.max(0,Math.floor((band-HEIGHT)/2)),cut=new Map([...score(NAMES.gun,names.left,top,seed+14,false),...score(NAMES.leet,names.right-nameWidth(NAMES.leet),top,seed+10,true)]);
+  const each=f=>{for(const [k,v] of cut){const [X,Y]=k.split(',').map(Number);f(X,Y,v,(i,j)=>cut.has((X+i)+','+(Y+j)));}};
+  each((X,Y,v,has)=>{if(!has(0,-1))px(X,Y-1,'#000',.75*v);if(!has(-1,0))px(X-1,Y,'#000',.6*v);if(!has(0,1))px(X,Y+1,STEEL[6],.3*v);if(!has(1,0))px(X+1,Y,STEEL[5],.3*v);});
+  each((X,Y,v)=>{px(X,Y,v>.8?CUT:v>.55?BARE:STEEL[6],.4+.5*v);if(v>.7&&hash(X,Y,seed+12)<.12)px(X+(hash(X,Y,seed+13)<.5?-1:1),Y-1,CUT,.3);keep.add(X+','+Y);});}
  // Wear: scuffs across both halves, paint chips, and a set of claw gouges across the right half.
  const b=brushes(c,seed^0x77);
  for(let i=0;i<26;i++){const x=b.r()*w,y=8+b.r()*(foot-10);b.scuff(x,y,4+b.r()*10,(b.r()-.5)*1.4,.1);}

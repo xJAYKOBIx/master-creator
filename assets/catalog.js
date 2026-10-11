@@ -278,7 +278,7 @@ const SOUND_ENTRIES=SOUNDS.map(s=>({id:'sound-'+s.id,name:s.name,category:'sound
  dur:s.dur,sound:s,options:s.options,defaults:Object.fromEntries((s.options||[]).map(o=>[o.key,0]))}));
 
 // The control center's steel faceplate: a game passes where its sticks, buttons and readouts sit, and the plate is painted to fit.
-TYPE.push({id:'control-plate',name:'Control center plate',category:'type',group:'Controls',kind:'still',summary:'Worn gunmetal under the touch controls: recessed wells for the sticks, sockets for buttons, dark glass for readouts, a hazard lip, rust, blood, and the G.U.N. and LEET AF stamps side by side.',
+TYPE.push({id:'control-plate',name:'Control center plate',category:'type',group:'Controls',kind:'still',summary:'Worn gunmetal under the touch controls: recessed wells for the sticks, sockets for buttons, dark glass for readouts, a hazard lip, rust, blood, and G.U.N. and LEET AF cut into the bottom edge with a knife, one careful and one hacked in fast.',
  source:'assets/ui/plate.js',usage:"import {paintPlate} from './assets/ui/plate.js';\n// one canvas pixel per art pixel; show it at 2x\npaintPlate(ctx, {w, h, split, band:8, wells:[{x,y,r}], sockets:[{x,y,r}], insets:[{x,y,w,h}], names:{left, right}});",
  w:PLATE_SAMPLE.w,h:PLATE_SAMPLE.h,scale:3,options:[{key:'blood',label:'Blood',choices:['On','Off']},{key:'seed',label:'Wear',choices:['One','Two','Three']}],defaults:{blood:0,seed:0},
  draw:(c,{o})=>paintPlate(c,{...PLATE_SAMPLE,blood:!(o.blood|0),seed:0x51ee1+(o.seed|0)*7919})});
