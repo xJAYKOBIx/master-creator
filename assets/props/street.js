@@ -126,7 +126,7 @@ export const STREET_ART={
   // The ammo can: a lid with its latch and handle, a stencil on the side.
   const x=w-11,yt=h-z-1;r(x-.5,yt-.5,11,z+1.5,EDGE);r(x,yt,10,3,A[2]);r(x,yt,10,.5,A[3]);r(x,yt+3,10,z-2.5,A[1]);r(x,yt+3,10,.5,A[2]);r(x,h-1,10,.5,A[0]);
   r(x+3,yt+.5,4,1,A[0]);r(x+3.5,yt+.5,3,.5,'#6b7a52');r(x+.5,yt+2.5,1,1.5,A[0]);r(x+2,yt+5,6,.5,'#c9b45a');r(x+2,yt+6,4,.5,'#c9b45a');
-  r(x+4,yt-1,.5,1.5,'#d0702e');r(x+4.5,yt-.5,2,1,'#e8904a');r(x+6,yt,1,2.5,'#d0702e');},
+  r(x+4,yt-1.5,1,2,'#d0702e');r(x+4.5,yt-1,2.5,1,'#e8904a');r(x+6.5,yt-.5,1,5,'#d0702e');r(x+7.5,yt+3.5,1,2.5,'#e8904a');},
  // A garden shed: a tin roof with its ridge along the length, plank walls and double doors.
  shed(g,o){const {r,l}=g,w=o.w,h=o.h,z=o.z,zf=Math.round(z*.72),yb=-zf,yr=Math.round(h/2-z),yf=h-zf,W=['#231e1a','#322a24','#40362d','#4e4236'],R=['#1e2024','#2a2d33','#363a42','#454952'];
   r(-1.5,Math.min(yb,yr)-1,w+3,yf-Math.min(yb,yr)+2,EDGE);if(yr>yb)r(-1,yb,w+2,yr-yb,R[1]);r(-1,yr,w+2,yf-yr,R[2]);for(let x=1;x<w;x+=3){r(x,yr,.5,yf-yr,R[1]);r(x+1,yr,.5,yf-yr,R[3]);}r(-1,yr-.5,w+2,1.5,R[3]);r(-1,yf,w+2,1.5,'#0d0e11');
