@@ -1,0 +1,245 @@
+// Base props: LEET AF's staging hangar at Harlan Field, where the opening mission is briefed. The hangar's corrugated walls and its
+// steel columns, the stage with its podium and the pull-down projector screen (six slides for the briefing), the folding chairs the
+// unit sits in, the projector cart, the armory cage, a bank of lockers, the unit's banner, an armored personnel carrier with its ramp
+// down, sample cases, a briefing board and the coffee table. Same conventions as street.js: footprint top left at (0, 0), height
+// rising into negative y, a box's top seen as y in [-z, h-z] and its front face below that. Kinds this file does not draw fall
+// through to the town set and from there to every other set.
+import {painter,hash2 as hash} from '../core/paint.js';
+import {EDGE,SHADOW,PROP_PAD} from './camp.js';
+import {propArt as townPropArt} from './town.js';
+import {text as stencil,textWidth as stencilWidth} from './workshop.js';
+import {GLYPHS} from '../ui/font5x7.js';
+export {PROP_PAD};
+// What the base is made of, shade to highlight: hangar steel, olive drab paint, the unit's navy and gold, walnut for the podium,
+// screen white, hazard yellow, signal red, and Marrow Industries' teal (LZ-6 glows its palest).
+const ST=['#16191d','#1f2328','#292e34','#343a41','#424a52','#55606a'],OD=['#1b2016','#262d1e','#323b27','#3f4a31','#4f5c3d','#62704c'];
+const NV=['#0e1320','#151c2e','#1e2840','#2a3756','#3a4a70'],GD=['#5e4a1c','#8a6c28','#b8923a','#dcb85a','#f0d888'];
+const WN=['#1c140f','#281d15','#36271c','#463324','#57412e'],SC=['#8e8c86','#b4b1a9','#d2cfc6','#e8e6df','#f6f5f0'];
+const HZ=['#6a5414','#9c7e1e','#cca42a','#e8c444'],BLK='#141518',RED=['#5a1612','#8a2620','#b8402e','#e0644a'];
+const TL=['#0f3a34','#1a5a4e','#2a8a74','#4cc0a0','#8ae8cc'],LZ='#b8ffd8',MAP=['#16211b','#1d2b23','#28392f','#3a4c40','#55685a'];
+// Letters from the 5 × 7 screen font at k units a pixel, for the slides and small labels.
+function type(g,s,x,y,k,col){[...s].forEach((ch,i)=>{const h=GLYPHS[ch]||GLYPHS[' '];for(let row=0;row<7;row++){const b=parseInt(h.slice(row*2,row*2+2),16);for(let c=0;c<5;c++)if(b>>(4-c)&1)g.r(x+(i*6+c)*k,y+row*k,k,k,col);}});}
+const typeW=(s,k)=>(s.length*6-1)*k,mid=(g,s,cx,y,k,col)=>type(g,s,cx-typeW(s,k)/2,y,k,col);
+// A box on footprint (x, y, w, d) from height z0 up to z1: its outline, top face and front face, the top edge lit.
+function bx(g,x,y,w,d,z0,z1,top,front,hi){const {r}=g,yt=y-z1,yf=y+d-z1,yb=y+d-z0;r(x-.5,yt-.5,w+1,yb-yt+1,EDGE);r(x,yt,w,yf-yt,top);r(x,yf,w,yb-yf,front);if(hi)r(x,yt,w,.5,hi);return yf;}
+// Yellow and black hazard stripes running down to the left, in a rectangle.
+function hazard(g,x,y,w,h,step=3){g.r(x,y,w,h,HZ[2]);for(let yy=0;yy<h;yy+=.5)for(let k=-h-step*2;k<w;k+=step*2){const a=Math.max(0,k+yy),b=Math.min(w,k+yy+step);if(b>a)g.r(x+a,y+yy,b-a,.5,BLK);}}
+// The LEET AF crest: a shield with a gold rim, a gold chevron pointing down and a white star over it. s is its height in units.
+export function crest(g,cx,top,s,{rim=GD[2],field=NV[2],mark=GD[3],star=SC[4],edge=EDGE}={}){const {p}=g,w=s*.8,
+  shield=(k,d)=>[[cx-w/2*k,top+d],[cx+w/2*k,top+d],[cx+w/2*k,top+s*.55],[cx,top+s-d],[cx-w/2*k,top+s*.55]];
+ p(shield(1.14,-s*.06),edge);p(shield(1,0),rim);p(shield(.8,s*.09),field);
+ p([[cx-w*.3,top+s*.42],[cx,top+s*.64],[cx+w*.3,top+s*.42],[cx+w*.3,top+s*.54],[cx,top+s*.76],[cx-w*.3,top+s*.54]],mark);
+ const R=s*.15,st=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.42:R;st.push([cx+Math.cos(a)*rr,top+s*.28+Math.sin(a)*rr]);}p(st,star);}
+// The biohazard trefoil, about 2r across.
+function trefoil(g,cx,cy,r,col,bg){const {e}=g;for(let i=0;i<3;i++){const a=-Math.PI/2+i*Math.PI*2/3;e(cx+Math.cos(a)*r*.55,cy+Math.sin(a)*r*.55,r*.5,r*.5,col);}
+ for(let i=0;i<3;i++){const a=-Math.PI/2+i*Math.PI*2/3;e(cx+Math.cos(a)*r*.75,cy+Math.sin(a)*r*.75,r*.3,r*.3,bg);}e(cx,cy,r*.32,r*.32,col);e(cx,cy,r*.16,r*.16,bg);}
+// The Hollow from the air, for the map slides: green ground, the creek, the street grid in blocks, Route 9 cutting across.
+function hollowMap(g,x,y,w,h,dim=0){const {r,l}=g,c=k=>MAP[Math.max(0,k-dim)];r(x,y,w,h,c(1));for(let i=0;i<w*h/12;i++)r(x+hash(i,7)*w,y+hash(7,i)*h,.5,.5,c(i%3?0:2));
+ for(let t=0;t<1;t+=.01){const cx=x+w*(.08+.06*Math.sin(t*9)),cy=y+t*h;r(cx,cy,2.5,h/100+.5,dim?'#1a2a3a':'#23405a');}
+ for(let bx0=x+w*.2;bx0<x+w-8;bx0+=w*.11)for(let by=y+4;by<y+h-6;by+=h*.16){r(bx0,by,w*.09,h*.12,c(2));for(let k=0;k<3;k++)r(bx0+1+k*w*.03,by+1,w*.02,h*.04,c(3));}
+ for(let bx0=x+w*.2-2;bx0<x+w;bx0+=w*.11)r(bx0,y,1,h,c(3));for(let by=y+2.5;by<y+h;by+=h*.16)r(x+w*.18,by,w*.82,1,c(3));
+ l(x+w*.15,y+h,x+w,y+h*.18,2,dim?'#4a4430':'#8a7a3a');l(x+w*.15,y+h,x+w,y+h*.18,.5,dim?'#5a5438':'#c8b05a');}
+// The six slides of the briefing, each painted into the screen's picture (x, y, w, h).
+export const SLIDES=[
+ // 0: the title card: the crest on navy, LEET AF under it, the operation's name, and the classification bars.
+ (g,x,y,w,h)=>{const {r}=g;r(x,y,w,h,NV[1]);for(let i=1;i<h;i+=3)r(x,y+i,w,.5,'#ffffff06');r(x,y,w,5,RED[1]);r(x,y+h-5,w,5,RED[1]);
+  mid(g,'TOP SECRET // BELL JAR',x+w/2,y+.75,.5,SC[4]);mid(g,'LEET AF EYES ONLY',x+w/2,y+h-4.25,.5,SC[4]);
+  crest(g,x+w/2,y+8,24);mid(g,'LEET AF',x+w/2,y+34,1,GD[3]);mid(g,'OPERATION BELL JAR',x+w/2,y+43,.5,SC[2]);},
+ // 1: the Hollow on the map, the cordon round it in red, and its name and size.
+ (g,x,y,w,h)=>{const {r,e}=g;hollowMap(g,x,y,w,h);for(let i=0;i<64;i++){const a=i/64*Math.PI*2;if(i%2)continue;r(x+w*.56+Math.cos(a)*w*.36,y+h*.5+Math.sin(a)*h*.4,1.5,1,RED[3]);}
+  r(x+2,y+2,typeW('DEADLIGHT HOLLOW',.5)+3,10,'#0b100dcc');type(g,'DEADLIGHT HOLLOW',x+3.5,y+3,.5,SC[4]);type(g,'POP 11,204',x+3.5,y+7.5,.5,RED[3]);
+  for(const [px,py] of [[.42,.35],[.66,.62],[.5,.7]]){e(x+w*px,y+h*py,1.5,1.5,RED[3]);r(x+w*px-.25,y+h*py-.25,.5,.5,SC[4]);}},
+ // 2: Marrow Industries' advert for LZ-6: the glowing vial, its name, and the promise.
+ (g,x,y,w,h)=>{const {r,e,p}=g;r(x,y,w,h,'#0d1a19');for(let k=0;k<6;k++)e(x+w*.3,y+h*.5,26-k*3.5,24-k*3.5,['#0f2622','#123029','#163a31','#1a4639','#1f5444','#24624f'][k]);
+  const vx=x+w*.3,vy=y+h*.16,vh=h*.66;r(vx-5.5,vy-.5,11,vh+1,EDGE);r(vx-5,vy+6,10,vh-7,'#cfe8e0');r(vx-4,vy+vh*.38,8,vh*.62-2,TL[3]);r(vx-4,vy+vh*.38,8,1.5,LZ);r(vx-3,vy+vh*.42,1.5,vh*.5,'#e8fff4');
+  r(vx-5,vy,10,6,SC[1]);r(vx-5,vy,10,1,SC[3]);for(let k=1;k<5;k++)r(vx-5+k*2,vy+1,.5,5,SC[0]);type(g,'LZ',vx-2.75,vy+vh*.62,.5,TL[0]);
+  type(g,'LZ-6',x+w*.5,y+h*.16,2,SC[4]);type(g,'MARROW INDUSTRIES',x+w*.5,y+h*.16+17,.5,TL[4]);
+  type(g,'NOBODY HAS TO',x+w*.5,y+h*.62,.5,SC[2]);type(g,'STAY DEAD.',x+w*.5,y+h*.62+5,.5,SC[2]);p([[x+w*.5,y+h*.84],[x+w*.5+4,y+h*.84],[x+w*.5+2,y+h*.84+3]],TL[3]);},
+ // 3: the crash, from a drone at night: Route 9, Marrow's courier van on its side with its wheels in the air, skid marks and
+ //    debris, a red ring round it, the time burned into the corner.
+ (g,x,y,w,h)=>{const {r,l,e,p}=g;r(x,y,w,h,'#262c22');for(let i=0;i<w*h/5;i++)r(x+hash(i,3)*w,y+hash(3,i)*h,.5,.5,i%4?'#1e231b':'#30372b');
+  p([[x,y+h*.75],[x+w,y+h*.08],[x+w,y+h*.42],[x,y+h]],'#3a3c3c');for(let t=.05;t<1;t+=.1)l(x+w*t,y+h*(.875-.73*t),x+w*(t+.04),y+h*(.875-.73*(t+.04)),.75,'#a89a50');
+  for(let i=0;i<w*h/10;i++){const px=x+hash(i,9)*w,py=y+hash(9,i)*h;if(py>y+h*(.75-.67*(px-x)/w)&&py<y+h*(1-.58*(px-x)/w))r(px,py,.5,.5,'#4a4c4a');}
+  l(x+w*.2,y+h*.86,x+w*.48,y+h*.6,.75,'#1a1b1c');l(x+w*.22,y+h*.9,x+w*.5,y+h*.64,.75,'#1a1b1c');
+  const vx=x+w*.55,vy=y+h*.38;p([[vx,vy+2],[vx+22,vy-6],[vx+26,vy+4],[vx+4,vy+12]],EDGE);p([[vx+.5,vy+2.5],[vx+21.5,vy-5.5],[vx+25,vy+3.5],[vx+4.5,vy+11.5]],SC[3]);p([[vx+2,vy+6],[vx+23,vy-2],[vx+24,vy+.5],[vx+3,vy+8.5]],TL[2]);
+  for(const [a,b] of [[4,1],[18,-4]])e(vx+a,vy+b,2,1.5,BLK);for(let i=0;i<9;i++)r(vx-8+hash(i,1)*40,vy-6+hash(1,i)*24,1,.5,i%2?SC[2]:'#8a8c88');
+  for(let i=0;i<48;i++){const a=i/48*Math.PI*2;if(i%3===2)continue;r(vx+13+Math.cos(a)*22,vy+3+Math.sin(a)*14,1,1,RED[3]);}
+  for(const [cx,cy,sx,sy] of [[x+2,y+2,1,1],[x+w-2,y+2,-1,1],[x+2,y+h-2,1,-1],[x+w-2,y+h-2,-1,-1]]){r(Math.min(cx,cx+sx*5),cy,5,.5,SC[3]);r(cx,Math.min(cy,cy+sy*5),.5,5,SC[3]);}
+  type(g,'RT 9  MILE 4',x+5,y+4,.5,HZ[3]);type(g,'23:41:07',x+5,y+8.5,.5,HZ[3]);r(x+w-18,y+4,3,3,RED[3]);type(g,'REC',x+w-14,y+4,.5,SC[4]);},
+ // 4: the containment beacon, as a blueprint: a tripod and mast, the battery box, the strobe head lit red, a dimension line.
+ (g,x,y,w,h)=>{const {r,l,e}=g,B='#d8e6f4';r(x,y,w,h,'#173a6a');for(let gx=x+6;gx<x+w;gx+=6)r(gx,y,.5,h,'#1f4a80');for(let gy=y+6;gy<y+h;gy+=6)r(x,gy,w,.5,'#1f4a80');
+  const cx=x+w*.32,base=y+h-6,top=y+10;l(cx,base-18,cx-12,base,.75,B);l(cx,base-18,cx+12,base,.75,B);l(cx,base-18,cx+3,base+1,.75,B);r(cx-.5,top+6,1,base-18-top-6,B);
+  r(cx-5,base-26,10,7,B);r(cx-4.5,base-25.5,9,6,'#173a6a');type(g,'+',cx-1.25,base-25,.5,B);e(cx,top+3,4.5,4,B);e(cx,top+3,3.5,3,RED[3]);e(cx-1,top+2,1,1,'#ffd0c0');
+  for(const k of [-1,1])l(cx+k*6,top+3,cx+k*10,top+1,.5,RED[3]);l(cx+16,top,cx+16,base,.5,B);r(cx+14,top,4,.5,B);r(cx+14,base-.5,4,.5,B);type(g,'1.8 M',cx+18,y+h*.45,.5,B);
+  type(g,'CONTAINMENT',x+w*.58,y+8,.5,B);type(g,'BEACON MK II',x+w*.58,y+13,.5,B);type(g,'STROBE + RADIO',x+w*.58,y+22,.5,'#9ab8d8');type(g,'RANGE 2 KM',x+w*.58,y+27,.5,'#9ab8d8');type(g,'72 HR CELL',x+w*.58,y+32,.5,'#9ab8d8');},
+ // 5: the Hollow cut into eight sectors, one pair to each; sector 6, yours, lit in amber, with the drop point and the crash in it.
+ (g,x,y,w,h)=>{const {r,p}=g;hollowMap(g,x,y,w,h,1);const sw=w/4,sh=h/2;for(let i=1;i<4;i++)r(x+i*sw-.25,y,.5,h,SC[3]);r(x,y+sh-.25,w,.5,SC[3]);
+  r(x+sw,y+sh,sw,sh,'#d08a2a40');for(const [a,b,c,d] of [[x+sw,y+sh,sw,.75],[x+sw,y+h-.75,sw,.75],[x+sw,y+sh,.75,sh],[x+2*sw-.75,y+sh,.75,sh]])r(a,b,c,d,HZ[3]);
+  for(let i=0;i<8;i++){const cx=x+(i%4)*sw+sw/2,cy=y+Math.floor(i/4)*sh+5;mid(g,String(i+1),cx,cy,1,i===5?HZ[3]:SC[2]);}
+  mid(g,'HOLLOW 6',x+sw*1.5,y+h-9,.5,HZ[3]);p([[x+sw*1.25,y+sh+12],[x+sw*1.25+3,y+sh+17],[x+sw*1.25-3,y+sh+17]],SC[4]);
+  const sx=x+sw*1.72,sy=y+sh+14;p([[sx,sy-3],[sx+1,sy-1],[sx+3,sy-1],[sx+1.5,sy+.5],[sx+2,sy+3],[sx,sy+1.5],[sx-2,sy+3],[sx-1.5,sy+.5],[sx-3,sy-1],[sx-1,sy-1]],RED[3]);}];
+export const SLIDE_NAMES=['Title','The Hollow','LZ-6','The crash','The beacon','Sectors'];
+export const BASE_ART={
+ // The hangar's back wall, face on: its cap from above, then corrugated steel with a rib every 4 units, panel seams and rivets, rain
+ // and rust run down from the seams, a steel girder near the top with clerestory windows over it (night outside), and a painted dado
+ // along the bottom with a kick rail, scuffed. o.sign stencils big letters on the face at o.signX.
+ hangarwall(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,s=(o.x|0)+(o.y|0)*7,yf=h-z;
+  r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,ST[1]);r(0,-z,w,.5,ST[4]);r(0,yf-1,w,1,ST[0]);
+  r(0,yf,w,z,ST[2]);for(let x=0;x<w;x+=4){r(x,yf,1.5,z,ST[3]);r(x+.5,yf,.5,z,ST[4]);r(x+3.5,yf,.5,z,ST[1]);}
+  for(let x=48;x<w;x+=48){r(x-.25,yf,.75,z,ST[0]);for(let y=yf+3;y<h-20;y+=6)r(x+1,y,.5,.5,ST[5]);}
+  for(let i=0;i<w/12;i++){const x=Math.floor(hash(i,s)*w/48)*48+1+hash(s,i)*3,y=yf+24,n=8+hash(i,s+1)*30;r(x,y,.5,n,i%3?'#00000026':'#6a402434');}
+  const gy=yf+16;r(0,gy-.5,w,8,EDGE);r(0,gy,w,7,ST[1]);r(0,gy,w,1.5,ST[4]);r(0,gy+5.5,w,1.5,ST[2]);r(0,gy+1.5,w,.5,ST[0]);for(let x=5;x<w;x+=10){r(x,gy+.5,.5,.5,ST[5]);r(x,gy+6,.5,.5,ST[3]);}
+  for(let x=40;x+56<w;x+=140){r(x-.5,yf+2.5,57,11,EDGE);r(x,yf+3,56,10,'#0b1019');for(let k=1;k<4;k++)r(x+k*14,yf+3,.75,10,ST[1]);r(x,yf+7.5,56,.75,ST[1]);r(x,yf+3,56,.5,'#18233a');r(x+3+hash(x,s)*36,yf+4,1.5,.5,'#2a3a5a');}
+  const dy=h-20;r(0,dy,w,20,OD[2]);r(0,dy,w,1,OD[4]);r(0,dy+1,w,.5,OD[1]);for(let x=0;x<w;x+=4)r(x+3.5,dy+1.5,.5,18.5,OD[1]);
+  r(0,h-5,w,5,ST[1]);r(0,h-5,w,.5,ST[4]);r(0,h-1,w,1,ST[0]);for(let i=0;i<w/16;i++)r(hash(i,s+3)*w,h-7-hash(s+3,i)*8,2+hash(i,9)*8,.5,OD[0]);
+  if(o.sign)stencil(g,o.sign,o.signX??8,yf+28,o.signK||3,'#a49e8066');},
+ // A side wall running away from you: its cap from above with column flanges standing proud along it, and its end facing you.
+ hangarwallV(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,ST[1]);r(0,-z,.5,h,ST[4]);r(w-.5,-z,.5,h,ST[0]);
+  for(let y=-z+40;y<h-z-4;y+=48){r(-1,y-.5,w+2,4,EDGE);r(-.5,y,w+1,3,ST[3]);r(-.5,y,w+1,.5,ST[5]);}
+  r(0,h-z,w,z,ST[2]);for(let x=0;x<w;x+=3)r(x,h-z,.5,z,ST[4]);r(0,h-20,w,20,OD[2]);r(0,h-20,w,1,OD[4]);r(0,h-5,w,5,ST[1]);r(0,h-5,w,.5,ST[4]);},
+ // A steel column where the big door's frame meets the floor: the flange facing you with its rivets, a cap plate on top, and a yellow
+ // and black guard round its foot against forklifts.
+ column(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,yf=h-z;r(-1.5,h-1,w+3,3,SHADOW);r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,ST[3]);r(0,-z,w,.5,ST[5]);
+  r(0,yf,w,z,ST[2]);r(0,yf,1.5,z,ST[4]);r(w-1.5,yf,1.5,z,ST[1]);r(w/2-.75,yf,1.5,z,ST[1]);for(let y=yf+4;y<h-16;y+=7){r(2,y,.5,.5,ST[5]);r(w-2.5,y,.5,.5,ST[5]);}
+  r(-.5,h-16.5,w+1,17,EDGE);hazard(g,0,h-16,w,16,2.5);r(0,h-16,w,.5,HZ[3]);},
+ // The pull-down projector screen on the wall: the aluminium roller case, the matte face in a black border showing o.slide (SLIDES),
+ // the weighted bar and the pull handle on its cord. o.drop is how far the face hangs below the case; o.off shows it blank.
+ screen(g,o){const {r,l}=g,w=o.w,h=o.h,z=o.z,drop=o.drop||66,y0=h-z;
+  r(-2.5,y0-.5,w+5,6,EDGE);r(-2,y0,w+4,5,'#8f949a');r(-2,y0,w+4,1,'#c4c8cc');r(-2,y0+4,w+4,1,'#55595e');r(-3,y0+1,1.5,3,'#3a3d42');r(w+1.5,y0+1,1.5,3,'#3a3d42');
+  const x0=3,x1=w-3,fy=y0+5,px=x0+2.5,py=fy+5,pw=x1-x0-5,ph=drop-8;r(x0-.5,fy,x1-x0+1,drop+.5,EDGE);r(x0,fy,x1-x0,drop,BLK);
+  if(o.off){r(px,py,pw,ph,SC[1]);r(px,py,pw,.5,SC[3]);}else SLIDES[(o.slide|0)%SLIDES.length](g,px,py,pw,ph,o);
+  r(x0,fy+drop-1.5,x1-x0,1.5,'#2a2b2e');r(x0,fy+drop-1.5,x1-x0,.5,'#4a4c50');l(w/2,fy+drop,w/2,fy+drop+5,.5,'#55595e');r(w/2-1.5,fy+drop+5,3,1.5,'#2a2b2e');},
+ // The podium: a walnut lectern with its reading top sloped toward the speaker, papers on it, a recessed front panel with the crest in
+ // gold, a plinth, a gooseneck microphone and a small reading lamp.
+ podium(g,o){const {r,p,e,l}=g,w=o.w,h=o.h,z=o.z,yf=h-z;e(w/2,h,w/2+3,3,SHADOW);
+  r(-1.5,h-4,w+3,4.5,EDGE);r(-1,h-3.5,w+2,3.5,WN[1]);r(-1,h-3.5,w+2,.5,WN[3]);
+  r(-.5,-z-.5,w+1,h+z-3,EDGE);r(0,-z,w,h,WN[3]);r(0,-z,w,.5,WN[4]);p([[1,-z+1],[w-1,-z+1],[w-1,-z+h*.55],[1,-z+h*.55]],WN[4]);
+  p([[3,-z+2],[11,-z+1.5],[11.5,-z+7],[3.5,-z+7.5]],SC[3]);for(let k=0;k<3;k++)r(4.5,-z+3+k*1.5,5.5-k,.5,SC[0]);
+  r(0,yf,w,z-3.5,WN[2]);r(0,yf,w,1,WN[4]);r(2,yf+2.5,w-4,z-9,EDGE);r(2.5,yf+3,w-5,z-10,WN[1]);r(2.5,yf+3,w-5,.5,WN[0]);crest(g,w/2,yf+6,Math.min(14,z-16));
+  l(5,-z+2,4.5,-z-7,.75,EDGE);l(4.5,-z-7,7.5,-z-10,.75,EDGE);r(7,-z-11.5,2.5,2,'#1a1b1e');r(8.5,-z-11.5,1,.5,RED[3]);
+  l(w-4,-z+2,w-4,-z-5,.75,'#3a3d42');p([[w-7,-z-5],[w-1,-z-5],[w-2.5,-z-7.5],[w-5.5,-z-7.5]],GD[1]);r(w-6.5,-z-5,5,.5,'#fff2c0');},
+ // The briefing stage: a low riser with navy carpet on top, an aluminium nosing and a black skirt, and a step up at each end.
+ stage(g,o){const {r}=g,w=o.w,h=o.h,z=o.z,s=(o.x|0)+(o.y|0)*3;r(-1.5,h-1,w+3,3,SHADOW);
+  for(const x of [-16,w+1])bx(g,x,h-16,15,15,0,z/2,NV[2],BLK,'#9aa0a6');
+  r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,NV[2]);for(let ty=0;ty<h;ty+=10)for(let tx=0;tx<w;tx+=10){const across=((tx+ty)/10)%2,tw=Math.min(10,w-tx),th=Math.min(10,h-ty);
+   if(across)for(let k=1;k<th;k+=2)r(tx,-z+ty+k,tw,.5,'#2a37561c');else for(let k=1;k<tw;k+=2)r(tx+k,-z+ty,.5,th,'#0e13201f');r(tx,-z+ty,tw,.25,'#0e132040');r(tx,-z+ty,.25,th,'#0e132040');}
+  for(let i=0;i<w*h/90;i++)r(hash(i,s)*w,-z+hash(s,i)*h,.5,.5,i%2?NV[1]:NV[3]);
+  r(0,-z,w,.5,NV[4]);r(0,h-z-1.5,w,1.5,'#7a8088');r(0,h-z-1.5,w,.5,'#b8bec4');r(0,h-z,w,z,BLK);for(let x=24;x<w;x+=48)r(x,h-z+.5,.5,z-1,'#26272b');},
+ // A steel folding chair seen from behind, as the unit sits facing the stage: the backrest panel (17 to 28 high) with its stencilled
+ // number, the tube frame, the seat behind it and the four legs with their braces. o.n is the number.
+ foldchair(g,o){const {r,e}=g,w=o.w,h=o.h,F=['#202327','#2e3237','#41464c','#5a6068'],yb=h-1,yf=1.5;e(w/2,h-1,w/2+1.5,2,SHADOW);
+  for(const x of [1.5,w-2.5]){r(x-.25,yf-16.25,1.5,16.5,EDGE);r(x,yf-16,1,16,F[1]);}r(1.5,yf-6,w-3,.75,F[0]);
+  r(.5,yf-16.5,w-1,yb-yf+1,EDGE);r(1,yf-16,w-2,yb-yf,F[2]);
+  for(const x of [.5,w-2]){r(x-.25,yb-28.5,2,29,EDGE);r(x,yb-28,1.5,28,F[2]);r(x,yb-28,.5,28,F[3]);}r(1,yb-9,w-2,.75,F[1]);
+  r(-.5,yb-29,w+1,11,EDGE);r(0,yb-28.5,w,10,OD[2]);r(0,yb-28.5,w,.5,OD[4]);r(0,yb-19,w,.5,OD[1]);r(w-1,yb-28,.5,9,OD[1]);
+  if(o.n!==undefined){const t=String(o.n);stencil(g,t,w/2-stencilWidth(t,1)/2,yb-26,1,'#b8b296');}},
+ // The projector on its AV cart: a two-shelf steel cart on casters, a laptop on the lower shelf, and the projector on top with its lens
+ // toward the screen, so you see its back: vents, the leads and a green running light.
+ projector(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,F=['#1d1f23','#2a2d32','#3b3f45','#525760'];e(w/2,h,w/2+2,2.5,SHADOW);
+  for(const x of [.5,w-2])for(const d of [1,h-1]){r(x-.25,d-z+6,1.5,z-6,EDGE);r(x,d-z+6,1,z-6,F[2]);e(x+.5,d,1.2,.8,BLK);}
+  bx(g,0,1,w,h-2,9,10,F[1],F[0],F[2]);r(3,1-11.5,10,h-6,EDGE);r(3.5,1-11,9,h-7,'#2a2c30');r(4,1-10.5,8,h-9,'#4a6a8a');
+  bx(g,0,1,w,h-2,z-7,z-6,F[2],F[1],F[3]);const t=bx(g,3,3,w-6,h-6,z-6,z,'#3a3d42','#26282c','#5a5e64');
+  for(let x=5;x<w-5;x+=1.5)r(x,t+1,.5,3,'#141518');r(w-6,t+1,1,1,'#5aff8a');l(w/2,t+5,w/2+2,h-z+8,.75,BLK);l(w/2+2,h-z+8,w/2+1,h,.75,BLK);},
+ // The armory: a chain-link cage against the wall. Inside, a rack of rifles standing upright and shelves of ammo cans; the front is
+ // mesh on steel posts with a service window in the middle (a steel counter at 30) and the ARMORY plate over it. o.taken leaves that
+ // many gaps in the rack.
+ armory(g,o){const {r,l,e,p}=g,w=o.w,h=o.h,z=o.z,s=(o.x|0)+3,cx=w/2,win=[cx-22,cx+22];r(-1.5,h-1,w+3,3,SHADOW);
+  r(0,-z,w,h+z,'#191b1f');r(0,-z,w,h,'#202328');for(let x=0;x<w;x+=6)r(x,-z,.5,h,'#2a2d32');
+  // The rack: a frame along the back with rifles in it, and shelves of olive ammo cans at each end.
+  const rd=6,rx0=34,rx1=w-34;r(rx0-2,rd-46,rx1-rx0+4,2,EDGE);r(rx0-2,rd-45.5,rx1-rx0+4,1,ST[3]);r(rx0-2,rd-12,rx1-rx0+4,2,EDGE);r(rx0-2,rd-11.5,rx1-rx0+4,1,ST[3]);
+  let n=0;for(let x=rx0+1;x<rx1-3;x+=5.5,n++){if(n<(o.taken|0))continue;const v=hash(n,s)>.7;
+   r(x-.5,rd-44.5,3,39,EDGE);r(x,rd-14,2,8,v?'#3a2c20':BLK);r(x,rd-26,2.5,12,'#26282c');r(x+.5,rd-26,.5,12,'#3e4248');r(x+2,rd-22,1.5,5,'#1a1b1d');r(x,rd-30,2,4,'#2e3136');r(x+.75,rd-44,.75,14,'#1a1b1d');r(x,rd-29,2,.5,'#4a4e54');}
+  for(const sx of [2,w-30]){for(const sy of [16,30,44]){r(sx-.5,rd-sy-.5,29,2,EDGE);r(sx,rd-sy,28,1,ST[3]);}
+   for(const sy of [16,30,44])for(let k=0;k<3;k++){const ax=sx+1+k*9,ay=rd-sy-7;r(ax-.5,ay-.5,8,7.5,EDGE);r(ax,ay,7,7,OD[3]);r(ax,ay,7,1.5,OD[4]);r(ax+2,ay-1,3,1,OD[1]);r(ax+1,ay+3,5,1,'#c8c098');}}
+  // The counter in the window, and the front: posts, rails, the mesh with the window cut out of it, and the plate over the window.
+  bx(g,win[0],h-10,win[1]-win[0],10,0,30,ST[3],ST[2],ST[5]);r(win[0]+4,h-30-6,8,5,'#e8e4d8');r(win[0]+5,h-30-5,6,.5,'#8a867a');r(win[0]+26,h-30-7,10,6,OD[3]);r(win[0]+26,h-30-7,10,1,OD[4]);
+  const top=h-z,inWin=(x,y)=>x>win[0]&&x<win[1]&&y>h-58&&y<h-30;
+  for(let y=top+2;y<h-1;y+=2)for(let x=((y-top)/2|0)%2;x<w;x+=2)if(!inWin(x,y))r(x,y,.5,.5,'#8e939b88');
+  for(const x of [0,win[0]-2,win[1],w-2]){r(x-.5,top-.5,3,z+.5,EDGE);r(x,top,2,z,ST[3]);r(x,top,.5,z,ST[5]);}
+  for(const y of [top,h-58-2,h-2]){r(-.5,y-.5,w+1,3,EDGE);r(0,y,w,2,ST[3]);r(0,y,w,.5,ST[5]);}r(win[0],h-30,win[1]-win[0],1,ST[5]);
+  r(-.5,-z-.5,w+1,h+1,EDGE);for(let y=-z+1;y<top-1;y+=2)for(let x=(y/2|0)%2;x<w;x+=3)r(x,y,.5,.5,'#8e939b55');r(0,-z,w,.5,ST[5]);
+  const pw=stencilWidth('ARMORY',1.5)+8;r(cx-pw/2-.5,top+6.5,pw+1,12,EDGE);r(cx-pw/2,top+7,pw,11,OD[2]);r(cx-pw/2,top+7,pw,.5,OD[4]);stencil(g,'ARMORY',cx-pw/2+4,top+9,1.5,'#d8d0b0');},
+ // A bank of steel lockers in olive drab: each door with vents top and bottom, a handle, a name tape and its number. o.open swings that
+ // locker's door out to the right and shows what is inside: a jacket on a hanger, a helmet on the shelf, boots, a photo taped up.
+ lockers(g,o){const {r,l,e,p}=g,w=o.w,h=o.h,z=o.z,n=Math.max(1,Math.round(w/14)),lw=w/n,yf=h-z,s=(o.x|0)+(o.y|0);r(-1.5,h-1,w+3,3,SHADOW);
+  r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,OD[2]);r(0,-z,w,.5,OD[4]);r(0,yf,w,z,OD[1]);r(0,h-4,w,4,BLK);
+  for(let i=0;i<n;i++){const x=i*lw,x1=x+lw;if(o.open===i){r(x+.5,yf+.5,lw-1,z-5,'#0d0f10');r(x+1,yf+8,lw-2,.75,OD[3]);p([[x+lw/2-2.5,yf+11],[x+lw/2+2.5,yf+11],[x+lw/2+2,yf+3],[x+lw/2-2,yf+3]],OD[3]);e(x+lw/2,yf+5,3,2.5,OD[4]);
+    l(x+lw/2,yf+10,x+lw/2,yf+12,.5,'#8a8e94');p([[x+2,yf+13],[x+lw-2,yf+13],[x+lw-1.5,yf+34],[x+1.5,yf+34]],OD[3]);r(x+lw/2-.25,yf+13,.5,21,OD[1]);r(x+3,yf+16,2,1.5,'#d8d0b0');r(x+lw-6,yf+18,3.5,4,'#e8e4d8');r(x+lw-5.5,yf+18.5,2.5,2.5,'#6a8aa8');
+    r(x+2,h-11,4,5,BLK);r(x+lw-6,h-11,4,5,BLK);r(x1-.5,yf-2,3,z-2,EDGE);r(x1,yf-1.5,2,z-3,OD[3]);r(x1,yf-1.5,.5,z-3,OD[5]);continue;}
+   r(x+.5,yf+.5,lw-1,z-5,OD[3]);r(x+.5,yf+.5,lw-1,.5,OD[5]);r(x1-1,yf+.5,.5,z-5,OD[1]);for(const vy of [yf+3,h-12])for(let k=0;k<3;k++)r(x+3,vy+k*1.5,lw-6,.5,OD[0]);
+   r(x+2.5,yf+10,lw-5,2.5,'#cfc9b4');for(let k=0;k<3;k++)r(x+3+hash(i+k,s)*(lw-8),yf+10.75,1+hash(k,i+s)*2,.75,'#3a3a34');r(x1-3.5,yf+24,1,5,'#8a8e94');r(x1-3.5,yf+24,1,.5,'#c4c8cc');
+   const t=String((o.from|0)+i+1);stencil(g,t,x+lw/2-stencilWidth(t,.5)/2,yf+6,.5,'#c8c2a8');}},
+ // The unit's banner on the wall: a navy pennant on a gold rod with finials, a gold border, the crest, LEET AF under it in gold, and a
+ // swallowtail end. len is how far it hangs.
+ crestbanner(g,o){const {r,p,e}=g,w=o.w,h=o.h,z=o.z,y0=h-z,len=o.len||60,b=y0+1.5,e2=b+len;
+  p([[0,b],[w,b],[w,e2],[w/2,e2-7],[0,e2]],EDGE);p([[.5,b],[w-.5,b],[w-.5,e2-1],[w/2,e2-7.5],[.5,e2-1]],NV[2]);
+  p([[2,b+2],[w-2,b+2],[w-2,e2-3.5],[w/2,e2-9.5],[2,e2-3.5]],GD[2]);p([[3,b+3],[w-3,b+3],[w-3,e2-4.5],[w/2,e2-10.5],[3,e2-4.5]],NV[2]);
+  for(let x=5;x<w-4;x+=6)r(x,b+3,2,len-12,'#ffffff07');r(w-6,b+3,3,len-12,'#00000022');crest(g,w/2,b+7,w*.55);mid(g,'LEET',w/2,b+9+w*.55,.5,GD[3]);mid(g,'AF',w/2,b+13.5+w*.55,.5,GD[3]);
+  r(-3,y0-.5,w+6,2,EDGE);r(-2.5,y0,w+5,1,GD[2]);r(-2.5,y0,w+5,.5,GD[4]);e(-3.5,y0+.5,1.5,1.5,GD[3]);e(w+3.5,y0+.5,1.5,1.5,GD[3]);},
+ // An armored personnel carrier, side on like the cars: eight big wheels under an angled olive hull with darker blotches, vision
+ // blocks, a side door, jerry cans and a tow hook, a remote weapon station and two antennas on the roof, the crest and o.mark (its call
+ // sign) stencilled on. The rear is on the left: o.open drops the ramp onto the ground. w is the length, h the depth, z the roof.
+ apc(g,o){const {r,p,e,l}=g,L=o.w,D=o.h,Z=o.z,H0=9,Hh=Math.round(Z*.6),Hc=Math.round(Z*.78),xr=Math.round(L*.7),xn=Math.round(L*.86),s=(o.x|0)+(o.y|0)*5;
+  e(L/2,D-1,L/2+8,7,SHADOW);r(6,D-H0-1,L-14,H0+1,'#0a0b0d');
+  if(o.open){p([[-1,1-H0],[-1,D-1-H0],[-27,D-1],[-27,1]],EDGE);p([[-.5,1.5-H0],[-.5,D-1.5-H0],[-26,D-1.5],[-26,1.5]],OD[2]);for(let k=0;k<6;k++){const t=k/6;r(-24+t*23,2+(-H0+1)*t,.75,D-4,OD[1]);}
+   r(-26,D-2.5,25,1,OD[4]);r(-3,-H0-1,3,D-2,'#3a0c0a');}
+  // Lower hull the whole length, then the troop compartment, the driver's cab and the sloped nose.
+  bx(g,0,0,xn,D,H0,Hh,OD[3],OD[2],OD[4]);
+  p([[xn-.5,-Hh-.5],[L+.5,-H0-9.5],[L+.5,D-H0+.5],[xn-.5,D-H0+.5]],EDGE);p([[xn,-Hh],[L,-H0-9],[L,D-H0-9],[xn,D-Hh]],OD[5]);p([[xn,-Hh],[L,-H0-9],[L,-H0-8.5],[xn,-Hh+.5]],'#76845e');l(xn+.5,D-Hh-.5,xn+.5,-Hh+.5,.5,OD[3]);l(xn+(L-xn)*.55,-Hh+(Hh-H0-9)*.55+1,xn+(L-xn)*.55,D-Hh+(Hh-H0-9)*.55-1,.5,OD[4]);p([[xn,D-Hh],[L,D-H0-9],[L,D-H0],[xn,D-H0]],OD[2]);
+  bx(g,0,2,xr,D-4,Hh,Z,OD[4],OD[3],OD[5]);bx(g,xr,3,xn-xr,D-6,Hh,Hc,OD[4],OD[3],OD[5]);p([[xn-1,D-3-Hc],[xn+10,D-3-Hh+2],[xn-1,D-3-Hh+2]],OD[2]);
+  for(let i=0;i<14;i++){const bx0=hash(i,s)*(L-30)+4,by=D-Hh+3+hash(s,i)*(Hh-H0-10),bw=6+hash(i,s+1)*14;p([[bx0,by],[bx0+bw,by-1],[bx0+bw-2,by+4],[bx0+2,by+5]],i%2?OD[1]:'#2a2418');}
+  for(let i=0;i<10;i++){const bx0=hash(i,s+4)*(xr-20)+4,by=2-Z+hash(s+4,i)*(D-8);e(bx0,by,4+hash(i,2)*6,2+hash(2,i)*2,i%2?OD[3]:'#3a3424');}
+  // Vision blocks along the compartment, the side door, the cab window, a headlight and the tow hook.
+  for(const x of [L*.14,L*.3,L*.46]){r(x-.5,D-2-Z+5.5,9,4,EDGE);r(x,D-2-Z+6,8,3,'#1a2430');r(x+.5,D-2-Z+6.5,2,1,'#3a5068');}
+  const dx=Math.round(L*.56);r(dx-.5,D-2-Z+12,20,Z-Hh-10,EDGE);r(dx,D-2-Z+12.5,19,Z-Hh-11,OD[3]);r(dx,D-2-Z+12.5,19,.5,OD[5]);r(dx+15,D-2-Z+20,2.5,1,'#8a8e94');for(const y of [D-2-Z+15,D-Hh-6])r(dx-1.5,y,2,2,OD[1]);
+  r(xr+3,D-3-Hc+4,xn-xr-6,6,EDGE);r(xr+3.5,D-3-Hc+4.5,xn-xr-7,5,'#1a2430');r(xr+4,D-3-Hc+5,4,1,'#3a5068');r(L-2.5,D-H0-14,3,3,EDGE);r(L-2,D-H0-13.5,2,2,'#f0e6c0');r(L-1,D-H0-4,2.5,2.5,'#2a2b2e');
+  for(let k=0;k<2;k++){const jx=8+k*9;r(jx-.5,D-Hh+4,8,13,EDGE);r(jx,D-Hh+4.5,7,12,OD[2]);r(jx,D-Hh+4.5,7,.5,OD[4]);l(jx+1,D-Hh+6,jx+6,D-Hh+15,.5,OD[1]);l(jx+6,D-Hh+6,jx+1,D-Hh+15,.5,OD[1]);}
+  crest(g,L*.38,D-Hh+4,12);if(o.mark)stencil(g,o.mark,L*.62,D-Hh+6,1.5,'#d8d0b0');stencil(g,'LEET AF',L*.13,D-2-Z+12.5,1,'#c8c2a8');
+  // Wheels under an armored skirt.
+  for(const x of [L*.12,L*.27,L*.6,L*.75]){e(x,D-8,10,9.5,EDGE);e(x,D-8,9.5,9,'#111214');e(x,D-8,5,4.8,'#34373c');e(x,D-8,2,1.9,'#1c1d20');for(let k=0;k<6;k++){const a=k*Math.PI/3;r(x+Math.cos(a)*3.5-.25,D-8+Math.sin(a)*3.4-.25,.5,.5,'#55595e');}}
+  r(2,D-H0-8.5,xn-4,4,EDGE);r(2,D-H0-8,xn-4,3,OD[2]);r(2,D-H0-8,xn-4,.5,OD[4]);
+  // On the roof: hatches, the weapon station with its barrel forward, and two antennas whipping back from the rear corners.
+  const ry=2-Z;for(const hx of [L*.12,L*.36]){e(hx,ry+D/2-2,5,3.5,EDGE);e(hx,ry+D/2-2,4.5,3,OD[3]);e(hx-1,ry+D/2-3,2,1,OD[5]);}
+  const wx=Math.round(L*.52);r(wx-.5,ry+D/2-14.5,15,12,EDGE);r(wx,ry+D/2-14,14,5,OD[4]);r(wx,ry+D/2-9,14,6,OD[2]);r(wx+2,ry+D/2-8,4,2,'#1a2430');l(wx+14,ry+D/2-11,wx+32,ry+D/2-11,1.25,EDGE);l(wx+14,ry+D/2-11,wx+32,ry+D/2-11,.5,'#3a3d42');
+  for(const ay of [ry+3,ry+D-8]){l(4,ay,1,ay-34,.75,EDGE);l(4,ay,1,ay-34,.4,'#55595e');r(3,ay-1,2.5,2,EDGE);}},
+ // A hard case for biological samples: a moulded shell with ribs, two latches and a handle, the biohazard trefoil on the front. o.cold
+ // makes it the white cryo case with a blue band, a misting vent and a green readout; o.marrow adds Marrow's teal stripe and name.
+ hazcase(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,C=o.cold?[SC[0],SC[1],SC[2],SC[3]]:[HZ[0],HZ[1],HZ[2],HZ[3]],yf=h-z;e(w/2,h,w/2+2,2.5,SHADOW);
+  r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,C[2]);r(0,-z,w,.5,C[3]);for(let x=4;x<w-2;x+=5)r(x,-z+1,.5,h-2,C[1]);r(w/2-4,-z+h/2-1,8,2,EDGE);r(w/2-3.5,-z+h/2-.5,7,1,'#2a2b2e');
+  r(0,yf,w,z,C[1]);r(0,yf,w,.5,C[3]);r(0,yf+3,w,.5,C[0]);for(const x of [3,w-6]){r(x-.5,yf+.5,4,3.5,EDGE);r(x,yf+1,3,2.5,'#55595e');}
+  if(o.cold){r(0,yf+5,w,2,o.marrow?TL[2]:'#3a6a9a');r(w-8,yf+8,5,3,EDGE);r(w-7.5,yf+8.5,4,2,'#0d1a10');r(w-7,yf+9,3,.75,'#5aff8a');for(let k=0;k<3;k++)e(4+k*2,yf+9-k*1.5,1.5+k*.5,1,'#e8f0f840');}
+  if(o.marrow){if(!o.cold)r(0,yf+5,w,1.5,TL[2]);const lw=typeW('MARROW',.5)+3;r(w/2-lw/2-.5,-z+h-6.5,lw+1,5.5,C[0]);r(w/2-lw/2,-z+h-6,lw,4.5,SC[4]);mid(g,'MARROW',w/2,-z+h-5.5,.5,TL[1]);}
+  trefoil(g,w/2,yf+(z-3)/2+3,Math.min(4,z*.28),o.cold?RED[2]:BLK,C[1]);},
+ // The briefing board: a rolling whiteboard with the operation's name, the eight pairs and where each goes, and Hollow 6 ringed in red.
+ briefboard(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,B='#2e4a8a',RD='#b33a2a',bh=38;e(w/2,h,w/2+3,3,SHADOW);
+  for(const x of [5,w-5]){l(x,h,x,-z+bh,1.5,EDGE);l(x,h,x,-z+bh,.7,ST[4]);for(const d of [-4,4])l(x,h-1,x+d,h,1,EDGE);}
+  r(-.5,-z-.5,w+1,bh+1,EDGE);r(.5,-z+.5,w-1,bh-1,'#d8d6ce');r(.5,-z+.5,w-1,.5,'#f2f0e8');r(.5,-z+bh-2,w-1,1.5,'#8a8f94');
+  type(g,'BELL JAR',3,-z+2.5,.5,B);r(3,-z+7,typeW('BELL JAR',.5),.5,B);
+  for(let k=0;k<8;k++){const col=k<4?3:w/2+1,y=-z+10+(k%4)*6;type(g,String(k+1),col,y,.5,k===5?RD:B);r(col+4,y+1.5,6+hash(k,5)*(w/2-16),.5,B);}
+  e(w/2+2.5,-z+17.5,4.5,3.5,RD);e(w/2+2.5,-z+17.5,3.75,2.75,'#d8d6ce');type(g,'6',w/2+1,-z+16,.5,RD);r(w-12,-z+bh-5,6,1.5,RD);r(w-5,-z+bh-5,2,1.5,B);},
+ // The coffee table by the door: a folding table with a steel urn and its tap, a sleeve of paper cups, a box of doughnuts left open and
+ // a sugar caddy.
+ urntable(g,o){const {r,e,l,p}=g,w=o.w,h=o.h,z=o.z;e(w/2,h,w/2+3,3,SHADOW);for(const x of [2,w-3])l(x,h-1,x+.5,h-z,1,EDGE);
+  const t=bx(g,0,0,w,h,z-1.5,z,'#c9c4b6','#7a766c','#e4e0d4');
+  const ux=6,uy=t-4;r(ux-.5,uy-17.5,11,18.5,EDGE);r(ux,uy-17,10,18,'#8e939b');r(ux,uy-17,2,18,'#c4c8cc');r(ux+7,uy-17,3,18,'#5a5f66');r(ux-.5,uy-19,11,2.5,EDGE);r(ux,uy-18.5,10,1.5,BLK);r(ux+4,uy-4,2,3,BLK);r(ux+3.5,uy-1,3,1,'#2a1a10');
+  for(let k=0;k<3;k++){r(20+k*.5,t-9+k*2.5,4,3,'#f0ece2');r(20+k*.5,t-9+k*2.5,4,.5,'#b8b2a4');}r(19.5,t-9.5,5,.5,EDGE);
+  p([[27,t-5],[w-4,t-5],[w-3,t-1],[26,t-1]],'#d87a96');p([[27.5,t-4.5],[w-4.5,t-4.5],[w-3.5,t-1.5],[26.5,t-1.5]],'#f2e4d0');for(const [dx,dy,c] of [[30,-3.5,'#8a5a32'],[34.5,-3,'#e88aa8'],[39,-3.5,'#8a5a32'],[43,-3,'#f0e0b0']]){e(dx,t+dy,2,1.2,c);e(dx,t+dy,.6,.4,'#f2e4d0');}
+  r(w-9,t-11,4,4,EDGE);r(w-8.5,t-10.5,3,3,'#8a2a22');r(w-8.5,t-10.5,3,.5,'#e8e4d8');}};
+// The library's samples: real sizes from the hangar in Deadlight Hollow.
+export const BASE_SAMPLES=[
+ {set:'base',kind:'hangarwall',name:'Hangar wall',group:'Hangar',samples:[{kind:'hangarwall',x:0,y:0,w:300,h:10,z:100,sign:'HANGAR 3',signX:20}]},
+ {set:'base',kind:'hangarwallV',name:'Hangar wall, side on',group:'Hangar',samples:[{kind:'hangarwallV',x:0,y:0,w:10,h:200,z:100}]},
+ {set:'base',kind:'column',name:'Door column',group:'Hangar',samples:[{kind:'column',x:0,y:0,w:12,h:10,z:110}]},
+ {set:'base',kind:'screen',name:'Projector screen',group:'Briefing',samples:[0,1,2,3,4,5].map(slide=>({kind:'screen',x:0,y:0,w:160,h:6,z:96,drop:66,slide}))},
+ {set:'base',kind:'podium',name:'Podium',group:'Briefing',samples:[{kind:'podium',x:0,y:0,w:26,h:14,z:36}]},
+ {set:'base',kind:'stage',name:'Stage',group:'Briefing',samples:[{kind:'stage',x:0,y:0,w:200,h:50,z:6}]},
+ {set:'base',kind:'foldchair',name:'Folding chair',group:'Briefing',samples:[{kind:'foldchair',x:0,y:0,w:14,h:12,z:28,n:6}]},
+ {set:'base',kind:'projector',name:'Projector cart',group:'Briefing',samples:[{kind:'projector',x:0,y:0,w:22,h:16,z:30}]},
+ {set:'base',kind:'briefboard',name:'Briefing board',group:'Briefing',samples:[{kind:'briefboard',x:0,y:0,w:60,h:10,z:62}]},
+ {set:'base',kind:'crestbanner',name:'Unit banner',group:'Briefing',samples:[{kind:'crestbanner',x:0,y:0,w:30,h:6,z:92,len:60}]},
+ {set:'base',kind:'armory',name:'Armory cage',group:'Armory',samples:[{kind:'armory',x:0,y:0,w:150,h:40,z:74},{kind:'armory',x:0,y:0,w:150,h:40,z:74,taken:3}]},
+ {set:'base',kind:'lockers',name:'Lockers',group:'Armory',samples:[{kind:'lockers',x:0,y:0,w:112,h:14,z:64},{kind:'lockers',x:0,y:0,w:112,h:14,z:64,open:2}]},
+ {set:'base',kind:'hazcase',name:'Sample case',group:'Armory',samples:[{kind:'hazcase',x:0,y:0,w:26,h:16,z:16},{kind:'hazcase',x:0,y:0,w:26,h:16,z:16,cold:true,marrow:true}]},
+ {set:'base',kind:'urntable',name:'Coffee table',group:'Armory',samples:[{kind:'urntable',x:0,y:0,w:52,h:18,z:26}]},
+ {set:'base',kind:'apc',name:'Armored personnel carrier',group:'Vehicles',samples:[{kind:'apc',x:0,y:0,w:230,h:66,z:72,mark:'H6'},{kind:'apc',x:0,y:0,w:230,h:66,z:72,mark:'H6',open:true}]}];
+export function propArt(c,o){if(!BASE_ART[o.kind])return townPropArt(c,o);c.save();c.scale(2,2);c.translate(PROP_PAD,o.z+PROP_PAD);BASE_ART[o.kind](painter(c),o);c.restore();}

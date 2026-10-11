@@ -37,6 +37,7 @@ import {PROP_SAMPLES} from './props/samples.js';
 import {propArt as homeProp,HOME_DECOR} from './props/home.js';
 import {propArt as streetProp} from './props/street.js';
 import {propArt as townProp,TOWN_SAMPLES} from './props/town.js';
+import {propArt as baseProp,BASE_SAMPLES} from './props/base.js';
 import {FLOORS,FLOOR_KINDS,floorArt} from './scenery/floors.js';
 import {BOT,BRUTE,botArt,bruteArt} from './characters/bots.js';
 import {painter} from './core/paint.js';
@@ -125,8 +126,8 @@ CHARACTERS.push(
 
 // ---------- Props and scenery ----------
 const propSize=o=>({w:Math.ceil(o.w+PROP_PAD*2)*2,h:Math.ceil(o.h+o.z+PROP_PAD*2)*2});
-const SETS={camp:{paint:campProp,file:'camp.js',id:'',label:'Camp'},workshop:{paint:workshopProp,file:'workshop.js',id:'workshop-',label:'Workshop'},home:{paint:homeProp,file:'home.js',id:'home-',label:'House'},street:{paint:streetProp,file:'street.js',id:'street-',label:'Street'},town:{paint:townProp,file:'town.js',id:'town-',label:'Town'}};
-const PROPS=[...PROP_SAMPLES,...TOWN_SAMPLES].map(s=>{const sizes=s.samples.map(propSize),w=Math.max(...sizes.map(z=>z.w)),h=Math.max(...sizes.map(z=>z.h)),set=SETS[s.set],o0=s.samples[0],file=set.file;
+const SETS={camp:{paint:campProp,file:'camp.js',id:'',label:'Camp'},workshop:{paint:workshopProp,file:'workshop.js',id:'workshop-',label:'Workshop'},home:{paint:homeProp,file:'home.js',id:'home-',label:'House'},street:{paint:streetProp,file:'street.js',id:'street-',label:'Street'},town:{paint:townProp,file:'town.js',id:'town-',label:'Town'},base:{paint:baseProp,file:'base.js',id:'base-',label:'Base'}};
+const PROPS=[...PROP_SAMPLES,...TOWN_SAMPLES,...BASE_SAMPLES].map(s=>{const sizes=s.samples.map(propSize),w=Math.max(...sizes.map(z=>z.w)),h=Math.max(...sizes.map(z=>z.h)),set=SETS[s.set],o0=s.samples[0],file=set.file;
  // Wall decorations are previewed on a piece of the wall they hang on.
  const paint=s.set==='home'&&HOME_DECOR.has(s.kind)?(c,o)=>{homeProp(c,{...o,kind:'wall',paint:0});homeProp(c,o);}:set.paint;
  return {id:'prop-'+set.id+s.kind,name:s.name,category:'props',group:s.group,kind:'still',

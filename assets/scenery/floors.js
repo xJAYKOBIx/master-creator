@@ -1,5 +1,5 @@
 // Floors and ground, painted into a rectangle of world units: wood boards, kitchen and bathroom tile, carpet, lawn, concrete, asphalt,
-// dirt, gravel, long field grass and still water.
+// dirt, gravel, long field grass, still water and a hangar's sealed concrete.
 // floorArt(g, {kind, x, y, w, h}) paints with a painter g already in world units; the pattern is tied to world position, so two
 // rectangles of the same floor side by side line up. Lighting and shadows come later, from the game.
 import {hash2 as hash} from '../core/paint.js';
@@ -14,7 +14,8 @@ export const FLOORS={
  dirt:{name:'Dirt',ramp:['#18140f','#221c15','#2c241b','#372d22']},
  gravel:{name:'Gravel',ramp:['#222326','#2e2f32','#3b3c40','#4a4b50']},
  field:{name:'Field',ramp:['#141710','#1b1f14','#23281a','#2d3320','#3a4128']},
- water:{name:'Water',ramp:['#0b1216','#101a1f','#16242a','#22343b','#3a5058']}};
+ water:{name:'Water',ramp:['#0b1216','#101a1f','#16242a','#22343b','#3a5058']},
+ hangar:{name:'Hangar floor',ramp:['#1f2224','#2a2e30','#323739','#3b4143','#4a5153']}};
 export const FLOOR_KINDS=Object.keys(FLOORS);
 export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLOORS.wood).ramp,x1=x+w,y1=y+h;
  if(k==='wood'){// Boards run east to west, 6 units wide, with staggered joints and a little grain.
@@ -40,4 +41,12 @@ export function floorArt(g,f){const {r}=g,{x,y,w,h}=f,k=f.kind,P=(FLOORS[k]||FLO
  // in pieces lines up.
  else if(k==='water'){r(x,y,w,h,P[1]);for(let gy=Math.floor(y/5)*5;gy<y1;gy+=5)for(let gx=Math.floor(x/23)*23;gx<x1;gx+=23){if(gy<y)continue;const v=hash(gx|0,(gy|0)+307);if(v<.55)continue;
    const len=3+v*9,a=Math.max(x,gx+((v*13)%1)*12),b=Math.min(x1,a+len);if(b>a)r(a,gy,b-a,.5,v>.92?P[4]:v>.75?P[3]:P[2]);}}
+ // Hangar floor: sealed concrete poured in 48-unit slabs, each a shade apart, with saw-cut joints (a dark cut and a lit lip), fine
+ // aggregate, and here and there tire scuffs and an oil stain. Tied to world position, so pieces line up.
+ else if(k==='hangar'){const S=48;for(let sy=Math.floor(y/S)*S;sy<y1;sy+=S)for(let sx=Math.floor(x/S)*S;sx<x1;sx+=S){const a=Math.max(x,sx),b=Math.min(x1,sx+S),t=Math.max(y,sy),u=Math.min(y1,sy+S);if(b<=a||u<=t)continue;
+   const v=hash(sx|0,(sy|0)+5);r(a,t,b-a,u-t,v>.6?P[2]:v>.25?'#2f3436':P[1]);if(sx>=x)r(sx,t,.5,u-t,P[0]);if(sx+.5>=x&&sx+.5<x1)r(sx+.5,t,.5,u-t,'#ffffff08');if(sy>=y)r(a,sy,b-a,.5,P[0]);if(sy+.5>=y&&sy+.5<y1)r(a,sy+.5,b-a,.5,'#ffffff08');
+   // A pair of tire scuffs running across the slab, and the odd oil stain.
+   if(v>.7){const ty=sy+8+hash(sx|0,sy|0)*28;for(const d of [0,7])for(let k=0;k<S;k+=2){const px=sx+k,py=ty+d+Math.sin((sx+k)/30)*1.5;if(px>=x&&px<x1-1&&py>=y&&py<y1-.5&&hash(px|0,(py|0)+d)>.25)r(px,py,2,.5,'#14161826');}}
+   if(v<.12){const ox=sx+10+hash(sy|0,sx|0)*26,oy=sy+10+hash(sx+1|0,sy|0)*26;for(let k=0;k<7;k++){const px=ox+hash(k,sx|0)*8-4,py=oy+hash(sy|0,k)*5-2.5,rw=2+hash(k,9)*4;if(px>=x&&px+rw<x1&&py>=y&&py+1.5<y1)r(px,py,rw,1.5,'#0d0f1030');}}}
+  for(let i=0;i<w*h/26;i++){const px=x+hash(i,(x|0)+23)*w,py=y+hash((y|0)+29,i)*h;r(Math.min(px,x1-.5),Math.min(py,y1-.5),.5,.5,i%3?P[3]+'66':P[0]+'88');}}
  else{r(x,y,w,h,P[1]);for(let sx=Math.floor(x/40)*40;sx<x1;sx+=40)if(sx>=x)r(sx,y,.5,h,P[0]);for(let sy=Math.floor(y/40)*40;sy<y1;sy+=40)if(sy>=y)r(x,sy,w,.5,P[0]);for(let i=0;i<w*h/30;i++)r(x+hash(i,17)*w,y+hash(19,i)*h,.5,.5,i%2?P[2]:P[0]);}}
