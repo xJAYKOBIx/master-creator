@@ -115,6 +115,18 @@ export const STREET_ART={
  // A wheeled trash bin out at the curb: green, grey or blue by paint.
  bin(g,o){const {r,e}=g,w=o.w,h=o.h,z=o.z,P=BINS[o.paint|0]||BINS[0];e(w/2,h,w/2+1.5,2,SHADOW);r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,-z,w,h,P[2]);r(0,-z,w,.5,P[3]);r(0,h-z-1,w,1,P[0]);
   r(.5,h-z,w-1,z-1,P[1]);r(.5,h-z,w-1,.5,P[2]);r(2.5,h-z+3,.5,z-6,P[0]);r(w-3,h-z+3,.5,z-6,P[0]);r(-1,h-z-1,w+2,2.5,EDGE);r(-.5,h-z-.5,w+1,1.5,P[2]);r(w/2-2,h-z+1.5,4,1,P[0]);e(2,h-1,1.5,1.5,'#0c0d10');e(w-2,h-1,1.5,1.5,'#0c0d10');},
+ // A survivor's stash: an olive ammo can and a duffel bag, half under a tarp weighted with a brick, and a strip of orange flagging
+ // tape tied to the can's handle so whoever left it could find it again in the dark.
+ cache(g,o){const {r,p,e}=g,w=o.w,h=o.h,z=o.z,T=['#1e2619','#2b3623','#3a482f','#4b5b3c'],A=['#22281a','#323b25','#435033','#56653f'],D=['#141a26','#1f2838','#2c384c'];e(w/2,h-1,w/2+2,3,SHADOW);
+  // The duffel along the back, its strap over the top.
+  r(1,h-z-3.5,w-8,z-1,EDGE);r(1.5,h-z-3,w-9,z-2,D[1]);r(1.5,h-z-3,w-9,1,D[2]);r(1.5,h-5,w-9,1,D[0]);r(6,h-z-3,1,z-2,D[0]);r(w-11,h-z-3,1,z-2,D[0]);
+  // The tarp over the left of it, its folds and the brick on its corner.
+  p([[-1,h-z-1],[w*.55,h-z-2.5],[w*.62,h+.5],[-1.5,h+.5]],EDGE);p([[-.5,h-z-.5],[w*.55-.5,h-z-2],[w*.6-.5,h],[-1,h]],T[1]);p([[-.5,h-z-.5],[w*.55-.5,h-z-2],[w*.55-.5,h-z-1],[-.5,h-z+.5]],T[3]);
+  r(3,h-z+1,.5,z-1,T[0]);r(8,h-z,.5,z,T[0]);r(5,h-z+1,1,z-2,T[2]);r(1,h-3,4,2.5,EDGE);r(1.5,h-2.5,3,1.5,'#7a3a2a');r(1.5,h-2.5,3,.5,'#9a5040');
+  // The ammo can: a lid with its latch and handle, a stencil on the side.
+  const x=w-11,yt=h-z-1;r(x-.5,yt-.5,11,z+1.5,EDGE);r(x,yt,10,3,A[2]);r(x,yt,10,.5,A[3]);r(x,yt+3,10,z-2.5,A[1]);r(x,yt+3,10,.5,A[2]);r(x,h-1,10,.5,A[0]);
+  r(x+3,yt+.5,4,1,A[0]);r(x+3.5,yt+.5,3,.5,'#6b7a52');r(x+.5,yt+2.5,1,1.5,A[0]);r(x+2,yt+5,6,.5,'#c9b45a');r(x+2,yt+6,4,.5,'#c9b45a');
+  r(x+4,yt-1,.5,1.5,'#d0702e');r(x+4.5,yt-.5,2,1,'#e8904a');r(x+6,yt,1,2.5,'#d0702e');},
  // A garden shed: a tin roof with its ridge along the length, plank walls and double doors.
  shed(g,o){const {r,l}=g,w=o.w,h=o.h,z=o.z,zf=Math.round(z*.72),yb=-zf,yr=Math.round(h/2-z),yf=h-zf,W=['#231e1a','#322a24','#40362d','#4e4236'],R=['#1e2024','#2a2d33','#363a42','#454952'];
   r(-1.5,Math.min(yb,yr)-1,w+3,yf-Math.min(yb,yr)+2,EDGE);if(yr>yb)r(-1,yb,w+2,yr-yb,R[1]);r(-1,yr,w+2,yf-yr,R[2]);for(let x=1;x<w;x+=3){r(x,yr,.5,yf-yr,R[1]);r(x+1,yr,.5,yf-yr,R[3]);}r(-1,yr-.5,w+2,1.5,R[3]);r(-1,yf,w+2,1.5,'#0d0e11');

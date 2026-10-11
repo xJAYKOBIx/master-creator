@@ -80,7 +80,17 @@ export const SOUNDS=[
  // A spent casing landing: a bright brass tink, or the dull tock of a shotgun's plastic hull.
  {id:'casing',name:'Casing drop',group:'Combat',dur:.12,options:[{key:'kind',label:'Casing',choices:['Brass','Hull']}],play:(k,o={})=>{const {out}=k;
   if((o.kind|0)===1){k.noise(0,.03,out,{type:'bandpass',f:1500,q:3,gain:.16,attack:.001,decay:true});k.tone(0,.04,out,{f:620,to:420,gain:.04,release:.03});return;}
-  k.tone(0,.07,out,{f:4200,to:3900,gain:.05,attack:.001,release:.06});k.tone(0,.04,out,{f:6100,gain:.025,attack:.001,release:.035});k.noise(0,.02,out,{type:'bandpass',f:5000,q:4,gain:.07,attack:.0005,decay:true});}}];
+  k.tone(0,.07,out,{f:4200,to:3900,gain:.05,attack:.001,release:.06});k.tone(0,.04,out,{f:6100,gain:.025,attack:.001,release:.035});k.noise(0,.02,out,{type:'bandpass',f:5000,q:4,gain:.07,attack:.0005,decay:true});}},
+ // Going through something in a hurry: cloth and paper shoved aside, a rattle, a thump, and a last rustle.
+ {id:'rummage',name:'Rummage',group:'Scavenging',dur:.9,play:k=>{const {out}=k;[[0,.18,1800],[.2,.14,2600],[.42,.2,1400],[.68,.16,2200]].forEach(([t,d,f])=>k.noise(t,d,out,{type:'bandpass',f,q:.8,gain:.12,attack:.02,decay:true}));
+  for(const t of [.3,.34,.37])k.noise(t,.03,out,{type:'bandpass',f:3600,q:5,gain:.06,attack:.001,decay:true});k.tone(.55,.08,out,{f:140,to:90,gain:.18,attack:.002,release:.06});}},
+ // Something small into the bag: a soft drop and a little rattle (shells), or a clink (metal).
+ {id:'pickup',name:'Pick up',group:'Scavenging',dur:.25,options:[{key:'kind',label:'What',choices:['Shells','Scrap','Soft']}],play:(k,o={})=>{const {out}=k,n=o.kind|0;
+  k.noise(0,.08,out,{f:900,gain:.18,attack:.003,decay:true});if(n===0)for(const t of [.05,.08,.1])k.tone(t,.04,out,{f:2400+t*4000,gain:.03,attack:.001,release:.03});
+  else if(n===1){k.tone(.03,.12,out,{f:1800,gain:.04,attack:.001,release:.1});k.tone(.03,.1,out,{f:2650,gain:.025,attack:.001,release:.08});}}},
+ // A car alarm going off: the two-tone whoop and a horn, over and over, from somewhere down the street.
+ {id:'car-alarm',name:'Car alarm',group:'Scavenging',dur:3.2,play:k=>{const {out}=k;for(let i=0;i<4;i++){const t=i*.8;k.tone(t,.36,out,{type:'square',f:780,to:1250,gain:.05,attack:.01,release:.03});
+  k.tone(t+.4,.36,out,{type:'square',f:1250,to:780,gain:.05,attack:.01,release:.03});k.tone(t,.2,out,{type:'sawtooth',f:410,gain:.035,attack:.005,release:.04});k.tone(t,.2,out,{type:'sawtooth',f:520,gain:.03,attack:.005,release:.04});}}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away.

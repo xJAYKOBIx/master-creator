@@ -130,6 +130,7 @@ export const PROP_SAMPLES=[
  {set:'home',kind:"mailbox",name:"Mailbox",group:"Outside",samples:[{"kind":"mailbox","x":40,"y":40,"w":10,"h":8,"z":34}]},
  {set:'home',kind:"picket",name:"Picket fence",group:"Outside",samples:[{"kind":"picket","x":40,"y":40,"w":80,"h":4,"z":22}]},
  {set:'street',kind:"car",name:"Parked car",group:"Street",samples:[{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":0},{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":1},{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":2},{"kind":"car","x":40,"y":40,"w":140,"h":52,"z":46,"paint":3}]},
+ {set:'street',kind:"cache",name:"Survivor's stash",group:"Street",samples:[{"kind":"cache","x":40,"y":40,"w":26,"h":14,"z":10}]},
  {set:'street',kind:"policecar",name:"Police cruiser",group:"Street",samples:[{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":0},{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":1},{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":2,"crashed":true},{"kind":"policecar","x":40,"y":40,"w":140,"h":52,"z":46,"lit":1,"crashed":true,"trunk":true}]},
  {set:'street',kind:"pole",name:"Utility pole",group:"Street",samples:[{"kind":"pole","x":40,"y":40,"w":12,"h":12,"z":150},{"kind":"pole","x":40,"y":40,"w":12,"h":12,"z":150,"lean":14}]},
  {set:'street',kind:"streetlamp",name:"Street lamp",group:"Street",samples:[{"kind":"streetlamp","x":40,"y":40,"w":10,"h":10,"z":110}]},

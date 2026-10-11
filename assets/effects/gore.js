@@ -78,8 +78,8 @@ export const BLOOD_KINDS=['pool','splash','drops','smear','wall'];export const B
 export function bloodArt(c,kind='pool',seed=0,direction=0){const g=painter(c),{r,e}=g,B=GORE.blood,h=k=>hash2(seed,k),a=direction*Math.PI/4,dx=Math.cos(a),dy=Math.sin(a)*.6;c.save();c.scale(2,2);c.translate(BLOOD_BOX.w/2,BLOOD_BOX.h/2);
  const puddle=(x,y,s,lit=true)=>{e(x,y,s*1.15,s*.7,B[0]);e(x,y,s,s*.6,B[1]);e(x-s*.15,y-s*.1,s*.7,s*.4,B[2]);if(lit){r(x-s*.4,y-s*.3,Math.max(.5,s*.25),.5,B[3]);r(x-s*.45,y-s*.3,.5,.5,B[4]);}};
  if(kind==='pool'){puddle(0,0,9+h(1)*4);for(let k=0;k<6;k++){const t=h(k+2)*Math.PI*2,d=7+h(k+9)*6;puddle(Math.cos(t)*d,Math.sin(t)*d*.6,2+h(k+20)*3,false);}}
- else if(kind==='splash'){puddle(0,0,4+h(1)*2);for(let k=0;k<14;k++){const d=4+h(k+2)*30,s=Math.max(.5,2.2-d/16),j=(h(k+30)-.5)*d*.5;const x=dx*d-dy*j,y=dy*d+dx*j*.6;if(s>1)e(x,y,s,s*.6,B[1]),r(x-.5,y-.5,.5,.5,B[3]);else r(x,y,.5,.5,B[1]);}
-  for(let t=4;t<16;t+=.5){const w=Math.max(.5,2-t/8);r(dx*t,dy*t,w,w*.6,t<10?B[2]:B[1]);}}
+ else if(kind==='splash'){for(let k=0;k<3;k++){const t=a+(h(k+70)-.5)*.5,len=6+h(k+80)*14;for(let q=2;q<len;q+=.5)r(Math.cos(t)*q,Math.sin(t)*q*.6,.5,.5,q<len*.6?B[2]:B[1]);e(Math.cos(t)*len,Math.sin(t)*len*.6,.8,.5,B[1]);}
+  for(let k=0;k<22;k++){const d=2+h(k+2)*30,t=a+(h(k+30)-.5)*(.5+d/30),s=Math.max(.5,(1.9-d/20)*(.6+h(k+50)*.8)),x=Math.cos(t)*d,y=Math.sin(t)*d*.6;if(s>1){e(x,y,s,s*.6,B[1]);r(x-.25,y-.25,.5,.5,B[2]);}else r(x,y,.5,.5,h(k+60)<.5?B[1]:B[2]);}}
  else if(kind==='drops'){for(let k=0;k<12;k++){const t=h(k)*Math.PI*2,d=h(k+40)*14,s=.5+h(k+60)*1.4;const x=Math.cos(t)*d,y=Math.sin(t)*d*.6;if(s>1)e(x,y,s,s*.6,B[1]);else r(x,y,.5,.5,B[2]);}}
  else if(kind==='smear'){for(let t=-24;t<24;t+=.5){const k=1-Math.abs(t)/24,w=1+k*3.5,j=Math.sin(t*.3+h(1)*6)*1.2,x=dx*t-dy*j,y=dy*t+dx*j;r(x-w/2,y-w*.3,w,w*.6,k>.6?B[2]:B[1]);}for(let k=0;k<4;k++){const t=(h(k)-.5)*40;r(dx*t+(h(k+5)-.5)*6,dy*t+3+h(k+7)*2,1,.5,B[0]);}}
  else{e(0,0,5+h(1)*3,4+h(2)*2,B[1]);e(-.5,-.5,3+h(1)*2,2.5+h(2),B[2]);for(let k=0;k<10;k++){const t=h(k+3)*Math.PI*2,d=5+h(k+13)*12;e(Math.cos(t)*d,Math.sin(t)*d*.8,.6+h(k+23)*1.2,.6+h(k+23),B[1]);}
