@@ -24,6 +24,7 @@ import {vectorPainter} from './core/paint.js';
 import {R,hash,canvas} from './core/kit.js';
 import {text,width,GLYPHS} from './ui/font5x7.js';
 import {BLOOD,brushes} from './effects/grime.js';
+import {GORE,GORE_PARTS,zombiePiece,CRAWL,crawlArt,GIBS,gibArt,BLOOD_KINDS,BLOOD_BOX,bloodArt} from './effects/gore.js';
 import {logo,osd,breakup,flip,noSignal} from './effects/tv.js';
 import {captions,lowerThird,ticker,bug} from './effects/broadcast.js';
 import {SOUNDS} from './sounds/library.js';
@@ -72,7 +73,17 @@ const CHARACTERS=[
   source:'assets/characters/character.js, zombie.js',usage:"import {survivor} from './assets/characters/character.js';\nc.scale(2,2); survivor(c, facing, frame, true, {...look, zombie: 1});",
   w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:personAnims(true),
   options:[...INFECTION.map(lookOption),...PERSON.map(lookOption)],presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),
-  defaults:pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON]),random:r=>pickKeys(randomAppearance(r),[...INFECTION,...PERSON]),draw:personDraw(true)}];
+  defaults:pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON]),random:r=>pickKeys(randomAppearance(r),[...INFECTION,...PERSON]),draw:personDraw(true)},
+ {id:'zombie-pieces',name:'Zombie pieces',category:'characters',group:'Infected',kind:'sprite',summary:'Any zombie blown apart: the top and bottom halves at the waist, or the head and the rest at the neck, each with a ragged wound, a stub of spine and gut, lined up with the whole body it came from.',
+  source:'assets/effects/gore.js',usage:"import {zombiePiece, GORE_PARTS} from './assets/effects/gore.js';\n// c: a 160 × 192 frame, the same as the zombie's own; part: 'upper', 'lower', 'head' or 'headless'\nzombiePiece(c, {...look, zombie: 1}, facing, 'upper', 0, seed);",
+  w:FRAME.w,h:FRAME.h,scale:2,facings:8,facing:1,anims:{Still:{frames:[0],ms:200}},
+  options:[{key:'part',label:'Piece',choices:['Top half','Bottom half','Head','Headless']},...INFECTION.map(lookOption),...PERSON.map(lookOption)],presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),
+  defaults:{part:0,...pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON])},draw:(c,{facing,o})=>zombiePiece(c,survivorLook(o,true),facing,GORE_PARTS[o.part||0],0,facing+1)},
+ {id:'zombie-crawler',name:'Crawling half',category:'characters',group:'Infected',kind:'sprite',summary:'The top half of a zombie that will not stay down, dragging itself along by its arms with a smear behind it, in 8 directions.',
+  source:'assets/effects/gore.js',usage:"import {crawlArt, CRAWL} from './assets/effects/gore.js';\n// c: a CRAWL.w × CRAWL.h frame, its point on the ground at (CRAWL.x, CRAWL.y)\ncrawlArt(c, {...look, zombie: 1}, facing, frame, seed);",
+  w:CRAWL.w,h:CRAWL.h,scale:2,facings:8,facing:0,anims:{Crawl:{frames:[0,1,2,3],ms:180}},
+  options:[...INFECTION.map(lookOption),...PERSON.map(lookOption)],presets:UNIFORMS.map(u=>({name:u.name,options:u.look})),
+  defaults:pickKeys(DEFAULT_APPEARANCE,[...INFECTION,...PERSON]),draw:(c,{facing,frame,o})=>crawlArt(c,survivorLook(o,true),facing,frame,3)}];
 function pickKeys(o,keys){const out={};for(const k of keys)out[k]=o[k];return out;}
 
 // Training robots and the brute come as sprite sheets; the library cuts single frames out of a sheet painted once.
@@ -172,6 +183,15 @@ const EFFECTS=[
  grime('hand-smear','Hand smear','A hand dragged through blood: a heavy patch, then finger streaks that break up.',b=>{b.smear(14,16,82,40,12,4,3,4);}),
  grime('claw-gouges','Claw gouges','Scraped metal with a shadow on one side, deepest mid-scratch.',b=>{b.claw(24,10,68,54,3,4);}),
  grime('scuffs-dirt','Scuffs and dirt','Worn paint, chips and grime for panels and props.',b=>{b.dirt(6,6,84,52,3,.6);for(let i=0;i<9;i++)b.scuff(10+i*9,14+(i%3)*14,14,.4+i*.2,.14);for(let i=0;i<12;i++)b.chip(8+i*7,50-(i%4)*9);}),
+ {id:'gibs',name:'Gibs',category:'effects',group:'Gore',kind:'still',summary:'What a close blast throws: meat, a rib, a bone, gut, a hand, a scrap of clothing and scalp. Each fits in 10 × 10 units round its middle.',source:'assets/effects/gore.js',
+  usage:"import {GIBS, gibArt} from './assets/effects/gore.js';\n// a 20 × 20 canvas per chunk; col is the clothing scrap's color\ngibArt(c, 'rib', seed, '#4c5566');",w:GIBS.length*20,h:20,scale:4,bg:'#3a3f46',options:[seedOpt],defaults:{seed:0},
+  draw:(c,{o})=>GIBS.forEach((k,i)=>{c.save();c.translate(i*20,0);gibArt(c,k,o.seed*7+i);c.restore();})},
+ {id:'gore-blood',name:'Fresh blood',category:'effects',group:'Gore',kind:'still',summary:'Blood for the ground and walls in a fight: a pool, a splash thrown one way, drops, a drag mark and a wall splatter that runs.',source:'assets/effects/gore.js',
+  usage:"import {bloodArt, BLOOD_BOX} from './assets/effects/gore.js';\n// a BLOOD_BOX.w × BLOOD_BOX.h unit picture at 2x, centred on the spot; direction 0 to 7 for a splash or smear\nbloodArt(c, 'splash', seed, direction);",
+  w:BLOOD_BOX.w*2,h:BLOOD_BOX.h*2,scale:2,bg:'#3a3f46',options:[{key:'kind',label:'Kind',choices:['Pool','Splash','Drops','Drag mark','Wall']},{key:'dir',label:'Direction',choices:['Right','Down right','Down','Down left','Left','Up left','Up','Up right']},seedOpt],defaults:{kind:0,dir:0,seed:0},
+  draw:(c,{o})=>bloodArt(c,BLOOD_KINDS[o.kind||0],o.seed*13+1,o.dir||0)},
+ {id:'gore-palette',name:'Gore palette',category:'effects',group:'Gore',kind:'still',summary:'Fresh blood from the dark rim to the shine, raw flesh, gut and bone.',source:'assets/effects/gore.js',usage:"import {GORE} from './assets/effects/gore.js';",
+  w:120,h:24,scale:4,palette:[...GORE.blood,...GORE.flesh,...GORE.gut,...GORE.bone],draw:c=>[...GORE.blood,...GORE.flesh,...GORE.gut,...GORE.bone].forEach((col,i)=>R(c,i*8,0,8,24,col))},
  {id:'blood-palette',name:'Blood palette',category:'effects',group:'Blood and grime',kind:'still',summary:'The five dried-to-fresh blood colors every grime brush uses.',source:'assets/effects/grime.js',usage:"import {BLOOD} from './assets/effects/grime.js';",
   w:100,h:24,scale:4,palette:BLOOD,draw:c=>BLOOD.forEach((col,i)=>R(c,i*20,0,20,24,col))}];
 
