@@ -2,7 +2,7 @@
 // walk, a body that turns to the nearest of eight facings toward your aim, and arms and gun drawn ahead of time at 64 angles, so the
 // barrel points where you aim and stays crisp pixel art. Each layer is cropped to the part of the 160 × 192 frame it uses.
 import {survivorLegs,survivorBody,gunArms,bodyShift,FRAME,FRAME_COUNT} from './character.js';
-import {GUNS} from '../weapons/equipment.js';
+import {holds} from '../weapons/equipment.js';
 import {canvas} from '../core/kit.js';
 export const AIM_ANGLES=64;
 // Crops in source pixels of the full frame, measured over every look with a little room to spare.
@@ -13,7 +13,7 @@ export const LAYERS={
  head:{key:'tg-head',x:32,y:8,w:96,h:124,cols:8,count:8}};
 export const ORDER=['legs','body','arms','head'];
 export const aimIndex=a=>((Math.round(a/(Math.PI*2)*AIM_ANGLES)%AIM_ANGLES)+AIM_ANGLES)%AIM_ANGLES;
-export const armed=look=>look.zombie!==1&&!!GUNS[look.gun];
+export const armed=look=>look.zombie!==1&&holds(look.gun);
 const cell=(L,i)=>[(i%L.cols)*L.w,Math.floor(i/L.cols)*L.h];
 export const sheetSize=L=>[L.cols*L.w,Math.ceil(L.count/L.cols)*L.h];
 // Where the feet sit inside a cropped frame, as a sprite origin.

@@ -18,7 +18,7 @@ import {APPEARANCE_OPTIONS,DEFAULT_APPEARANCE,UNIFORMS,randomAppearance} from '.
 import {SKIN_TONES,DYES,ROT_TONES,rotRamp} from './characters/palette.js';
 import {pet,PET_FRAME,PET_ANIM} from './animals/pet.js';
 import {BREEDS,MARKINGS,COATS,EYES,COLLARS,DEFAULT_PET,randomPet} from './animals/look.js';
-import {GUNS,GRENADES,PAINT,gunArt,grenadeArt} from './weapons/equipment.js';
+import {GUNS,HELD,GRENADES,PAINT,gunArt,grenadeArt} from './weapons/equipment.js';
 import {DIVE,paintDive,layerSheets,sheetSize} from './characters/layers.js';
 import {vectorPainter} from './core/paint.js';
 import {R,hash,canvas} from './core/kit.js';
@@ -171,8 +171,12 @@ const WEAPONS=[
  ...GUN_IDS.map(id=>({id,name:GUNS[id].name,category:'weapons',group:GUNS[id].shells?'Shotguns':GUNS[id].rifle?'Rifles':'Handguns',kind:'still',summary:GUNS[id].description+'.',
   stats:{Slot:GUNS[id].rifle?'Primary · carried ammo':'Secondary · unlimited ammo',[GUNS[id].shells?'Tube':'Magazine']:GUNS[id].mag,Damage:GUNS[id].damage+(GUNS[id].pellets?' × '+GUNS[id].pellets+' pellets':''),'Fire interval':GUNS[id].interval+' s',Reload:GUNS[id].reload+(GUNS[id].shells?' s a shell':' s'),Range:GUNS[id].range},
   source:'assets/weapons/equipment.js',usage:`import {gunArt, heldGun, weaponArms} from './assets/weapons/equipment.js';\n// gunArt draws the icon; survivor() draws it held when look.gun = '${id}'\ngunArt(painter, '${id}', paintColor);`,
-  w:120,h:60,scale:3,options:[{key:'paintball',label:'Finish',choices:['Steel','Paintball']}],defaults:{paintball:0},
-  draw:(c,{o})=>icon(c,120,60,g=>gunArt(g,id,o.paintball?PAINT[id]:undefined))})),
+  w:120,h:60,scale:3,options:[{key:'paintball',label:'Finish',choices:['Steel','Paintball']},{key:'light',label:'Flashlight',choices:['None','Under the barrel']}],defaults:{paintball:0,light:0},
+  draw:(c,{o})=>icon(c,120,60,g=>gunArt(g,id,o.paintball?PAINT[id]:undefined,0,!!o.light))})),
+ // The flashlight: held up in both hands like a gun when look.gun is 'flashlight', its beam from the lens (lightAt).
+ ...Object.keys(HELD).map(id=>({id,name:HELD[id].name,category:'weapons',group:'Lights',kind:'still',summary:HELD[id].description+'. Held in both hands and pointed where you look.',
+  source:'assets/weapons/equipment.js',usage:`import {lightAt} from './assets/weapons/equipment.js';\n// survivor() draws it held when look.gun = '${id}'; the beam starts at lightAt(angle, '${id}') from the feet\nsurvivor(ctx, facing, frame, true, {...look, gun:'${id}'});`,
+  w:60,h:40,scale:4,draw:c=>icon(c,60,40,g=>gunArt(g,id))})),
  ...Object.keys(GRENADES).map(id=>({id:id+'-grenade',name:GRENADES[id].name,category:'weapons',group:'Grenades',kind:'still',summary:GRENADES[id].description+'.',
   stats:{Fuse:GRENADES[id].duration+' s',Radius:GRENADES[id].radius},source:'assets/weapons/equipment.js',usage:`import {grenadeArt} from './assets/weapons/equipment.js';\ngrenadeArt(painter, '${id}');`,
   w:60,h:60,scale:3,draw:c=>icon(c,60,60,g=>grenadeArt(g,id))}))];

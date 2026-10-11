@@ -9,6 +9,10 @@ export const GUNS={
 };
 // Pistols are secondaries: they still reload, but their spare rounds never run out. Shotguns and rifles are primaries and use
 // ammo you carry in your bag.
+// Things held up like a gun that are not guns: the flashlight, gripped in both hands and pointed where you look. holds() is true
+// for these and every gun, so the survivor raises their arms for either.
+export const HELD={flashlight:{name:'Flashlight',description:'Black aluminium torch · wide head · warm white beam'}};
+export const holds=id=>!!(GUNS[id]||HELD[id]);
 export const slotOf=id=>GUNS[id]?.rifle===false?'secondary':'primary';
 export const unlimited=id=>slotOf(id)==='secondary';
 // In the Training Grounds every gun is its paintball twin: same handling, its own paint color.
@@ -21,8 +25,9 @@ export function saveLoadout(storage,v){try{storage.setItem(LOADOUT_KEY,JSON.stri
 // Author-sized half-pixel silhouettes translated from the approved design sheets.
 // act: the gun mid-action, as it fires (0 at rest, 1 racked): a pistol's slide locked back over a spent case, a shotgun's pump
 // pulled back along the tube. Rifles and the revolver look the same either way.
-export function gunArt(g,id,paint,act=0){gunShape(g,id,act);if(paint&&GUNS[id])paintKit(g,id,paint);}
-function gunShape(g,id,act=0){const{p,r}=g,ink='#10151c',steel='#535c65',hi='#a1a7aa';if(!GUNS[id])return;
+// light: a flashlight clamped under the barrel (gunLight), so a gun's beam has somewhere to come from.
+export function gunArt(g,id,paint,act=0,light=false){gunShape(g,id,act);if(paint&&GUNS[id])paintKit(g,id,paint);if(light&&GUNS[id])gunLight(g,id);}
+function gunShape(g,id,act=0){const{p,r}=g,ink='#10151c',steel='#535c65',hi='#a1a7aa';if(id==='flashlight'){torch(g,ink);return;}if(!GUNS[id])return;
  if(id==='pump-shotgun'){shotgun(g,ink,steel,hi,act);return;}
  if(!GUNS[id].rifle){const heavy=id==='heavy-pistol',rev=id==='hand-cannon',len=heavy?15:rev?13:11;
  p([[-3,-3],[len,-3],[len+1,-1],[len+1,2],[4,2],[2,8],[-3,8],[-1,2],[-4,1]],ink);
@@ -55,6 +60,14 @@ function shotgun(g,ink,steel,hi,act=0){const{p,r}=g,wood='#6b3f27',woodHi='#8f5a
  // Barrel over the tube, then the pump.
  r(7.5,-3,23,1.6,steel);r(7.5,-3,23,.5,hi);r(7.5,-1.4,18,1.4,'#3f464d');r(25,-1.4,.5,1.4,'#262c33');r(30,-3,.5,1.6,'#262c33');r(29.5,-3.8,1,.8,'#c6a06a');
  const k=act?-4:0;if(k){r(15,-1.4,5,1.4,'#2c3238');r(15,-1.4,5,.5,'#4a525a');}r(11+k,-1.3,8.5,3.3,wood);r(11+k,-1.3,8.5,.5,woodHi);for(let x=12;x<19;x+=1.5)r(x+k,-.3,.5,2,woodLo);}
+// The flashlight: a ribbed black tube from the tail cap to a flared head, and the lens at the front, pale until it is lit.
+function torch(g,ink){const{p,r}=g;p([[-4,-2],[7,-2],[9,-3.5],[12.5,-3.5],[12.5,3.5],[9,3.5],[7,2],[-4,2]],ink);
+ r(-3.5,-1.5,10.5,3,'#2b3037');r(-3.5,-1.5,10.5,.5,'#5b636c');for(let x=-1;x<5;x+=1.5)r(x,-1,.5,2.5,'#1a1e23');r(-3.5,-1.5,1,3,'#3b424a');
+ p([[7.5,-1.5],[9.2,-3],[12,-3],[12,3],[9.2,3],[7.5,1.5]],'#3a4048');r(9.5,-3,2.5,.5,'#77808a');r(11.5,-2.5,1,5,'#efe6c8');r(11.5,-2.5,.5,2,'#ffffff');r(2,-2.6,1.5,1,'#9a2b22');}
+// A flashlight clamped under the barrel: where it sits on each gun (gun-local x from, x to, top), its body, and its lens.
+const LIGHT_AT={'light-pistol':[5.5,11,2],'heavy-pistol':[7,14,2],'hand-cannon':[5,11.5,2],'tactical-ar':[15,22,1.5],'heavy-ar':[15,22,1.5],'pump-shotgun':[20,25.5,1]};
+function gunLight(g,id){const{p,r}=g,[a,b,t]=LIGHT_AT[id]||[5,10,2];p([[a-.5,t-.5],[b+.5,t-.5],[b+.5,t+3],[a-.5,t+3]],'#10151c');r(a,t,b-a,2.5,'#2b3037');r(a,t,b-a,.5,'#5b636c');
+ r(a+1,t-.5,1.5,.5,'#10151c');r(b-1,t,1,2.5,'#3a4048');r(b,t+.3,.5,1.9,'#efe6c8');}
 // The paintball twin: a hopper of paint balls on top and a painted muzzle, so you can tell at a glance it is not the real thing.
 function paintKit(g,id,paint){const{p,r}=g,ink='#10151c',rifle=GUNS[id].rifle,x0=rifle?7:1,w=rifle?9:6,t=rifle?-4:-3,hh=rifle?6:4.5;
  p([[x0,t],[x0+w,t],[x0+w+1,t-hh+1.5],[x0+w-1,t-hh],[x0+1,t-hh],[x0-1,t-hh+1.5]],ink);r(x0+.5,t-hh+1,w-.5,hh-1.5,'#2c3138');r(x0+1.5,t-hh+1.5,w-2.5,hh-3,paint);r(x0+1.5,t-hh+1.5,1,.5,'#f4efe2');r(x0+w-2.5,t-1.5,1,.5,'#00000055');
@@ -69,14 +82,16 @@ export function aimPose(angle){const d=facingOf(angle),side=d===0||d===4,back=d>
  // A true rotation (not a shear) keeps every gun's silhouette intact at each angle. Grip is gun-local (0,0).
  return {d,side,back,quarter,mirror,flip,point:([u,v])=>[ax+u*L*c-v*flip*n,ay+u*L*n+v*flip*c]};}
 // Where each hand closes on the gun: the trigger grip, and the fore-end for rifles (pistols use a cupped support hand).
-function gunHands(P,id,act=0){const grip=P.point([0,3]);return {grip,support:id==='pump-shotgun'?P.point([act?11:15,2.5]):GUNS[id]?.rifle?P.point([12,3]):[grip[0]-1.5*P.flip,grip[1]+1]};}
-const MUZZLE={'light-pistol':12.5,'heavy-pistol':16.5,'hand-cannon':14.5,'tactical-ar':27,'heavy-ar':27,'pump-shotgun':30.5};
+function gunHands(P,id,act=0){const grip=P.point([0,id==='flashlight'?.5:3]);return {grip,support:id==='pump-shotgun'?P.point([act?11:15,2.5]):GUNS[id]?.rifle?P.point([12,3]):[grip[0]-1.5*P.flip,grip[1]+1]};}
+const MUZZLE={flashlight:12.5,'light-pistol':12.5,'heavy-pistol':16.5,'hand-cannon':14.5,'tactical-ar':27,'heavy-ar':27,'pump-shotgun':30.5};
 // The end of the barrel on screen, relative to the feet, so shots leave the gun you see.
 export function muzzle(angle,id){const P=aimPose(angle),[x,y]=P.point([MUZZLE[id]??12,-.25]);return {x:P.mirror?-x:x,y};}
+// Where the light comes out, relative to the feet: the flashlight's lens, or the lens of the one under a gun's barrel.
+export function lightAt(angle,id){if(!GUNS[id])return muzzle(angle,id);const P=aimPose(angle),L=LIGHT_AT[id]||[5,10,2],[x,y]=P.point([L[1]+.5,L[2]+1.2]);return {x:P.mirror?-x:x,y};}
 function hand(g,[x,y],near){g.p([[x-2.5,y-1.5],[x+2.5,y-1.5],[x+2.5,y+2.5],[x-1,y+3.5],[x-3.5,y+1.5]],'#111319');g.p([[x-2,y-1],[x+2,y-1],[x+2,y+2],[x-1,y+3],[x-3,y+1]],near?'#d99b73':'#ae7356');g.r(x-1,y-.5,2,1.5,near?'#ecb18a':'#d99b73');}
-export function heldGun(g,id,angle,paint,act=0){if(!GUNS[id])return;const P=aimPose(angle),{point}=P;
+export function heldGun(g,id,angle,paint,act=0,light=false){if(!holds(id))return;const P=aimPose(angle),{point}=P;
  const projected={p:(pts,col)=>g.p(pts.map(point),col),r:(x,y,w,h,col)=>g.p([[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(point),col)};
- gunArt(projected,id,paint,act);
+ gunArt(projected,id,paint,act,light);
  // Hands close around the trigger and the fore-end, over the gun.
  if(P.back&&!P.quarter)return;const h=gunHands(P,id,act);hand(g,h.support,false);hand(g,h.grip,true);
 }
@@ -98,7 +113,7 @@ function limb(g,s,e,h,near,sleeve){const short=sleeve===1||sleeve===true,bare=sl
 function elbow(s,h,out,lu=9,lf=9){const dx=h[0]-s[0],dy=h[1]-s[1],d=Math.min(Math.hypot(dx,dy)||1,lu+lf-.5),ux=dx/(Math.hypot(dx,dy)||1),uy=dy/(Math.hypot(dx,dy)||1),a=(lu*lu-lf*lf+d*d)/(2*d),k=Math.sqrt(Math.max(0,lu*lu-a*a)),px=s[0]+ux*a,py=s[1]+uy*a;
  const c1=[px-uy*k,py+ux*k],c2=[px+uy*k,py-ux*k];return out(c1)>=out(c2)?c1:c2;}
 // shoulderX scales shoulder spread for narrower bodies.
-export function weaponArms(g,id,angle,sleeve=0,shoulderX=x=>x,act=0){if(!GUNS[id])return;const P=aimPose(angle),{side,back,quarter}=P,h=gunHands(P,id,act);
+export function weaponArms(g,id,angle,sleeve=0,shoulderX=x=>x,act=0){if(!holds(id))return;const P=aimPose(angle),{side,back,quarter}=P,h=gunHands(P,id,act);
  // Far arm (support hand) first, then near arm (trigger hand); elbows bend outward and down, never across the chest.
  // Front diagonals put the near (right) shoulder on screen-left, matching the walking arms and legs.
  const fq=quarter&&!back,far=side?[-1,-46]:[shoulderX(back&&quarter?-12:fq?9:-10),-46],near=side?[1,-45]:[shoulderX(fq?-9:quarter?9:10),-45];

@@ -1,4 +1,4 @@
-import {GUNS,heldGun,weaponArms,grenadeArt,facingOf} from '../weapons/equipment.js';
+import {holds,heldGun,weaponArms,grenadeArt,facingOf} from '../weapons/equipment.js';
 import {colorMaps,tint} from './palette.js';
 import {zombieFace,zombieTorso,zombieBite,zombieLegs,zombieReach,reachPainter} from './zombie.js';
 import {skull,faceFeatures,styledHead,hairBehind,facialHair as moreFacialHair} from './hair.js';
@@ -453,9 +453,9 @@ export function survivorLegs(c,direction=1,frame=0,look={}){const zombie=look.zo
  const L=legLayout(dir,frame,zombie);
  leg(g,L.far.x,L.far.foot,side,false,L.far.depth,boots,look.bottom||0,look.shoes||0);leg(g,L.near.x,L.near.foot,side,true,0,boots,look.bottom||0,look.shoes||0);if(zombie)zombieLegs(c,g,L,look.bottom||0,look);c.restore();}
 // The arms and gun at any angle: shoulders from the body's facing, hands on the gun, the gun along the aim.
-export function gunArms(c,angle,look={},frame=0,act=0){if(look.zombie===1||!GUNS[look.gun])return;const {side,back,quarter,mirror}=view(facingOf(angle)),G=gait(frame,side,back,quarter),maps=colorMaps(look),T=TOPS[look.top]||TOPS[0],female=look.body===1;
+export function gunArms(c,angle,look={},frame=0,act=0){if(look.zombie===1||!holds(look.gun))return;const {side,back,quarter,mirror}=view(facingOf(angle)),G=gait(frame,side,back,quarter),maps=colorMaps(look),T=TOPS[look.top]||TOPS[0],female=look.body===1;
  const shoulder=x=>female&&!side?-.5+(x+.5)*.86:x;
- c.save();c.translate(40,85);if(mirror)c.scale(-1,1);c.translate(G.lean,G.bob);const g=tint(painter(c),maps.main);weaponArms(g,look.gun,angle,T.sleeve,shoulder,act);heldGun(g,look.gun,angle,look.paint,act);c.restore();}
+ c.save();c.translate(40,85);if(mirror)c.scale(-1,1);c.translate(G.lean,G.bob);const g=tint(painter(c),maps.main);weaponArms(g,look.gun,angle,T.sleeve,shoulder,act);heldGun(g,look.gun,angle,look.paint,act,!!look.light);c.restore();}
 // Everything above the legs. 'under' is the torso, walking arms (when no gun is held) and belt grenade; 'over' is the neck and head,
 // and from behind the backpack when a gun is held, so the arms and gun show between the coat and the pack. 'over' never changes
 // from frame to frame except by bodyShift, so the game draws it once per facing.
@@ -465,7 +465,7 @@ export function survivorBody(c,direction=1,frame=0,pack=true,look={},part='all')
  const {side,back,quarter,mirror}=view(direction);MIRROR=mirror;
  const G=gait(frame,side,back,quarter,zombie),maps=colorMaps(look),T=TOPS[look.top]||TOPS[0],sleeve=T.sleeve,female=look.body===1;
  // Pack choice 1 removes the pack and its straps; the legacy pack argument only hides the pack itself.
- const straps=look.pack!==1;pack=pack&&straps;const U=part!=='over',O=part!=='under',packOver=back&&!!GUNS[look.gun];
+ const straps=look.pack!==1;pack=pack&&straps;const U=part!=='over',O=part!=='under',packOver=back&&holds(look.gun);
  c.save();c.translate(40,85);if(mirror)c.scale(-1,1);
  // The upper body rises, dips and (when running) leans into the stride.
  c.save();c.translate(G.lean,G.bob);let g=tint(painter(c),maps.main),packG=tint(painter(c),maps.pack);
@@ -483,14 +483,14 @@ export function survivorBody(c,direction=1,frame=0,pack=true,look={},part='all')
  // From behind, arms held out in front rise up the screen past the shoulders; the torso and head cover the rest.
  const reachBehind=zombie&&back;if(U&&reachBehind){farArm();nearArm();}
  // In profile the far arm is genuinely behind the body.
- if(U){if(side&&!GUNS[look.gun])armAt(g,3,-46,G.farHand,false);}
+ if(U){if(side&&!holds(look.gun))armAt(g,3,-46,G.farHand,false);}
  if(U){if(pack&&!back)backpack(packG,false,quarter,side,look.pack|0);}
  // Long hair falls behind the shoulders in forward views, so that part is painted before the torso.
  if(U&&look.hair===7)hairBehind(headG,back,quarter,side,look.hair,hairPalette(look));
  if(U){torso(body,back,quarter,side,T,straps?packG:null);if(zombie)zombieTorso(c,body,back,quarter,side,look);}
  if(pack&&back&&(packOver?O:U))backpack(packG,true,quarter,false,look.pack|0);
- if(U){if(!side&&!GUNS[look.gun]&&!reachBehind)farArm();}
- if(U){if(!GUNS[look.gun]&&!reachBehind)nearArm();}
+ if(U){if(!side&&!holds(look.gun)&&!reachBehind)farArm();}
+ if(U){if(!holds(look.gun)&&!reachBehind)nearArm();}
  if(U){if(look.grenade&&!back){const belt={p:(pts,col)=>g.p(pts.map(([x,y])=>[x*.6-8,y*.6-25]),col),r:(x,y,w,h,col)=>g.r(x*.6-8,y*.6-25,w*.6,h*.6,col)};grenadeArt(belt,look.grenade);}}
  // Neck/collar connect torso and skull; the head is the final silhouette layer.
  if(O){if(T.hood)hood(body,back,quarter,side,true);if(female)g.r(side?.5:-2.5,-51,5,4,C.skinLo);else g.r(side?0:-3,-51,6,4,C.skinLo);body.p([[-6,-51],[1,-50],[6,-51],[8,-48],[4,-46],[-5,-47],[-8,-49]],C.coatDeep);body.r(-5,-49,5,1,C.coatHi);neckline(body,back,quarter,side,T);if(zombie)zombieBite(c,body,back,quarter,side,look);}
