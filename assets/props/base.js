@@ -79,6 +79,16 @@ export const SLIDES=[
   mid(g,'HOLLOW 6',x+sw*1.5,y+h-9,.5,HZ[3]);p([[x+sw*1.25,y+sh+12],[x+sw*1.25+3,y+sh+17],[x+sw*1.25-3,y+sh+17]],SC[4]);
   const sx=x+sw*1.72,sy=y+sh+14;p([[sx,sy-3],[sx+1,sy-1],[sx+3,sy-1],[sx+1.5,sy+.5],[sx+2,sy+3],[sx,sy+1.5],[sx-2,sy+3],[sx-1.5,sy+.5],[sx-3,sy-1],[sx-1,sy-1]],RED[3]);}];
 export const SLIDE_NAMES=['Title','The Hollow','LZ-6','The crash','The beacon','Sectors'];
+// The truck's inside (apcbay): its paint, a pale olive, and the tread plate of its floor.
+const IN=['#232823','#2f362f','#3c443b','#4c564a','#5f6a5c','#78836f'],FL=['#1d2023','#272b2f','#33383d','#41474d','#535a61'];
+// How the inside of the truck is laid out along its length: the walls' thickness T, the cut walls' height C, the dash's depth FW, the
+// front wall at xf and the partition at xp, and each bench's n seats, SW apart.
+export function apcFrame(o){const T=6,C=8,FW=10,xf=o.w-14-T,xp=xf-(o.cab||66)-4,SW=26;return {T,C,FW,xf,xp,SW,n:Math.floor((xp-T-6)/SW)};}
+// Where everyone sits, in the truck's own units: x along it, y the middle of the cushion, hip where a seated body's hips are drawn
+// (the cushion's top), and for the north bench feet, where the boots rest on the floor in front of it.
+export function apcSeats(o){const {T,FW,xf,xp,n,SW}=apcFrame(o),H=o.h,at=i=>T+3+i*SW+(SW-1)/2,dx=xf-FW-24;
+ return {north:[...Array(n)].map((_,i)=>({x:at(i),y:T+6.5,hip:T-4.5,feet:T+16})),south:[...Array(n)].map((_,i)=>({x:at(i),y:H-T-6.5,hip:H-T-17.5})),
+  driver:{x:dx,y:T+11,hip:T+1},commander:{x:dx,y:H-T-11,hip:H-T-21}};}
 export const BASE_ART={
  // The hangar's back wall, face on: its cap from above, then corrugated steel with a rib every 4 units, panel seams and rivets, rain
  // and rust run down from the seams, a steel girder near the top with clerestory windows over it (night outside), and a painted dado
@@ -224,7 +234,86 @@ export const BASE_ART={
   const ux=6,uy=t-4;r(ux-.5,uy-17.5,11,18.5,EDGE);r(ux,uy-17,10,18,'#8e939b');r(ux,uy-17,2,18,'#c4c8cc');r(ux+7,uy-17,3,18,'#5a5f66');r(ux-.5,uy-19,11,2.5,EDGE);r(ux,uy-18.5,10,1.5,BLK);r(ux+4,uy-4,2,3,BLK);r(ux+3.5,uy-1,3,1,'#2a1a10');
   for(let k=0;k<3;k++){r(20+k*.5,t-9+k*2.5,4,3,'#f0ece2');r(20+k*.5,t-9+k*2.5,4,.5,'#b8b2a4');}r(19.5,t-9.5,5,.5,EDGE);
   p([[27,t-5],[w-4,t-5],[w-3,t-1],[26,t-1]],'#d87a96');p([[27.5,t-4.5],[w-4.5,t-4.5],[w-3.5,t-1.5],[26.5,t-1.5]],'#f2e4d0');for(const [dx,dy,c] of [[30,-3.5,'#8a5a32'],[34.5,-3,'#e88aa8'],[39,-3.5,'#8a5a32'],[43,-3,'#f0e0b0']]){e(dx,t+dy,2,1.2,c);e(dx,t+dy,.6,.4,'#f2e4d0');}
-  r(w-9,t-11,4,4,EDGE);r(w-8.5,t-10.5,3,3,'#8a2a22');r(w-8.5,t-10.5,3,.5,'#e8e4d8');}};
+  r(w-9,t-11,4,4,EDGE);r(w-8.5,t-10.5,3,3,'#8a2a22');r(w-8.5,t-10.5,3,.5,'#e8e4d8');},
+ // The armored truck from above with its roof cut away, for the ride in. The footprint is the whole hull: the ramp at the west end,
+ // the troop bay with a bench down each side, the partition, the cab (the driver's seat on the north side, the commander's on the
+ // south), the dash and the vision blocks across the front, and the sloped nose. The north wall stands full height behind it all, with
+ // the grab rail, the red dome light, the seat backs and their harnesses, and what is stowed on it; every other wall is cut low so you
+ // can see in, its armor shown in section. o.cab is the cab's length and o.mark the truck's number, stencilled on the outside. The
+ // driver's seat back is its own prop (cabseat), drawn over whoever is driving. apcSeats(o) says where everyone sits.
+ apcbay(g,o){const {r,p,e,l}=g,L=o.w,H=o.h,Z=o.z,{T,C,FW,xf,xp,n,SW}=apcFrame(o),s=(o.x|0)+(o.y|0)*3,yn=T-Z;
+  e(L/2,H+1,L/2+6,5,SHADOW);
+  // The north wall: its top in section (the olive skin, the steel, the inside paint) and its inside face, ribbed and seamed.
+  r(-.5,-Z-.5,xf+T+1,Z+T+1,EDGE);r(0,-Z,xf+T,T,OD[3]);r(0,-Z,xf+T,.5,OD[5]);r(0,-Z+T-2,xf+T,1,ST[2]);r(0,-Z+T-1,xf+T,1,IN[4]);
+  for(let x=4;x<xf+T;x+=12)r(x,-Z+2,1,1,OD[1]);
+  r(T,yn,xf-T,Z,IN[2]);r(T,yn,xf-T,1,IN[0]);for(let x=T+20;x<xf;x+=26){r(x,yn,1.5,Z,IN[1]);r(x+1.5,yn,.5,Z,IN[4]);for(let y=yn+4;y<T-4;y+=9)r(x+.5,y,.5,.5,IN[5]);}
+  r(T,yn+12,xf-T,.5,IN[1]);r(T,yn+12.5,xf-T,.5,IN[3]);r(T,T-8,xf-T,1.5,'#1c201c');r(T,T-6.5,xf-T,.5,IN[3]);
+  for(let i=0;i<9;i++){const x=T+hash(i,s)*(xf-T-10),y=yn+14+hash(s,i)*(Z-26);r(x,y,2+hash(i,s+1)*6,.5,i%2?IN[1]:IN[3]);}
+  // The partition's end of the wall is the cab: a vision block, the radio stack with its handset on a coiled cord.
+  const cx0=xp+4,vb=xf-24;r(vb-.5,yn+9.5,13,9,EDGE);r(vb,yn+10,12,8,'#1a2430');r(vb+1,yn+11,4,1,'#3a5068');r(vb+1,yn+12,2,1,'#2c3e52');r(vb-1,yn+18,14,1,IN[1]);
+  r(cx0+5.5,yn+15.5,16,20,EDGE);r(cx0+6,yn+16,15,19,'#24272b');for(let k=0;k<3;k++){r(cx0+7,yn+18+k*5.5,13,4,'#1a1c1f');r(cx0+8,yn+19+k*5.5,2,1,k===1?'#e8a03a':'#5aff8a');r(cx0+11,yn+19+k*5.5,7,.5,'#3a3d42');r(cx0+17,yn+20+k*5.5,2,1.5,'#55595e');}
+  for(let k=0;k<8;k++)e(cx0+12+Math.sin(k*1.3)*2,yn+37+k*1.6,1.6,.9,'#141518');r(cx0+9.5,yn+49.5,6,5,EDGE);r(cx0+10,yn+50,5,4,'#2a2d32');
+  // Over the bay: the grab rail on its brackets, the dome light (lit red), a pack hung at each end, the first aid kit and an
+  // extinguisher by the partition.
+  r(T+3,yn+6.5,xp-T-6,2,EDGE);r(T+3,yn+7,xp-T-6,1,ST[4]);r(T+3,yn+7,xp-T-6,.5,ST[5]);for(let x=T+8;x<xp-4;x+=40){r(x-.5,yn+4,2,5,EDGE);r(x,yn+4.5,1,4,ST[3]);}
+  const dl=Math.round((T+xp)/2);r(dl-6.5,yn+.5,13,5,EDGE);r(dl-6,yn+1,12,4,'#2a2b2e');e(dl,yn+3,4.5,1.6,RED[1]);e(dl,yn+2.8,3.5,1.1,RED[3]);r(dl-2,yn+2.5,2,.5,'#ffc8b8');
+  for(const px of [T+6,xp-34]){l(px+8,yn+8,px+8,yn+12,.75,EDGE);r(px+.5,yn+11.5,15,19,EDGE);r(px+1,yn+12,14,18,OD[3]);r(px+1,yn+12,14,.5,OD[5]);r(px+1,yn+12,14,6,OD[4]);r(px+1,yn+18,14,.5,OD[1]);r(px+6,yn+17,4,2,'#8a8e94');
+   r(px+3,yn+21,1,9,OD[1]);r(px+12,yn+21,1,9,OD[1]);r(px+5,yn+23,6,5,OD[2]);r(px+5,yn+23,6,.5,OD[4]);}
+  const fa=T+46;r(fa-.5,yn+13.5,15,11,EDGE);r(fa,yn+14,14,10,SC[2]);r(fa,yn+14,14,.5,SC[4]);r(fa,yn+21.5,14,2.5,SC[1]);r(fa+5.5,yn+15.5,3,7,RED[2]);r(fa+3.5,yn+17.5,7,3,RED[2]);
+  const fx=xp-12;r(fx-3,yn+16,8,2,EDGE);r(fx-.5,yn+16.5,6,23,EDGE);r(fx,yn+18,5,21,RED[2]);r(fx,yn+18,1.5,21,RED[3]);r(fx+3.5,yn+18,1.5,21,RED[1]);r(fx,yn+17,5,1.5,'#2a2b2e');l(fx+5,yn+18,fx+7,yn+30,.75,'#141518');r(fx,yn+33,5,1,'#e8e4d8');
+  // The seat backs on the wall, a harness hanging over each from the rail.
+  for(let i=0;i<n;i++){const x0=T+3+i*SW+1,w=SW-2;r(x0-.5,T-31.5,w+1,22,EDGE);r(x0,T-31,w,21,OD[2]);r(x0,T-31,w,.5,OD[4]);r(x0+w/2-.25,T-30,.5,19,OD[1]);r(x0,T-11,w,1,OD[1]);
+   for(const k of [6,w-7]){l(x0+k,yn+9,x0+k+(k<w/2?2:-2),T-14,1.25,'#141518');l(x0+k,yn+9,x0+k+(k<w/2?2:-2),T-14,.5,'#3a3424');}r(x0+w/2-2,T-15,4,3,EDGE);r(x0+w/2-1.5,T-14.5,3,2,'#8a8e94');}
+  // The floor: tread plate, its seams, and the tie-down rings either side of the aisle.
+  r(T,T,xf-T,H-2*T,FL[2]);for(let y=T+1.5,row=0;y<H-T-1;y+=3,row++)for(let x=T+1.5+(row%2)*3;x<xf-2;x+=6){r(x,y,2,.5,FL[3]);r(x+.5,y+.5,1.5,.5,FL[1]);}
+  for(const x of [T+52,T+104,T+156,xp+36])r(x,T,.5,H-2*T,FL[0]);for(let i=0;i<14;i++){const x=T+hash(i,s+7)*(xf-T-12),y=T+14+hash(s+7,i)*(H-2*T-28);e(x,y,3+hash(i,2)*5,1+hash(2,i)*1.5,'#00000020');}
+  for(let x=T+18;x<xp-8;x+=36)for(const y of [T+16,H-T-16]){e(x,y,2,1.2,EDGE);e(x,y-.3,1.3,.6,ST[4]);}
+  // The benches: a folding seat for each place, its cushion and the steel frame under the front edge. The north one faces you; of
+  // the south one you see the cushions and the top of the back, above the cut wall.
+  for(let i=0;i<n;i++){const x0=T+3+i*SW,w=SW-1;bx(g,x0,T,w,13,0,11,OD[3],'#141518',OD[4]);r(x0+1,T-10,w-2,.5,OD[5]);r(x0+w/2-.25,T-10,.5,11,OD[2]);r(x0,T+2,w,1.5,ST[3]);r(x0,T+2,w,.5,ST[4]);for(const k of [1,w-2.5])r(x0+k,T+3.5,1.5,9.5,ST[2]);
+   r(x0+3,T+3.5,4,5,'#14161a');r(x0+w-7,T+3.5,4,5,'#14161a');r(x0+4,T+7.5,2,2,'#8a8e94');
+   const ys=H-T-13;r(x0-.5,ys-11.5,w+1,16,EDGE);r(x0,ys-11,w,13,OD[3]);r(x0,ys-11,w,.5,OD[5]);r(x0+w/2-.25,ys-10,.5,11,OD[2]);r(x0,ys+2,w,2,OD[1]);r(x0,ys+2,w,.5,OD[2]);}
+  // The cab: the commander's seat (empty, a headset on it), the console between, the dash with the driver's screens, and the wheel.
+  const S=apcSeats(o),cm=S.commander,dv=S.driver;bx(g,cm.x-8,cm.y-7,16,14,0,10,OD[3],'#141518',OD[4]);bx(g,cm.x-12,cm.y-7,4,14,10,30,OD[2],OD[1],OD[4]);bx(g,cm.x-12,cm.y-4,4,8,30,35,OD[1],OD[1],OD[3]);
+  e(cm.x+1,cm.y-11,4,2.5,'#141518');e(cm.x+1,cm.y-11,2.6,1.5,OD[3]);e(cm.x+5,cm.y-9,1.6,1.6,'#2a2b2e');
+  bx(g,dv.x-8,dv.y-7,16,14,0,10,OD[3],'#141518',OD[4]);
+  bx(g,xp+24,H/2-7,18,14,0,9,'#2a2d32','#1c1e22','#3b3f45');r(xp+28,H/2-15,3,6,EDGE);e(xp+29.5,H/2-15,2,1.5,'#3b3f45');r(xp+34,H/2-14,6,4,'#1a1c1f');r(xp+35,H/2-13,1,1,'#e8a03a');
+  const dy=bx(g,xf-FW,T,FW,H-2*T,0,18,'#26292d','#1c1e22','#3b3f45');r(xf-FW+1,T-17,FW-2,16,'#1c1e22');
+  r(xf-FW+1.5,dv.y-18,FW-3,11,EDGE);r(xf-FW+2,dv.y-17.5,FW-4,10,'#10261a');for(let k=0;k<4;k++)r(xf-FW+3,dv.y-16+k*2.2,FW-7-k,.5,k===2?'#8affb0':'#3acf6a');
+  r(xf-FW+1.5,H/2-24,FW-3,8,EDGE);r(xf-FW+2,H/2-23.5,FW-4,7,'#1a1c1f');for(let k=0;k<4;k++)r(xf-FW+3+k*2,H/2-22,1,1,k%2?'#e8a03a':'#5aff8a');
+  r(xf-FW+1.5,cm.y-20,FW-3,9,EDGE);r(xf-FW+2,cm.y-19.5,FW-4,8,'#101a28');r(xf-FW+3,cm.y-18,FW-7,.5,'#4a8acf');r(xf-FW+3,cm.y-15,FW-9,.5,'#4a8acf');
+  l(xf-FW,dv.y-14,xf-FW-3,dv.y-17,2,EDGE);e(xf-FW-4,dv.y-18,3.2,6.8,EDGE);e(xf-FW-4,dv.y-18,2.4,6,'#2a2b2e');e(xf-FW-4,dv.y-18,1.2,4.4,EDGE);e(xf-FW-4,dv.y-18,.6,1.2,'#3b3f45');r(xf-FW-6,dv.y-24,1,1.5,'#55595e');
+  // The partition, cut low with its doorway, and the ramp and the front wall in section; the vision blocks set in the front wall.
+  for(const [y,d] of [[T,20],[H-T-20,20]])bx(g,xp,y,4,d,0,22,IN[3],IN[2],IN[4]);
+  bx(g,0,T,T,H-2*T,0,C,OD[3],OD[2],OD[4]);r(T-1.5,T-C,1.5,H-2*T,IN[4]);for(let y=T+6;y<H-T-6;y+=14){r(1.5,y-C,2,2,OD[1]);r(2,y-C+.5,1,1,OD[5]);}
+  r(T,T+20,3,H-2*T-40,'#00000030');
+  bx(g,xf,T,T,H-2*T,0,14,OD[3],OD[2],OD[4]);for(const y of [T+3,H/2-8,H-T-19]){r(xf+.5,y-14,T-1,13,EDGE);r(xf+1,y-13.5,T-2,12,'#1a2430');r(xf+1.5,y-13,1,4,'#3a5068');}
+  // The nose, sloping down to the headlights.
+  p([[xf+T-.5,T-14.5],[L+.5,T-6.5],[L+.5,H-T+.5],[xf+T-.5,H-T+.5]],EDGE);p([[xf+T,T-14],[L,T-6],[L,H-T-6],[xf+T,H-T-14]],OD[4]);p([[xf+T,T-14],[L,T-6],[L,T-5.5],[xf+T,T-13.5]],OD[5]);
+  p([[xf+T,H-T-14],[L,H-T-6],[L,H-T],[xf+T,H-T]],OD[2]);for(const y of [T,H-T-8]){r(L-3,y-4,3,3.5,EDGE);r(L-2.5,y-3.5,2,2.5,'#f0e6c0');}
+  // The south wall, cut to the height of the benches' backs: its top in section, and outside, the truck's number and the unit.
+  bx(g,0,H-T,xf+T,T,0,C,OD[3],OD[2],OD[4]);r(0,H-T-C,xf+T,1,IN[4]);r(0,H-T-C+2,xf+T,1,ST[2]);for(let x=4;x<xf+T;x+=12)r(x,H-C-2,1,1,OD[1]);
+  r(0,H-1,xf+T,1,OD[1]);for(let i=0;i<8;i++){const x=hash(i,s+3)*(xf-10)+4;e(x,H-C+3+hash(s+3,i)*4,3+hash(i,4)*5,1.2,i%2?OD[1]:'#2a2418');}
+  if(o.mark)stencil(g,o.mark,T+20,H-C+1.5,1,'#d8d0b0');stencil(g,'LEET AF',T+44,H-C+1.5,1,'#c8c2a8');},
+ // The driver's seat back and its headrest, drawn over whoever is in the seat: seen from the south it is a narrow upright slab.
+ cabseat(g,o){const {r}=g,w=o.w,h=o.h,z=o.z;bx(g,0,0,w,h,10,z,OD[2],OD[1],OD[4]);bx(g,0,3,w,h-6,z,z+6,OD[1],OD[1],OD[3]);r(w-1,-z+1,1,h-2,OD[3]);},
+ // The containment beacon, standing: a tripod, its mast with the battery box and radio, and the strobe on top (o.on lights it red).
+ beacon(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,cx=w/2,hub=h/2-14,top=h/2-z+4;e(cx,h-1,w/2+2,2.5,SHADOW);
+  for(const [fx,fy] of [[1,h-1.5],[w-1,h-1.5],[cx,1.5]]){l(cx,hub,fx,fy,1.75,EDGE);l(cx,hub,fx,fy,.75,ST[4]);r(fx-1,fy-.5,2,1,EDGE);}
+  r(cx-1.25,top+4,2.5,hub-top-4,EDGE);r(cx-.75,top+4,1.5,hub-top-4,ST[4]);r(cx-.75,top+4,.5,hub-top-4,ST[5]);
+  r(cx-5.5,hub-13.5,11,10,EDGE);r(cx-5,hub-13,10,9,OD[3]);r(cx-5,hub-13,10,.5,OD[5]);r(cx-4,hub-11,8,3,HZ[2]);r(cx-4,hub-8,8,.5,BLK);r(cx+3,hub-6.5,1.5,1.5,o.on?'#5aff8a':'#2a4a30');
+  l(cx+2,top+6,cx+6,top-8,.5,EDGE);r(cx+5.5,top-8.5,1,1,EDGE);
+  e(cx,top+3,4.5,4,EDGE);e(cx,top+3,3.8,3.4,o.on?RED[3]:RED[1]);e(cx-1,top+2,1.3,1,o.on?'#ffd8c8':RED[2]);r(cx-4,top+5,8,2,EDGE);r(cx-3.5,top+5.5,7,1,ST[3]);},
+ // The beacon packed in its hard case: shut, with the stencil and the latches, or (o.open) the lid up and the parts in their foam,
+ // the strobe head, the mast in two lengths, the folded tripod and the battery box.
+ beaconcase(g,o){const {r,e,l}=g,w=o.w,h=o.h,z=o.z,yf=h-z;e(w/2,h,w/2+2,2.5,SHADOW);
+  if(o.open){const lh=h*.6;r(-.5,-z-lh-.5,w+1,lh+1,EDGE);r(0,-z-lh,w,lh,OD[2]);r(1.5,-z-lh+1.5,w-3,lh-3,'#2a2b2e');r(0,-z-lh,w,.5,OD[4]);for(let x=4;x<w-3;x+=6)r(x,-z-lh+2,3,lh-4,'#323438');}
+  r(-.5,-z-.5,w+1,h+z+1,EDGE);r(0,yf,w,z,OD[2]);r(0,yf,w,.5,OD[4]);for(const x of [4,w-8]){r(x-.5,yf+1.5,5,3.5,EDGE);r(x,yf+2,4,2.5,'#8a8e94');}
+  if(!o.open){r(0,-z,w,h,OD[3]);r(0,-z,w,.5,OD[5]);for(let x=3;x<w-1;x+=5)r(x,-z+1,.5,h-2,OD[2]);r(w/2-5,-z+h/2-1.5,10,3,EDGE);r(w/2-4.5,-z+h/2-1,9,2,'#2a2b2e');stencil(g,'BEACON',w/2-stencilWidth('BEACON',.5)/2,yf+4.5,.5,'#d8d0b0');return;}
+  r(0,-z,w,h,OD[3]);r(1.5,-z+1.5,w-3,h-3,'#2a2b2e');for(let i=0;i<10;i++)r(2+hash(i,5)*(w-5),-z+2+hash(5,i)*(h-5),1,.5,'#34363a');
+  e(6,-z+h/2,3.6,3.2,EDGE);e(6,-z+h/2,3,2.6,RED[1]);e(5.2,-z+h/2-.8,1,.8,RED[2]);
+  for(const y of [-z+3,-z+6])r(11,y,w-14,1.5,ST[4]);r(11,-z+h-6,9,4,OD[3]);r(11,-z+h-6,9,.5,OD[5]);r(12,-z+h-5,7,1.5,HZ[2]);
+  for(let k=0;k<3;k++)l(22+k*1.5,-z+h-3,26+k*1.5,-z+h-10,.75,ST[3]);stencil(g,'BEACON',w/2-stencilWidth('BEACON',.5)/2,yf+4.5,.5,'#d8d0b0');}};
 // The library's samples: real sizes from the hangar in Deadlight Hollow.
 export const BASE_SAMPLES=[
  {set:'base',kind:'hangarwall',name:'Hangar wall',group:'Hangar',samples:[{kind:'hangarwall',x:0,y:0,w:300,h:10,z:100,sign:'HANGAR 3',signX:20}]},
@@ -241,5 +330,9 @@ export const BASE_SAMPLES=[
  {set:'base',kind:'lockers',name:'Lockers',group:'Armory',samples:[{kind:'lockers',x:0,y:0,w:112,h:14,z:64},{kind:'lockers',x:0,y:0,w:112,h:14,z:64,open:2}]},
  {set:'base',kind:'hazcase',name:'Sample case',group:'Armory',samples:[{kind:'hazcase',x:0,y:0,w:26,h:16,z:16},{kind:'hazcase',x:0,y:0,w:26,h:16,z:16,cold:true,marrow:true}]},
  {set:'base',kind:'urntable',name:'Coffee table',group:'Armory',samples:[{kind:'urntable',x:0,y:0,w:52,h:18,z:26}]},
- {set:'base',kind:'apc',name:'Armored personnel carrier',group:'Vehicles',samples:[{kind:'apc',x:0,y:0,w:230,h:66,z:72,mark:'H6'},{kind:'apc',x:0,y:0,w:230,h:66,z:72,mark:'H6',open:true}]}];
+ {set:'base',kind:'apc',name:'Armored personnel carrier',group:'Vehicles',samples:[{kind:'apc',x:0,y:0,w:230,h:66,z:72,mark:'H6'},{kind:'apc',x:0,y:0,w:230,h:66,z:72,mark:'H6',open:true}]},
+ {set:'base',kind:'apcbay',name:'Armored truck, inside',group:'Vehicles',samples:[{kind:'apcbay',x:0,y:0,w:300,h:76,z:60,cab:66,mark:'H6'}]},
+ {set:'base',kind:'cabseat',name:'Driver\'s seat back',group:'Vehicles',samples:[{kind:'cabseat',x:0,y:0,w:4,h:14,z:30}]},
+ {set:'base',kind:'beaconcase',name:'Beacon case',group:'Operation',samples:[{kind:'beaconcase',x:0,y:0,w:34,h:18,z:12},{kind:'beaconcase',x:0,y:0,w:34,h:18,z:12,open:true}]},
+ {set:'base',kind:'beacon',name:'Containment beacon',group:'Operation',samples:[{kind:'beacon',x:0,y:0,w:16,h:12,z:46},{kind:'beacon',x:0,y:0,w:16,h:12,z:46,on:true}]}];
 export function propArt(c,o){if(!BASE_ART[o.kind])return townPropArt(c,o);c.save();c.scale(2,2);c.translate(PROP_PAD,o.z+PROP_PAD);BASE_ART[o.kind](painter(c),o);c.restore();}

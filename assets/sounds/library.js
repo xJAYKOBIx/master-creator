@@ -131,7 +131,19 @@ export const SOUNDS=[
   for(const [f,g] of [[1180,.014],[1586,.011],[2213,.008]])k.tone(.02,2.5,out,{type:'triangle',f,gain:g,attack:.004,release:2.3});k.noise(0,.05,out,{type:'highpass',f:3000,gain:.25,attack:.001,decay:true});}},
  // Thunder a long way off: a soft crack, then a rumble that rolls and dies away.
  {id:'thunder',name:'Distant thunder',group:'Title',dur:4,play:k=>{const {out}=k,r=rng(77);k.noise(0,.25,out,{f:1400,gain:.12,attack:.01,decay:true,sweep:300});k.noise(.1,3.8,out,{f:240,gain:.4,attack:.35,decay:true,sweep:90});
-  for(let i=0;i<6;i++){const t=.3+r()*2.4;k.noise(t,.5+r()*.6,out,{f:160+r()*120,gain:.18+r()*.14,attack:.08,decay:true});}}}];
+  for(let i=0;i<6;i++){const t=.3+r()*2.4;k.noise(t,.5+r()*.6,out,{f:160+r()*120,gain:.18+r()*.14,attack:.08,decay:true});}}},
+ // The armored truck on the ride in: its diesel (played again every couple of seconds, the ends overlapping, for as long as it runs),
+ // the air brakes, the ramp coming down on its hydraulics, something hitting the hull, and the radio opening.
+ {id:'apc-engine',name:'Armored truck engine',group:'Vehicles',dur:3,options:[{key:'idle',label:'Engine',choices:['Driving','Idling']}],play:(k,o={})=>{const {ctx,at,out}=k,idle=(o.idle|0)===1,f=idle?26:40,
+  lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=idle?200:340;const g=ctx.createGain();g.gain.setValueAtTime(0,at(0));g.gain.linearRampToValueAtTime(1,at(.45));g.gain.setValueAtTime(1,at(2.55));g.gain.linearRampToValueAtTime(0,at(3));lp.connect(g).connect(out);
+  const saw=ctx.createOscillator(),am=ctx.createGain(),knock=ctx.createOscillator(),kg=ctx.createGain();saw.type='sawtooth';saw.frequency.value=f;am.gain.value=.1;knock.type='square';knock.frequency.value=f/2;kg.gain.value=.06;
+  knock.connect(kg).connect(am.gain);saw.connect(am).connect(lp);for(const n of [saw,knock]){n.start(at(0));n.stop(at(3.05));}
+  k.noise(0,3,lp,{f:idle?160:260,gain:.3,attack:.45});if(!idle)k.noise(0,3,g,{type:'bandpass',f:800,q:.6,gain:.035,attack:.45});}},
+ {id:'air-brake',name:'Air brakes',group:'Vehicles',dur:1.1,play:k=>{const {out}=k;k.tone(0,.25,out,{f:70,to:45,gain:.12,attack:.01,release:.2});k.noise(.05,1,out,{type:'highpass',f:2600,gain:.16,attack:.01,decay:true});k.noise(.05,.5,out,{type:'bandpass',f:1200,q:1,gain:.08,attack:.01,decay:true});}},
+ {id:'apc-ramp',name:'Ramp coming down',group:'Vehicles',dur:3.2,play:k=>{const {out}=k;k.tone(0,2.1,out,{type:'triangle',f:190,to:150,gain:.035,attack:.15,release:.2});k.noise(0,2.1,out,{type:'bandpass',f:620,q:2,gain:.06,attack:.15});
+  k.tone(2.1,.6,out,{f:72,to:38,gain:.55,attack:.002,release:.5});k.noise(2.1,.7,out,{f:1300,gain:.5,attack:.002,decay:true,sweep:160});for(const [f,d] of [[1240,.9],[1730,.7],[2410,.5]])k.tone(2.1,d,out,{type:'square',f,gain:.012,attack:.002,release:d*.9});}},
+ {id:'hull-thump',name:'Hit on the hull',group:'Vehicles',dur:.9,play:k=>{const {out}=k;k.tone(0,.35,out,{f:58,to:34,gain:.6,attack:.002,release:.3});k.noise(0,.3,out,{f:520,gain:.45,attack:.002,decay:true,sweep:120});k.tone(.01,.8,out,{f:410,gain:.018,attack:.002,release:.75});k.tone(.01,.6,out,{f:655,gain:.01,attack:.002,release:.55});}},
+ {id:'radio-in',name:'Radio opening',group:'Vehicles',dur:.3,play:k=>{const {out}=k;k.noise(0,.11,out,{type:'bandpass',f:1900,q:.9,gain:.22,attack:.002,decay:true});k.tone(.1,.05,out,{type:'square',f:1450,gain:.018,attack:.002,release:.03});}}];
 
 // Play a sound now on a live AudioContext (or schedule it on an OfflineAudioContext at 0). options.vol (0 to 1) plays it quieter,
 // for something further away; options.bus (kit.js bus) sends it through a volume of the game's own.
